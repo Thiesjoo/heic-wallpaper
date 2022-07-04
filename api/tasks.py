@@ -10,7 +10,7 @@ def taskstatus(task_id):
     if task.state == "PENDING":
         response = {
             "queue_state": task.state,
-            "status": "Process is ongoing...",
+            "status": task.info,
             "status_update": url_for("tasks.taskstatus", task_id=task.id),
         }
     else:

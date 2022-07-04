@@ -78,6 +78,8 @@ def handle_image(self, name):
                 warnings += "Warning: Ambigous time specifiation found. Might skip some images.\n"
             prev = cur
 
+        if warnings:
+            print(warnings)
         # now = datetime.now().time()
         # nowsecs = now.hour * 60 * 60 + now.minute * 60 + now.second
         # last_one = times[-1]
@@ -91,12 +93,15 @@ def handle_image(self, name):
         #     last_one = time
         # index = last_one["i"]
 
+        self.update_state(state="PENDING", meta="Opening file container")
         heif_container = open_container(complete_file_path)
         all_images: list[HeifTopLevelImage] = heif_container.top_level_images
 
         os.mkdir(f"{AppConfig.PROCESSED_FOLDER}/{name}/")
 
         for i, img in enumerate(all_images):
+            self.update_state(state="PENDING", meta=f"Loading {i}")
+
             heif_file: HeifFile = img.image
             heif_file.load()
 
@@ -108,8 +113,11 @@ def handle_image(self, name):
                 heif_file.mode,
                 heif_file.stride,
             )
+            self.update_state(state="PENDING", meta=f"Resizing {i}")
 
             loaded_img.thumbnail((3000, 3000))
+            self.update_state(state="PENDING", meta=f"Saving {i}")
+
             loaded_img.save(
                 f"{AppConfig.PROCESSED_FOLDER}/{name}/{i}.png",
                 quality=85,
