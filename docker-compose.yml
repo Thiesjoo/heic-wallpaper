@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+  web:
+    container_name: web
+    build: ./api
+    ports:
+      - "5000:5000"
+    depends_on:
+      - redis
+      - db
+    environment:
+      - FLASK_ENV=development
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./api:/app
+      - ./static:/static
+
+  redis:
+    container_name: redis
+    image: redis:5.0.5
+
+  worker:
+    build:
+      context: ./api
+    hostname: worker
+    entrypoint: celery
+    command: -A celery_app.celery worker --loglevel=info
+    volumes:
+      - ./api:/app
+    depends_on:
+      - redis
