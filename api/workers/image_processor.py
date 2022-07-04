@@ -49,7 +49,7 @@ def remove_all_data(filename):
 
 
 @celery.task(bind=True)
-def handle_image(self, name):
+def handle_image(self, name, friendly_filename):
     try:
         # TODO: Check if file is heic:
         # Do all cool handling and database mapping
@@ -82,18 +82,6 @@ def handle_image(self, name):
 
         if warnings:
             print(warnings)
-        # now = datetime.now().time()
-        # nowsecs = now.hour * 60 * 60 + now.minute * 60 + now.second
-        # last_one = times[-1]
-        # for time in times:
-        #     if float(time["t"]) * 60 * 60 * 24 > nowsecs:
-        #         if (
-        #             float(time["t"]) * 60 * 60 * 24 - nowsecs < 10
-        #         ):  # prevent floating errors or similar things
-        #             last_one = time
-        #         break
-        #     last_one = time
-        # index = last_one["i"]
 
         self.update_state(state="PENDING", meta="Opening file container")
         heif_container = open_container(complete_file_path)
@@ -154,7 +142,14 @@ def handle_image(self, name):
 
         json_location = f"{AppConfig.PROCESSED_FOLDER}/{name}/data.json"
         with open(json_location, "w") as f:
-            json.dump({"time": int(time.time()), "data": times}, f)
+            json.dump(
+                {
+                    "time": int(time.time()),
+                    "data": times,
+                    "original_name": friendly_filename,
+                },
+                f,
+            )
 
         return "Finished"
     except Exception as e:

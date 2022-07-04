@@ -6,6 +6,7 @@ from flask import Flask, jsonify, redirect, request, url_for
 from config import AppConfig
 from workers.image_processor import func1, handle_image
 from tasks import tasks
+from werkzeug.utils import secure_filename
 
 ALLOWED_EXTENSIONS = {"heic", "png", "jpg", "jpeg", "gif"}
 
@@ -57,7 +58,7 @@ def upload_new_wallpaper():
         app.logger.info(
             f"File should be uploaded {os.path.exists(f'{AppConfig.UPLOAD_FOLDER}/{new_filename}')}"
         )
-        task = handle_image.delay(new_filename)
+        task = handle_image.delay(new_filename, secure_filename(file.filename))
         return jsonify(
             {"taskid": url_for("tasks.taskstatus", task_id=task.id), "ok": True}
         )
@@ -67,7 +68,15 @@ def upload_new_wallpaper():
 @app.route("/wallpapers")
 def get_wallpapers():
     # Returns a list of all available .heic wallpapers with identifiers?
-    wallpapers = [f.name for f in os.scandir(f"{AppConfig.PROCESSED_FOLDER}")]
+    wallpapers = [
+        {
+            "name": f.name,
+            "preview_url": url_for(
+                "static", filename=f"processed/{f.name}/preview.png"
+            ),
+        }
+        for f in os.scandir(f"{AppConfig.PROCESSED_FOLDER}")
+    ]
     return jsonify(wallpapers)
 
 
