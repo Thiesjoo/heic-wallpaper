@@ -15,7 +15,7 @@ def get_exif(fname):
     """
     args = ["exiftool", fname]
     r = subprocess.run(args, stdout=subprocess.PIPE)
-    print(r.stdout.decode("utf-8"))
+    # TODO: Error handling
     output = r.stdout.decode("utf-8")
     return {
         line.split(":")[0].strip(): line.split(":")[1].strip()
@@ -26,11 +26,9 @@ def get_exif(fname):
 def get_wallpaper_config(fname):
     exif = get_exif(fname)
 
-    print("Exif data: ", exif)
-
     if "H24" not in exif and "Solar" not in exif:
-        print("Couldn't find time/solar info")
-        sys.exit(0)
+        # TODO: Research more of heic spec
+        raise Exception("This is not a live wallpaper")
 
     if "Solar" in exif:
         data = exif["Solar"]

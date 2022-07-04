@@ -12,7 +12,9 @@ services:
 
   web:
     container_name: web
-    build: ./api
+    build:
+      context: ./api
+      target: web
     ports:
       - "5000:5000"
     depends_on:
@@ -35,12 +37,13 @@ services:
   worker:
     build:
       context: ./api
+      target: watchdog
     hostname: worker
     working_dir: /app
-    command: celery -A workers.image_processor worker --loglevel=info
+    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A workers.image_processor worker --loglevel=info
     volumes:
       - ./api:/app:ro
-    user: nobody
+      - ./static:/static
     links:
       - redis
     depends_on:
