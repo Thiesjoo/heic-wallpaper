@@ -1,4 +1,7 @@
 flask
+# Image processing
 Pillow
 pyheif
+# Worker things
 Celery
+Redis

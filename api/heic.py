@@ -15,27 +15,18 @@ def get_exif(fname):
     """
     args = ["exiftool", fname]
     r = subprocess.run(args, stdout=subprocess.PIPE)
+    print(r.stdout.decode("utf-8"))
     output = r.stdout.decode("utf-8")
-    return {line.split(":")[0].strip(): line.split(":")[1].strip() for line in output.split("\n")[:-1]}
-
-
-def extract_images(fname, outputdir, filename_prefix, extension):
-    """
-    TODO: use pyheif
-    """
-    if extension.startswith("."):
-        extension = extension[1:]
-    if not os.path.isdir(outputdir):
-        os.makedirs(outputdir)
-
-    args = ["heif-convert", "-q", "100", os.path.abspath(fname), f"{filename_prefix}.{extension}"]
-    r = subprocess.run(args, cwd=outputdir)
-    if r.returncode != 0:
-        print("An error occured when extracting the file.")
+    return {
+        line.split(":")[0].strip(): line.split(":")[1].strip()
+        for line in output.split("\n")[:-1]
+    }
 
 
 def get_wallpaper_config(fname):
     exif = get_exif(fname)
+
+    print("Exif data: ", exif)
 
     if "H24" not in exif and "Solar" not in exif:
         print("Couldn't find time/solar info")

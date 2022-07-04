@@ -20,6 +20,7 @@ services:
       - db
     environment:
       - FLASK_ENV=development
+      - FLASK_APP=app.py
       - POSTGRES_NAME=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -35,9 +36,12 @@ services:
     build:
       context: ./api
     hostname: worker
-    entrypoint: celery
-    command: -A celery_app.celery worker --loglevel=info
+    working_dir: /app
+    command: celery -A workers.image_processor worker --loglevel=info
     volumes:
-      - ./api:/app
+      - ./api:/app:ro
+    user: nobody
+    links:
+      - redis
     depends_on:
       - redis
