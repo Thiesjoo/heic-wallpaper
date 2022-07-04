@@ -2,9 +2,9 @@ from datetime import datetime
 import json
 import os
 from uuid import uuid4
-from flask import Flask, jsonify, redirect, request, url_for
+from flask import Flask, jsonify, redirect, render_template, request, url_for
 from config import AppConfig
-from workers.image_processor import func1, handle_image
+from workers.image_processor import handle_image
 from tasks import tasks
 from werkzeug.utils import secure_filename
 
@@ -27,17 +27,20 @@ app.config["UPLOAD_FOLDER"] = AppConfig.UPLOAD_FOLDER
 os.makedirs(os.path.join(AppConfig.UPLOAD_FOLDER), exist_ok=True)
 os.makedirs(os.path.join(AppConfig.PROCESSED_FOLDER), exist_ok=True)
 
-
 # Max size is 100mb
 app.config["MAX_CONTENT_LENGTH"] = 100 * 1000 * 1000
 
 app.register_blueprint(tasks)
 
 
+@app.errorhandler(413)
+def too_large(e):
+    return "File is too large. Please contact admin for manual upload", 413
+
+
 @app.route("/")
-def hello_world():
-    task = func1.delay(1)
-    return jsonify({"taskid": url_for("tasks.taskstatus", task_id=task.id), "ok": True})
+def index():
+    return render_template("index.html")
 
 
 @app.route("/upload", methods=["POST"])

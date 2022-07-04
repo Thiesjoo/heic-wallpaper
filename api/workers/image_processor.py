@@ -1,9 +1,7 @@
-from datetime import datetime
 import os
 import shutil
 import json
 
-from time import sleep
 import time
 from celery import Celery
 from celery.exceptions import Ignore
@@ -23,13 +21,6 @@ celery = Celery(
     broker=CeleryConfig.CELERY_BROKER_URL,
     backend=CeleryConfig.CELERY_RESULT_BACKEND,
 )
-
-
-@celery.task()
-def func1(arg: int):
-    print("Celery task tests")
-    sleep(10)
-    return arg + 1
 
 
 def finish(filename):

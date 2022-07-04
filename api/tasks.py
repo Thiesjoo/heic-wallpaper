@@ -1,12 +1,12 @@
 from flask import Blueprint, jsonify, url_for
-from workers.image_processor import func1
+from workers.image_processor import handle_image
 
 tasks = Blueprint("tasks", __name__, template_folder="templates")
 
 
 @tasks.route("/status/<task_id>")
 def taskstatus(task_id):
-    task = func1.AsyncResult(task_id)
+    task = handle_image.AsyncResult(task_id)
     if task.state == "PENDING":
         response = {
             "queue_state": task.state,
