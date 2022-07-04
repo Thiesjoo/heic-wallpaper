@@ -1,8 +1,10 @@
 from datetime import datetime
 import os
 import shutil
+import json
 
 from time import sleep
+import time
 from celery import Celery
 from celery.exceptions import Ignore
 
@@ -96,11 +98,12 @@ def handle_image(self, name):
         self.update_state(state="PENDING", meta="Opening file container")
         heif_container = open_container(complete_file_path)
         all_images: list[HeifTopLevelImage] = heif_container.top_level_images
+        total_length = len(all_images)
 
         os.mkdir(f"{AppConfig.PROCESSED_FOLDER}/{name}/")
 
         for i, img in enumerate(all_images):
-            self.update_state(state="PENDING", meta=f"Loading {i}")
+            self.update_state(state="PENDING", meta=f"Loading {i}/{total_length}")
 
             heif_file: HeifFile = img.image
             heif_file.load()
@@ -113,16 +116,45 @@ def handle_image(self, name):
                 heif_file.mode,
                 heif_file.stride,
             )
-            self.update_state(state="PENDING", meta=f"Resizing {i}")
+            self.update_state(state="PENDING", meta=f"Resizing {i}/{total_length}")
 
-            loaded_img.thumbnail((3000, 3000))
-            self.update_state(state="PENDING", meta=f"Saving {i}")
+            loaded_img.thumbnail((3840, 2160))
+            self.update_state(state="PENDING", meta=f"Saving {i}/{total_length}")
 
             loaded_img.save(
                 f"{AppConfig.PROCESSED_FOLDER}/{name}/{i}.png",
                 quality=85,
                 optimize=True,
             )
+
+        self.update_state(state="PENDING", meta=f"Generating preview")
+
+        heif_file: HeifFile = all_images[0].image
+        heif_file.load()
+
+        loaded_img = Image.frombytes(
+            heif_file.mode,
+            heif_file.size,
+            heif_file.data,
+            "raw",
+            heif_file.mode,
+            heif_file.stride,
+        )
+        self.update_state(state="PENDING", meta=f"Resizing preview")
+        loaded_img.thumbnail((1280, 720))
+        self.update_state(state="PENDING", meta=f"Saving preview")
+
+        loaded_img.save(
+            f"{AppConfig.PROCESSED_FOLDER}/{name}/preview.png",
+            quality=70,
+            optimize=True,
+        )
+
+        self.update_state(state="PENDING", meta=f"Storing JSON")
+
+        json_location = f"{AppConfig.PROCESSED_FOLDER}/{name}/data.json"
+        with open(json_location, "w") as f:
+            json.dump({"time": int(time.time()), "data": times}, f)
 
         return "Finished"
     except Exception as e:

@@ -23,6 +23,8 @@ def allowed_file(filename):
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = AppConfig.UPLOAD_FOLDER
 os.makedirs(os.path.join(AppConfig.UPLOAD_FOLDER), exist_ok=True)
+os.makedirs(os.path.join(AppConfig.PROCESSED_FOLDER), exist_ok=True)
+
 
 # Max size is 100mb
 app.config["MAX_CONTENT_LENGTH"] = 100 * 1000 * 1000

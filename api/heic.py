@@ -3,9 +3,7 @@ Functions for reading and extracting data from heic files
 """
 import base64
 import plistlib
-import sys
 import subprocess
-import os
 import os.path
 
 
