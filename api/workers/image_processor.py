@@ -39,12 +39,12 @@ def remove_all_data(filename):
         pass
 
 
-@celery.task(queue=CeleryConfig.CELERY_PRIO_QUEUE)
+@celery.task()
 def handle_singular_image(name, idx):
     heic.generate_normal_image(name, idx)
 
 
-@celery.task(queue=CeleryConfig.CELERY_PRIO_QUEUE)
+@celery.task()
 def generate_preview(name):
     heic.generate_preview(name)
 

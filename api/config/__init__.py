@@ -4,7 +4,6 @@ import os
 class CeleryConfig:
     CELERY_BROKER_URL = os.environ.get("BROKER_URL")
     CELERY_RESULT_BACKEND = os.environ.get("BROKER_URL")
-    CELERY_PRIO_QUEUE = "high-prio-queue"
 
 
 class AppConfig:
