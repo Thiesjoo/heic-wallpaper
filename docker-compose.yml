@@ -13,6 +13,7 @@ services:
     environment:
       - FLASK_ENV=development
       - FLASK_APP=app.py
+      - BROKER_URL=redis://redis:6379/0
     volumes:
       - ./api:/app
       - ./static:/static
@@ -29,7 +30,9 @@ services:
     working_dir: /app
     environment:
       - BROKER_URL=redis://redis:6379/0
-    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A workers.image_processor worker --loglevel=info --autoscale=12,1
+    command: >
+      watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- 
+      celery -A workers.image_processor worker --loglevel=info --autoscale=12,1
     volumes:
       - ./api:/app:ro
       - ./static:/static

@@ -33,6 +33,8 @@ app = Flask(
     __name__,
     static_folder="/static/",
 )
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 300
+
 app.config["UPLOAD_FOLDER"] = AppConfig.UPLOAD_FOLDER
 os.makedirs(os.path.join(AppConfig.UPLOAD_FOLDER), exist_ok=True)
 os.makedirs(os.path.join(AppConfig.PROCESSED_FOLDER), exist_ok=True)
@@ -40,7 +42,7 @@ os.makedirs(os.path.join(AppConfig.PROCESSED_FOLDER), exist_ok=True)
 # Max size is 100mb
 app.config["MAX_CONTENT_LENGTH"] = 100 * 1000 * 1000
 
-app.register_blueprint(tasks)
+app.register_blueprint(tasks, url_prefix="/tasks")
 
 
 @app.errorhandler(413)
@@ -98,10 +100,13 @@ def upload_new_wallpaper():
 
 @app.route("/wallpapers")
 def get_wallpapers():
+    # TODO: This should be fetched out of redis. Because name is only stored in data
     # Returns a list of all available .heic wallpapers with identifiers?
     wallpapers = [
         {
             "name": f.name,
+            "id": f.name,
+            "location": url_for("get_wallpaper", name=f.name),
             "preview_url": url_for(
                 "static", filename=f"processed/{f.name}/preview.png"
             ),

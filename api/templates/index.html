@@ -4,39 +4,16 @@
 <head>
   <title>File Upload</title>
 
+  <!-- Dropping files -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.1/min/dropzone.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.1/min/dropzone.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.1/min/dropzone.min.css" />
 
+  <!-- Styling the page -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-  <script type="text/javascript">
-    Dropzone.options.myDropzone = {
-      // Prevents Dropzone from uploading dropped files immediately
-      autoProcessQueue: true,
-      uploadMultiple: false,
-      parallelUploads: 5,
-      maxFilesize: 100,
-      maxFiles: 5,
-      init: function () {
-        myDropzone = this; // closure
+  <!-- Toast notifications -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
 
-        this.element.querySelector("button[type=submit]").addEventListener("click", function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          myDropzone.processQueue();
-        });
-      },
-      accept(file, done) {
-        if (!file.name.endsWith(".heic")) {
-          return done("Sorry we do not supported files other than .heic yet")
-        }
-        return done();
-      },
-
-    };
-  </script>
 
   <style>
     .dropzone {
@@ -53,26 +30,107 @@
 </head>
 
 <body>
-  <section class="bg-light mt-5">
-    <div class="container"></div>
-    <div class="row">
-      <div class="col-lg-8 offset-lg-2">
-        <div class="form-wrapper py-5">
-          <form action="/upload" class="dropzone" id="my-dropzone" method="POST">
-            <div class="form-group">
-              <button type="submit">Submit</button>
-            </div>
-            <!-- <div class="form-group">
-              <label for="myFormData">Example Form Data</label>
-              <input type="text" name="myFormData" id="myFormData" placeholder="Enter your data" class="form-control"
-                required />
-            </div> -->
-          </form>
-        </div>
-      </div>
-    </div>
-    </div>
+  <header>
+    <form action="/upload" class="dropzone" id="my-dropzone" method="POST"></form>
+  </header>
+  <section class="w-full mr-5 ml-5 flex justify-center flex-col">
+    <h3 class="text-center text-xl text-emerald-300">All available wallpapers</h3>
+    <div id="content" class="w-full h-full flex flex-wrap"></div>
   </section>
+  <footer class="absolute bottom-0 p-4 w-full justify-center flex">Thies Nieborg</footer>
+
+  <div class="w-80 h-40 flex-col flex justify-center align-center border p-3 m-3 hidden" onclick="handleClick(this)"
+    id="template">
+    <img src="/static/processed/86b2204b-8803-4f82-bebe-9e8fe991bb15.heic/preview.png" class="w-full max-h-[90%]"
+      style="object-fit: cover" />
+    <span class="w-full text-center" id="title">Title</span>
+  </div>
 </body>
+
+<script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+<script type="text/javascript">
+  const notyf = new Notyf({ position: { x: "right", y: "top" } });
+
+  function handleClick(e) {
+    const customURL = e.id;
+    navigator.clipboard
+      .writeText(customURL)
+      .then((x) => {
+        notyf.success(`Copied URL to your clipboard`);
+      })
+      .catch((e) => {
+        notyf.error("Couldn't copy to clipboard ):");
+        console.error(e)
+      });
+  }
+
+
+
+  Dropzone.options.myDropzone = {
+    // Prevents Dropzone from uploading dropped files immediately
+    autoProcessQueue: true,
+    uploadMultiple: false,
+    parallelUploads: 5,
+    maxFilesize: 100,
+    addRemoveLinks: true,
+    accept(file, done) {
+      if (!file.name.endsWith(".heic")) {
+        return done("Sorry we do not supported files other than .heic yet");
+      }
+      return done();
+    },
+    uploadprogress: function (file, progress, bytesSent) {
+      // Display the progress
+      console.log(file, progress, bytesSent);
+    },
+    complete(file) {
+      console.log(file);
+    },
+  };
+
+  function fetchAllWallpapers() {
+    fetch("/wallpapers")
+      .then((x) => x.json())
+      .then((x) => {
+        const final_location = document.getElementById("content");
+        const template = document.getElementById("template");
+
+        x.forEach((y, i) => {
+          let copy;
+          if (document.getElementById(y.id)) {
+            // If y was updated very recently remove it and rerender
+            // if (y.time)
+            copy = document.getElementById(y.id)
+            // return
+          } else {
+            copy = template.cloneNode(true);
+            final_location.appendChild(copy);
+          }
+
+          copy.classList.remove("hidden");
+          copy.id = y.id;
+          copy.title = y.id;
+
+          const img = copy.childNodes[1];
+          const span = copy.childNodes[3];
+
+          if (y.pending) {
+            // Pending has the task id
+          }
+          else {
+            img.src = y.preview_url;
+            span.textContent = y.name.substr(0, 10) + "....";
+
+          }
+
+
+
+        });
+      });
+  }
+
+  fetchAllWallpapers()
+  setInterval(fetchAllWallpapers, 1000)
+</script>
 
 </html>
