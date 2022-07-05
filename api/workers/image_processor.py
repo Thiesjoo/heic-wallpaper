@@ -1,3 +1,4 @@
+import gc
 import os
 import shutil
 import json
@@ -81,6 +82,30 @@ def handle_image(self, name, friendly_filename):
 
         os.mkdir(f"{AppConfig.PROCESSED_FOLDER}/{name}/")
 
+        self.update_state(state="PENDING", meta=f"Generating preview")
+
+        heif_file: HeifFile = all_images[0].image
+        heif_file.load()
+
+        loaded_img = Image.frombytes(
+            heif_file.mode,
+            heif_file.size,
+            heif_file.data,
+            "raw",
+            heif_file.mode,
+            heif_file.stride,
+        )
+        self.update_state(state="PENDING", meta=f"Resizing preview")
+        loaded_img.thumbnail((1280, 720))
+        self.update_state(state="PENDING", meta=f"Saving preview")
+
+        loaded_img.save(
+            f"{AppConfig.PROCESSED_FOLDER}/{name}/preview.png",
+            quality=70,
+            optimize=True,
+        )
+        loaded_img.close()
+
         for i, img in enumerate(all_images):
             self.update_state(state="PENDING", meta=f"Loading {i}/{total_length}")
 
@@ -105,29 +130,12 @@ def handle_image(self, name, friendly_filename):
                 quality=85,
                 optimize=True,
             )
+            heif_file.close()
+            loaded_img.close()
 
-        self.update_state(state="PENDING", meta=f"Generating preview")
-
-        heif_file: HeifFile = all_images[0].image
-        heif_file.load()
-
-        loaded_img = Image.frombytes(
-            heif_file.mode,
-            heif_file.size,
-            heif_file.data,
-            "raw",
-            heif_file.mode,
-            heif_file.stride,
-        )
-        self.update_state(state="PENDING", meta=f"Resizing preview")
-        loaded_img.thumbnail((1280, 720))
-        self.update_state(state="PENDING", meta=f"Saving preview")
-
-        loaded_img.save(
-            f"{AppConfig.PROCESSED_FOLDER}/{name}/preview.png",
-            quality=70,
-            optimize=True,
-        )
+            del loaded_img
+            del heif_file.data
+            print(gc.collect())
 
         self.update_state(state="PENDING", meta=f"Storing JSON")
 
@@ -145,6 +153,7 @@ def handle_image(self, name, friendly_filename):
         return "Finished"
     except Exception as e:
         self.update_state(state="FAILED", meta=str(e))
+        print("Something went wrong on processing image: ", e)
         remove_all_data(name)
         raise Ignore()
     finally:

@@ -7,6 +7,9 @@ RUN apk add --no-cache build-base
 RUN apk add exiftool
 RUN pip3 install pyheif
 
+RUN apk add zlib-dev jpeg-dev
+RUN pip3 install Pillow
+
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
