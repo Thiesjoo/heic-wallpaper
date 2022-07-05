@@ -3,4 +3,4 @@ version: "3.9"
 services:
   redis:
     container_name: redis
-    image: bbilly1/rejson:2.0.9
+    image: bbilly1/rejson:v2.0.9

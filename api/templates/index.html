@@ -94,6 +94,9 @@
         const final_location = document.getElementById("content");
         const template = document.getElementById("template");
 
+        const ids = new Set(final_location.childNodes.map(x => x.id))
+        console.log(ids)
+
         x.forEach((y, i) => {
           let copy;
           if (document.getElementById(y.id)) {
