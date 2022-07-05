@@ -4,7 +4,7 @@ import shutil
 import json
 
 import time
-from celery import Celery
+from celery import Celery, group
 from celery.exceptions import Ignore
 
 import sys
@@ -43,6 +43,11 @@ def remove_all_data(filename):
 @celery.task()
 def handle_singular_image(name, idx):
     heic.generate_normal_image(name, idx)
+
+
+@celery.task()
+def generate_preview(name):
+    heic.generate_preview(name)
 
 
 @celery.task(bind=True)
@@ -87,14 +92,23 @@ def handle_image(self, name, friendly_filename):
 
         os.mkdir(f"{AppConfig.PROCESSED_FOLDER}/{name}/")
 
-        self.update_state(state="PENDING", meta=f"Generating preview")
-        heic.generate_preview(name)
+        self.update_state(
+            state="PENDING",
+            meta=f"Concurrently processing all image work (Preview and image resizing)",
+        )
 
-        for i in range(total_length):
-            self.update_state(
-                state="PENDING", meta=f"Processing image {i}/{total_length}"
-            )
-            heic.generate_normal_image(name, i)
+        # Not sure if this takes data, but to be sure delete everything
+        del all_images
+        del heif_container
+        gc.collect()
+
+        tasks = [handle_singular_image.s(name, i) for i in range(total_length)]
+        tasks.append(generate_preview.s(name))
+
+        job = group(tasks)
+        result = job.apply_async()
+        result.get(disable_sync_subtasks=False)
+
         self.update_state(state="PENDING", meta=f"Storing JSON")
 
         json_location = f"{AppConfig.PROCESSED_FOLDER}/{name}/data.json"

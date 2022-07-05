@@ -47,6 +47,9 @@ def generate_preview(fname):
         heif_file.mode,
         heif_file.stride,
     )
+    del heif_file.data
+    # Image data takes a lot of memory, so we want to get rid of it instantly
+    gc.collect()
     loaded_img.thumbnail((1280, 720))
     loaded_img.save(
         f"{AppConfig.PROCESSED_FOLDER}/{fname}/preview.png",
@@ -70,6 +73,9 @@ def generate_normal_image(fname, idx):
         heif_file.mode,
         heif_file.stride,
     )
+    del heif_file.data
+    # Image data takes a lot of memory, so we want to get rid of it instantly
+    gc.collect()
 
     loaded_img.thumbnail((3840, 2160))
     loaded_img.save(
@@ -78,8 +84,6 @@ def generate_normal_image(fname, idx):
         optimize=True,
     )
     loaded_img.close()
-    del heif_file.data
-    gc.collect()
 
 
 def get_wallpaper_config(fname):
