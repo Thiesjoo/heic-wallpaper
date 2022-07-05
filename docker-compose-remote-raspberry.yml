@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  worker:
+    build:
+      context: ./api
+      target: watchdog
+    hostname: worker
+    working_dir: /app
+    environment:
+      - BROKER_URL=redis://raspberrypi.local:6379/0
+    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A workers.image_processor worker --loglevel=info --autoscale=12,1 -Q high-prio-queue
+    volumes:
+      - ./api:/app:ro
+      - type: volume
+        source: nfs-data
+        target: /static
+volumes:
+  nfs-data:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: nfsvers=4,addr=192.168.178.75,rw
+      device: ":/home/thies/prod/heic-wallpaper/static"

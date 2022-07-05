@@ -9,7 +9,6 @@ from celery.exceptions import Ignore
 
 import sys
 from pyheif import HeifTopLevelImage, open_container, HeifFile
-from PIL import Image
 
 sys.path.append("..")
 
@@ -40,12 +39,12 @@ def remove_all_data(filename):
         pass
 
 
-@celery.task()
+@celery.task(queue=CeleryConfig.CELERY_PRIO_QUEUE)
 def handle_singular_image(name, idx):
     heic.generate_normal_image(name, idx)
 
 
-@celery.task()
+@celery.task(queue=CeleryConfig.CELERY_PRIO_QUEUE)
 def generate_preview(name):
     heic.generate_preview(name)
 
@@ -126,7 +125,8 @@ def handle_image(self, name, friendly_filename):
     except Exception as e:
         self.update_state(state="FAILED", meta=str(e))
         print("Something went wrong on processing image: ", e)
-        remove_all_data(name)
+        # remove_all_data(name)
         raise Ignore()
     finally:
-        finish(name)
+        # finish(name)
+        pass
