@@ -40,6 +40,11 @@ def remove_all_data(filename):
         pass
 
 
+@celery.task()
+def handle_singular_image(name, idx):
+    heic.generate_normal_image(name, idx)
+
+
 @celery.task(bind=True)
 def handle_image(self, name, friendly_filename):
     try:
@@ -83,60 +88,13 @@ def handle_image(self, name, friendly_filename):
         os.mkdir(f"{AppConfig.PROCESSED_FOLDER}/{name}/")
 
         self.update_state(state="PENDING", meta=f"Generating preview")
+        heic.generate_preview(name)
 
-        heif_file: HeifFile = all_images[0].image
-        heif_file.load()
-
-        loaded_img = Image.frombytes(
-            heif_file.mode,
-            heif_file.size,
-            heif_file.data,
-            "raw",
-            heif_file.mode,
-            heif_file.stride,
-        )
-        self.update_state(state="PENDING", meta=f"Resizing preview")
-        loaded_img.thumbnail((1280, 720))
-        self.update_state(state="PENDING", meta=f"Saving preview")
-
-        loaded_img.save(
-            f"{AppConfig.PROCESSED_FOLDER}/{name}/preview.png",
-            quality=70,
-            optimize=True,
-        )
-        loaded_img.close()
-
-        for i, img in enumerate(all_images):
-            self.update_state(state="PENDING", meta=f"Loading {i}/{total_length}")
-
-            heif_file: HeifFile = img.image
-            heif_file.load()
-
-            loaded_img = Image.frombytes(
-                heif_file.mode,
-                heif_file.size,
-                heif_file.data,
-                "raw",
-                heif_file.mode,
-                heif_file.stride,
+        for i in range(total_length):
+            self.update_state(
+                state="PENDING", meta=f"Processing image {i}/{total_length}"
             )
-            self.update_state(state="PENDING", meta=f"Resizing {i}/{total_length}")
-
-            loaded_img.thumbnail((3840, 2160))
-            self.update_state(state="PENDING", meta=f"Saving {i}/{total_length}")
-
-            loaded_img.save(
-                f"{AppConfig.PROCESSED_FOLDER}/{name}/{i}.png",
-                quality=85,
-                optimize=True,
-            )
-            heif_file.close()
-            loaded_img.close()
-
-            del loaded_img
-            del heif_file.data
-            print(gc.collect())
-
+            heic.generate_normal_image(name, i)
         self.update_state(state="PENDING", meta=f"Storing JSON")
 
         json_location = f"{AppConfig.PROCESSED_FOLDER}/{name}/data.json"
