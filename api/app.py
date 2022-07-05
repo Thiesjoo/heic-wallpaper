@@ -93,7 +93,7 @@ def upload_new_wallpaper():
         )
         task = handle_image.delay(new_filename, secure_filename(file.filename))
         return jsonify(
-            {"taskid": url_for("tasks.taskstatus", task_id=task.id), "ok": True}
+            {"taskid": url_for("tasks.single_task_status", task_id=task.id), "ok": True}
         )
     return "This is not a valid extension", 400
 

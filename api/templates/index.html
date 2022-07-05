@@ -33,38 +33,40 @@
   <header>
     <form action="/upload" class="dropzone" id="my-dropzone" method="POST"></form>
   </header>
+  <h3 class="text-center text-xxl w-full">Get your dynamic wallpapers from here: <a
+      href="https://dynamicwallpaper.club/gallery" target="_blank" rel="noreferrer">dynamicwallpaper.club</a> </h3>
   <section class="w-full mr-5 ml-5 flex justify-center flex-col">
     <h3 class="text-center text-xl text-emerald-300">All available wallpapers</h3>
     <div id="content" class="w-full h-full flex flex-wrap"></div>
   </section>
   <footer class="absolute bottom-0 p-4 w-full justify-center flex">Thies Nieborg</footer>
 
+  <!-- THIS IS TEMPLATE FOR ALL WALLPAPER DISPLAYS -->
   <div class="w-80 h-40 flex-col flex justify-center align-center border p-3 m-3 hidden" onclick="handleClick(this)"
-    id="template">
+    ondblclick="handleDoubleClick(this)" id="template">
     <img src="/static/processed/86b2204b-8803-4f82-bebe-9e8fe991bb15.heic/preview.png" class="w-full max-h-[90%]"
       style="object-fit: cover" />
     <span class="w-full text-center" id="title">Title</span>
   </div>
+  <!-- END OF TEMPLATE -->
 </body>
 
 <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
 <script type="text/javascript">
   const notyf = new Notyf({ position: { x: "right", y: "top" } });
 
+  function handleDoubleClick(e) {
+    window.open(e.dataset.url, "_blank").focus()
+  }
+
   function handleClick(e) {
-    const customURL = e.id;
+    const customURL = e.dataset.url;
     navigator.clipboard
       .writeText(customURL)
       .then((x) => {
         notyf.success(`Copied URL to your clipboard`);
       })
-      .catch((e) => {
-        notyf.error("Couldn't copy to clipboard ):");
-        console.error(e)
-      });
   }
-
-
 
   Dropzone.options.myDropzone = {
     // Prevents Dropzone from uploading dropped files immediately
@@ -72,19 +74,16 @@
     uploadMultiple: false,
     parallelUploads: 5,
     maxFilesize: 100,
-    addRemoveLinks: true,
     accept(file, done) {
       if (!file.name.endsWith(".heic")) {
+        notyf.error("You can only upload .heic files for now")
         return done("Sorry we do not supported files other than .heic yet");
       }
       return done();
     },
-    uploadprogress: function (file, progress, bytesSent) {
-      // Display the progress
-      console.log(file, progress, bytesSent);
-    },
-    complete(file) {
-      console.log(file);
+    success(file) {
+      notyf.success("File upload was a success!")
+      this.removeFile(file);
     },
   };
 
@@ -98,10 +97,7 @@
         x.forEach((y, i) => {
           let copy;
           if (document.getElementById(y.id)) {
-            // If y was updated very recently remove it and rerender
-            // if (y.time)
             copy = document.getElementById(y.id)
-            // return
           } else {
             copy = template.cloneNode(true);
             final_location.appendChild(copy);
@@ -110,21 +106,20 @@
           copy.classList.remove("hidden");
           copy.id = y.id;
           copy.title = y.id;
+          copy.dataset.url = window.location.href + y.location
 
           const img = copy.childNodes[1];
           const span = copy.childNodes[3];
+          img.classList.remove("blur-sm")
 
           if (y.pending) {
             // Pending has the task id
-          }
-          else {
-            img.src = y.preview_url;
+            img.classList.add("blur-sm")
+            span.textContent = "This image is still being processed"
+          } else {
             span.textContent = y.name.substr(0, 10) + "....";
-
+            img.src = y.preview_url;
           }
-
-
-
         });
       });
   }
