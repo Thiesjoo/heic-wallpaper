@@ -1,8 +1,18 @@
 from datetime import datetime
 import json
 import os
+import time
 from uuid import uuid4
-from flask import Flask, jsonify, redirect, render_template, request, url_for
+from flask import (
+    Flask,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+    current_app,
+    g as app_ctx,
+)
 from config import AppConfig
 from workers.image_processor import handle_image
 from tasks import tasks
@@ -36,6 +46,24 @@ app.register_blueprint(tasks)
 @app.errorhandler(413)
 def too_large(e):
     return "File is too large. Please contact admin for manual upload", 413
+
+
+@app.before_request
+def logging_before():
+    # Store the start time for the request
+    app_ctx.start_time = time.perf_counter()
+
+
+@app.after_request
+def logging_after(response):
+    # Get total time in milliseconds
+    total_time = time.perf_counter() - app_ctx.start_time
+    time_in_ms = int(total_time * 1000)
+    # Log the time taken for the endpoint
+    current_app.logger.info(
+        "%s ms %s %s %s", time_in_ms, request.method, request.path, dict(request.args)
+    )
+    return response
 
 
 @app.route("/")

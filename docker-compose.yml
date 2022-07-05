@@ -1,15 +1,6 @@
 version: "3.9"
 
 services:
-  db:
-    image: postgres
-    volumes:
-      - ./data/db:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-
   web:
     container_name: web
     build:
@@ -19,13 +10,9 @@ services:
       - "5000:5000"
     depends_on:
       - redis
-      - db
     environment:
       - FLASK_ENV=development
       - FLASK_APP=app.py
-      - POSTGRES_NAME=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
     volumes:
       - ./api:/app
       - ./static:/static
