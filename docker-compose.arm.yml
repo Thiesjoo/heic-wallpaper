@@ -4,3 +4,5 @@ services:
   redis:
     container_name: redis
     image: bbilly1/rejson:v2.0.9
+    ports:
+      - "6379:6379"
