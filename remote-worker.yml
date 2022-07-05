@@ -1,11 +1,11 @@
 version: "3.9"
 
 services:
-  worker:
+  remote_worker:
     build:
       context: ./api
       target: watchdog
-    hostname: worker
+    hostname: remoteworker
     working_dir: /app
     environment:
       - BROKER_URL=redis://192.168.178.75:6379/0

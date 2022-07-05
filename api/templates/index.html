@@ -94,10 +94,10 @@
         const final_location = document.getElementById("content");
         const template = document.getElementById("template");
 
-        // const ids = new Set(final_location.childNodes.map(x => x.id))
-        // console.log(ids)
+        const ids = new Set([...final_location.childNodes].map(x => x.id))
 
         x.forEach((y, i) => {
+          ids.delete(y.id)
           let copy;
           if (document.getElementById(y.id)) {
             copy = document.getElementById(y.id)
@@ -124,6 +124,11 @@
             img.src = y.preview_url;
           }
         });
+
+        ids.forEach(y => {
+          console.log("ID:", y, "was in dom, but not in array")
+          document.getElementById(y).remove()
+        })
       });
   }
 
