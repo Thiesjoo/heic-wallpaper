@@ -1,11 +1,11 @@
-FROM python:3.10-slim as web
+FROM python:3.10-alpine as web
 
 WORKDIR /app
 
-RUN DEBIAN_FRONTEND=noninteractive apt update && apt -y install --no-install-recommends \
-  exiftool
-  
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache libffi-dev libheif-dev libde265-dev
+RUN apk add --no-cache build-base
+RUN apk add exiftool
+RUN pip3 install pyheif
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
