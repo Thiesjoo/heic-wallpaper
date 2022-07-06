@@ -32,7 +32,7 @@ services:
       - BROKER_URL=redis://redis:6379/0
     command: >
       watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- 
-      celery -A workers.image_processor worker --loglevel=info --autoscale=12,1
+      celery -A workers.image_processor worker --loglevel=info --autoscale=4,1
     volumes:
       - ./api:/app:ro
       - ./static:/static
