@@ -74,7 +74,7 @@
 
     if (user) {
       // Save in settings
-      notyf.success("Saved the setting into your profile")
+      updateWallpaperOnAccount(customURL)
     } else {
       window.open(customURL, "_blank").focus()
     }
@@ -136,7 +136,7 @@
           copy.classList.remove("hidden");
           copy.id = y.id;
           copy.title = y.id;
-          copy.dataset.url = window.location.href + y.location
+          copy.dataset.url = window.location.href + y.location.slice(1)
 
           const img = copy.childNodes[1];
           const span = copy.childNodes[3];
@@ -157,6 +157,41 @@
           document.getElementById(y).remove()
         })
       });
+  }
+
+  function updateWallpaperOnAccount(newURL) {
+    if (!user) {
+      return false
+    }
+    const myHeaders = new Headers();
+    myHeaders.append('pragma', 'no-cache');
+    myHeaders.append('cache-control', 'no-cache');
+    myHeaders.append("content-type", "application/json")
+
+    const fetchConfig = {
+      method: 'PATCH',
+      headers: myHeaders,
+      credentials: "include",
+      body: JSON.stringify({
+        backgroundURL: newURL
+      })
+    };
+
+    fetch("https://auth.thies.dev/api/settings/me", fetchConfig)
+      .then(x => {
+        if (x.status != 200) {
+          throw new Error(x.error)
+        }
+
+        return x.json()
+      })
+      .then(function (response) {
+        notyf.success("Succesfully updated wallpaper on your account!")
+        console.log(response)
+      }).catch(x => {
+        notyf.error("Something went wrong ):")
+        console.error(x)
+      })
   }
 
   async function whoami() {
