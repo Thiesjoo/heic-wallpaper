@@ -31,9 +31,12 @@
 
 <body>
   <header>
+    <div id="login_status" class="w-full text-right p-3 font-bolder">
+      Not logged in
+    </div>
     <form action="/upload" class="dropzone" id="my-dropzone" method="POST"></form>
   </header>
-  <h3 class="text-center text-xxl w-full">Get your dynamic wallpapers from here: <a
+  <h3 class="text-center text-xxl w-full">Get your dynamic wallpapers from here: <a class="underline text-emerald-600"
       href="https://dynamicwallpaper.club/gallery" target="_blank" rel="noreferrer">dynamicwallpaper.club</a> </h3>
   <section class="w-full mr-5 ml-5 flex justify-center flex-col">
     <h3 class="text-center text-xl text-emerald-300">All available wallpapers</h3>
@@ -44,8 +47,7 @@
   <!-- THIS IS TEMPLATE FOR ALL WALLPAPER DISPLAYS -->
   <div class="w-80 h-40 flex-col flex justify-center align-center border p-3 m-3 hidden" onclick="handleClick(this)"
     ondblclick="handleDoubleClick(this)" id="template">
-    <img src="/static/processed/86b2204b-8803-4f82-bebe-9e8fe991bb15.heic/preview.png" class="w-full max-h-[90%]"
-      style="object-fit: cover" />
+    <img src="" class="w-full max-h-[90%]" style="object-fit: cover" />
     <span class="w-full text-center" id="title">Title</span>
   </div>
   <!-- END OF TEMPLATE -->
@@ -54,18 +56,43 @@
 <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
 <script type="text/javascript">
   const notyf = new Notyf({ position: { x: "right", y: "top" } });
+  /**
+   * This weird curly brace thing is for jinja (Flask rendering engine)
+   * @type {{ "{{" }} name: string, uid: string, email: string } | undefined}
+   */
+  let user = undefined;
+
+
+  let timeout = null;
 
   function handleDoubleClick(e) {
-    window.open(e.dataset.url, "_blank").focus()
+    if (timeout) {
+      clearTimeout(timeout)
+      timeout = null
+    }
+    const customURL = e.dataset.url;
+
+    if (user) {
+      // Save in settings
+      notyf.success("Saved the setting into your profile")
+    } else {
+      window.open(customURL, "_blank").focus()
+    }
   }
 
   function handleClick(e) {
     const customURL = e.dataset.url;
-    navigator.clipboard
-      .writeText(customURL)
-      .then((x) => {
-        notyf.success(`Copied URL to your clipboard`);
-      })
+    if (timeout) {
+      return
+    }
+    timeout = setTimeout(() => {
+      timeout = null
+      navigator.clipboard
+        .writeText(customURL)
+        .then((x) => {
+          notyf.success(`Copied URL to your clipboard`);
+        })
+    }, 200)
   }
 
   Dropzone.options.myDropzone = {
@@ -132,8 +159,42 @@
       });
   }
 
+  async function whoami() {
+    const myHeaders = new Headers();
+    myHeaders.append('pragma', 'no-cache');
+    myHeaders.append('cache-control', 'no-cache');
+
+    const fetchConfig = {
+      method: 'GET',
+      headers: myHeaders,
+      credentials: "include"
+    };
+
+    await fetch("https://auth.thies.dev/auth/refresh/access", fetchConfig)
+
+    const test = await fetch("https://auth.thies.dev/api/users/me", fetchConfig)
+      .then(x => {
+        if (x.status != 200) {
+          throw new Error(x.error)
+        }
+
+        return x.json()
+      })
+      .then(function (response) {
+        const login_status = document.getElementById("login_status")
+        user = response;
+        login_status.textContent = `Logged in as: ${response.name} (${response.email})`
+        return true
+      }).catch(x => {
+        console.warn("User is not logged in ):")
+        return false
+      })
+  }
+
+  whoami()
+
   fetchAllWallpapers()
-  setInterval(fetchAllWallpapers, 1000)
+  setInterval(fetchAllWallpapers, 100000)
 </script>
 
 </html>
