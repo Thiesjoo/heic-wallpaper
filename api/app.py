@@ -160,16 +160,17 @@ def get_wallpaper(name: str):
     if not nowsecs:
         now = datetime.now().time()
         nowsecs = now.hour * 60 * 60 + now.minute * 60 + now.second
+    else:
+        # TODO: parse this as unix time
+        temptime = t
 
+    # TODO: This date parsing is prettttyyy weird
     last_one = times[-1]
     for time in times:
-        if float(time["t"]) * 60 * 60 * 24 > nowsecs:
-            if (
-                float(time["t"]) * 60 * 60 * 24 - nowsecs < 10
-            ):  # prevent floating errors or similar things
-                last_one = time
-            break
-        last_one = time
+        if nowsecs > float(time["t"]) * 60 * 60 * 24:
+            last_one = time
     index = last_one["i"]
+
+    print(times)
 
     return redirect(url_for("static", filename=f"processed/{name}/{index}.png"))
