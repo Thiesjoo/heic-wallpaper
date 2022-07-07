@@ -90,8 +90,9 @@ def get_wallpaper_config(fname):
     exif = get_exif(fname)
 
     if "H24" not in exif and "Solar" not in exif:
-        # TODO: Research more of heic spec
-        raise Exception("This is not a live wallpaper")
+        raise Exception(
+            "This is not a live wallpaper. We only support live wallpapers atm"
+        )
 
     if "Solar" in exif:
         data = exif["Solar"]

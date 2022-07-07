@@ -23,6 +23,7 @@ from database.redis import (
     WallpaperTypes,
     add_wallpaper,
     get_all_wallpapers,
+    get_single_wallpaper,
 )
 
 ALLOWED_EXTENSIONS = {"heic", "png", "jpg", "jpeg", "gif"}
@@ -122,8 +123,6 @@ def upload_new_wallpaper():
 
 @app.route("/wallpapers")
 def get_wallpapers():
-    # TODO: This should be fetched out of redis. Because name is only stored in data
-    # Returns a list of all available .heic wallpapers with identifiers?
     all_wallpaper_data = get_all_wallpapers()
     wallpapers = [
         {
@@ -145,17 +144,17 @@ def get_wallpapers():
 @app.route("/wallpaper/<string:name>")
 def get_wallpaper(name: str):
     if not name.endswith(".heic"):
-        # special logic?
+        # special logic? for custom PNG's
         assert False
 
-    if not os.path.exists(f"{AppConfig.PROCESSED_FOLDER}/{name}"):
-        return "Image does not exist", 404
+    wallpaper = get_single_wallpaper(name)
+    if type(wallpaper) == tuple:
+        return wallpaper
 
-    json_location = f"{AppConfig.PROCESSED_FOLDER}/{name}/data.json"
-    with open(json_location, "r") as f:
-        data = json.load(f)
+    if wallpaper is None:
+        return "This wallpaper is not in my system", 404
 
-        times = data["data"]
+    times = wallpaper["data"]
 
     nowsecs = request.args.get("time", type=int)
     if not nowsecs:
@@ -174,6 +173,3 @@ def get_wallpaper(name: str):
     index = last_one["i"]
 
     return redirect(url_for("static", filename=f"processed/{name}/{index}.png"))
-
-
-# Returns a URL (which nginx? should serve) for a specific name and a specific time

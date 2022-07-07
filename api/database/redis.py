@@ -47,8 +47,8 @@ class Wallpaper(TypedDict):
     date_created: int
     status: int  # WallpaperStatus
     type: int  # WallpaperTypes
-    data: Any  # TODO: Figure out how to type this
-    error: Any
+    data: Any
+    error: str
 
 
 def get_all_wallpapers() -> list[Wallpaper]:

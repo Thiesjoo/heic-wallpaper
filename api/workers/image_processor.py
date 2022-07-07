@@ -11,6 +11,7 @@ import sys
 from pyheif import HeifTopLevelImage, open_container, HeifFile
 from database.redis import (
     WallpaperStatus,
+    add_error_to_wallpaper,
     update_data_of_wallpaper,
     update_status_of_wallpaper,
 )
@@ -34,7 +35,6 @@ def finish(filename):
         os.remove(f"{AppConfig.UPLOAD_FOLDER}/{filename}")
     except:
         pass
-    # TODO: Remove partially processed files?
 
 
 def remove_all_data(filename):
@@ -118,6 +118,8 @@ def handle_image(self, name):
         update_data_of_wallpaper(name, times)
 
         json_location = f"{AppConfig.PROCESSED_FOLDER}/{name}/data.json"
+        # TODO: This must be in sync with redis to potentially have backup
+        # Also have to write a script that imports it into redis
         with open(json_location, "w") as f:
             json.dump(
                 {
@@ -132,11 +134,10 @@ def handle_image(self, name):
     except Exception as e:
         self.update_state(state="FAILED", meta=str(e))
         print("Something went wrong on processing image: ", e)
-        update_status_of_wallpaper(uuid, WallpaperStatus.ERROR)
-        add_error_to_wallpaper(uuid, str(e))
+        update_status_of_wallpaper(name, WallpaperStatus.ERROR)
+        add_error_to_wallpaper(name, str(e))
 
-        # remove_all_data(name)
+        remove_all_data(name)
         raise Ignore()
     finally:
-        # finish(name)
-        pass
+        finish(name)
