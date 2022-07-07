@@ -9,6 +9,11 @@ from celery.exceptions import Ignore
 
 import sys
 from pyheif import HeifTopLevelImage, open_container, HeifFile
+from database.redis import (
+    WallpaperStatus,
+    update_data_of_wallpaper,
+    update_status_of_wallpaper,
+)
 
 sys.path.append("..")
 
@@ -50,7 +55,7 @@ def generate_preview(name):
 
 
 @celery.task(bind=True)
-def handle_image(self, name, friendly_filename):
+def handle_image(self, name, uuid):
     try:
         # TODO: Check if file is heic:
         # Do all cool handling and database mapping
@@ -109,6 +114,8 @@ def handle_image(self, name, friendly_filename):
         result.get(disable_sync_subtasks=False)
 
         self.update_state(state="PENDING", meta=f"Storing JSON")
+        update_status_of_wallpaper(uuid, WallpaperStatus.READY)
+        update_data_of_wallpaper(uuid, times)
 
         json_location = f"{AppConfig.PROCESSED_FOLDER}/{name}/data.json"
         with open(json_location, "w") as f:
@@ -116,7 +123,7 @@ def handle_image(self, name, friendly_filename):
                 {
                     "time": int(time.time()),
                     "data": times,
-                    "original_name": friendly_filename,
+                    "original_name": uuid,
                 },
                 f,
             )
@@ -125,6 +132,9 @@ def handle_image(self, name, friendly_filename):
     except Exception as e:
         self.update_state(state="FAILED", meta=str(e))
         print("Something went wrong on processing image: ", e)
+        update_status_of_wallpaper(uuid, WallpaperStatus.ERROR)
+        # TODO: Set error in redis
+
         # remove_all_data(name)
         raise Ignore()
     finally:

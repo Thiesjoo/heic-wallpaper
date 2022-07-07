@@ -18,6 +18,12 @@ from workers.image_processor import handle_image
 from tasks import tasks
 from werkzeug.utils import secure_filename
 
+from database.redis import (
+    WallpaperStatus,
+    WallpaperTypes,
+    add_wallpaper,
+)
+
 ALLOWED_EXTENSIONS = {"heic", "png", "jpg", "jpeg", "gif"}
 
 
@@ -84,14 +90,30 @@ def upload_new_wallpaper():
     if file.filename == "" or not file:
         return "You didn't select a file", 400
     if file and allowed_file(file.filename):
-        new_filename = f"{str(uuid4())}.{get_extension(file.filename)}"
+        id = str(uuid4())
+        new_filename = f"{id}.{get_extension(file.filename)}"
         app.logger.info(f"Uploading new file with name {new_filename}")
 
         file.save(os.path.join(app.config["UPLOAD_FOLDER"], new_filename))
+
         app.logger.info(
             f"File should be uploaded {os.path.exists(f'{AppConfig.UPLOAD_FOLDER}/{new_filename}')}"
         )
-        task = handle_image.delay(new_filename, secure_filename(file.filename))
+
+        # TODO: handle redis here
+        old_name = secure_filename(file.filename)
+
+        add_wallpaper(
+            id,
+            {
+                "original_name": old_name,
+                "date_created": int(time.time()),
+                "status": WallpaperStatus.PROCESSING,
+                "type": WallpaperTypes.HEIC,
+            },
+        )
+
+        task = handle_image.delay(new_filename, id)
         return jsonify(
             {"taskid": url_for("tasks.single_task_status", task_id=task.id), "ok": True}
         )
