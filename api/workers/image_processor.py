@@ -55,7 +55,7 @@ def generate_preview(name):
 
 
 @celery.task(bind=True)
-def handle_image(self, name, uuid):
+def handle_image(self, name):
     try:
         # TODO: Check if file is heic:
         # Do all cool handling and database mapping
@@ -114,8 +114,8 @@ def handle_image(self, name, uuid):
         result.get(disable_sync_subtasks=False)
 
         self.update_state(state="PENDING", meta=f"Storing JSON")
-        update_status_of_wallpaper(uuid, WallpaperStatus.READY)
-        update_data_of_wallpaper(uuid, times)
+        update_status_of_wallpaper(name, WallpaperStatus.READY)
+        update_data_of_wallpaper(name, times)
 
         json_location = f"{AppConfig.PROCESSED_FOLDER}/{name}/data.json"
         with open(json_location, "w") as f:
@@ -123,7 +123,7 @@ def handle_image(self, name, uuid):
                 {
                     "time": int(time.time()),
                     "data": times,
-                    "original_name": uuid,
+                    "original_name": name,
                 },
                 f,
             )
@@ -133,7 +133,7 @@ def handle_image(self, name, uuid):
         self.update_state(state="FAILED", meta=str(e))
         print("Something went wrong on processing image: ", e)
         update_status_of_wallpaper(uuid, WallpaperStatus.ERROR)
-        # TODO: Set error in redis
+        add_error_to_wallpaper(uuid, str(e))
 
         # remove_all_data(name)
         raise Ignore()

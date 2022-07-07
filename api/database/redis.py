@@ -52,13 +52,26 @@ class Wallpaper(TypedDict):
 
 
 def get_all_wallpapers() -> list[Wallpaper]:
-    return client.zrange(WALLPAPER_LOCATION, 0, -1, withscores=True)
+    all_ids = client.zrange(WALLPAPER_LOCATION, 0, -1)
+    all_objs = [
+        {
+            **client.json().get(WALLPAPER_UUID_PREFIX + (uuid.decode("UTF-8"))),
+            "uuid": uuid.decode("UTF-8"),
+        }
+        for uuid in all_ids
+    ]
+
+    return all_objs
     # Return every wallpaper
 
 
 def get_single_wallpaper(uuid: str) -> Wallpaper | Tuple[str, int]:
     temp: Wallpaper = client.json().get(WALLPAPER_UUID_PREFIX + uuid)
-    if temp["status"] == WallpaperStatus.PROCESSING:
+    if (
+        temp is not None
+        and "status" in temp
+        and temp["status"] == WallpaperStatus.PROCESSING
+    ):
         # 202 status code when result is still processing
         return "Still processing", 202
     # Should return URL, preview URL and data
@@ -74,9 +87,13 @@ def add_wallpaper(uuid: str, wallpaper: Wallpaper):
     client.zadd(WALLPAPER_LOCATION, {uuid: wallpaper["date_created"]})
 
 
-def update_status_of_wallpaper(uuid: str, status: str):
+def update_status_of_wallpaper(uuid: str, status: int):
     client.json().set(WALLPAPER_UUID_PREFIX + uuid, ".status", status)
 
 
 def update_data_of_wallpaper(uuid: str, data: Any):
     client.json().set(WALLPAPER_UUID_PREFIX + uuid, ".data", data)
+
+
+def add_error_to_wallpaper(uuid: str, err: str):
+    client.json().set(WALLPAPER_UUID_PREFIX + uuid, ".error", err)

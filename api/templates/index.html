@@ -147,7 +147,7 @@
             img.classList.add("blur-sm")
             span.textContent = "This image is still being processed"
           } else {
-            span.textContent = y.name.substr(0, 10) + "....";
+            span.textContent = y.name.substr(0, 20) + (y.name.length > 20 ? "...." : "");
             img.src = y.preview_url;
           }
         });

@@ -22,6 +22,7 @@ from database.redis import (
     WallpaperStatus,
     WallpaperTypes,
     add_wallpaper,
+    get_all_wallpapers,
 )
 
 ALLOWED_EXTENSIONS = {"heic", "png", "jpg", "jpeg", "gif"}
@@ -100,11 +101,10 @@ def upload_new_wallpaper():
             f"File should be uploaded {os.path.exists(f'{AppConfig.UPLOAD_FOLDER}/{new_filename}')}"
         )
 
-        # TODO: handle redis here
         old_name = secure_filename(file.filename)
 
         add_wallpaper(
-            id,
+            new_filename,
             {
                 "original_name": old_name,
                 "date_created": int(time.time()),
@@ -113,7 +113,7 @@ def upload_new_wallpaper():
             },
         )
 
-        task = handle_image.delay(new_filename, id)
+        task = handle_image.delay(new_filename)
         return jsonify(
             {"taskid": url_for("tasks.single_task_status", task_id=task.id), "ok": True}
         )
@@ -124,16 +124,20 @@ def upload_new_wallpaper():
 def get_wallpapers():
     # TODO: This should be fetched out of redis. Because name is only stored in data
     # Returns a list of all available .heic wallpapers with identifiers?
+    all_wallpaper_data = get_all_wallpapers()
     wallpapers = [
         {
-            "name": f.name,
-            "id": f.name,
-            "location": url_for("get_wallpaper", name=f.name),
+            "name": wallpaper["original_name"],
+            "pending": not wallpaper["status"] == WallpaperStatus.READY,
+            "id": wallpaper["uuid"],
+            "location": url_for("get_wallpaper", name=wallpaper["uuid"]),
             "preview_url": url_for(
-                "static", filename=f"processed/{f.name}/preview.png"
+                "static", filename=f"processed/{wallpaper['uuid']}/preview.png"
             ),
+            "status": wallpaper["status"],
+            "error": wallpaper["error"] if "error" in wallpaper else None,
         }
-        for f in os.scandir(f"{AppConfig.PROCESSED_FOLDER}")
+        for wallpaper in all_wallpaper_data
     ]
     return jsonify(wallpapers)
 
