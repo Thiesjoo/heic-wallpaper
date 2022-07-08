@@ -1,4 +1,8 @@
+import os
+import shutil
 from flask import Blueprint, jsonify, url_for
+from database.redis import WallpaperStatus, get_all_wallpapers, remove_single_wallpaper
+from config import AppConfig
 from workers.image_processor import handle_image, celery
 from celery.result import AsyncResult
 from celery.app.control import Inspect
@@ -38,7 +42,7 @@ def revoke_task(task_id):
     task: AsyncResult = handle_image.AsyncResult(task_id)
 
     if task.state == "PENDING":
-        task.revoke()
+        task.revoke(terminate=True)
         response = {
             "queue_state": task.state,
             "status": task.info,
@@ -47,3 +51,35 @@ def revoke_task(task_id):
     else:
         response = {"queue_state": task.state, "result": task.wait()}
     return jsonify(response)
+
+
+@tasks.route("/gc")
+def garbage_collect():
+    tasks: Inspect = celery.control.inspect()
+
+    total_active_tasks = 0
+    sch = tasks.scheduled()
+    total_active_tasks += sum([len(i) for i in sch.values()]) if sch else 0
+    sch = tasks.active()
+    total_active_tasks += sum([len(i) for i in sch.values()]) if sch else 0
+    sch = tasks.reserved()
+    total_active_tasks += sum([len(i) for i in sch.values()]) if sch else 0
+
+    assert total_active_tasks == 0
+
+    print("Going to garbage collect")
+
+    shutil.rmtree(f"{AppConfig.UPLOAD_FOLDER}/")
+    os.mkdir(f"{AppConfig.UPLOAD_FOLDER}/")
+
+    all_wallpapers = get_all_wallpapers()
+    removed = 0
+    for wall in all_wallpapers:
+        if not wall["status"] == WallpaperStatus.READY:
+            print("This wallpaper errored somewhere:", wall)
+            shutil.rmtree(
+                f"{AppConfig.PROCESSED_FOLDER}/{wall['uuid']}", ignore_errors=True
+            )
+            remove_single_wallpaper(wall["uuid"])
+            removed += 1
+    return f"Removed {removed} folders", 200

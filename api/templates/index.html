@@ -117,6 +117,9 @@
       notyf.success("File upload was a success!")
       this.removeFile(file);
     },
+    queuecomplete() {
+      fetchAllWallpapers()
+    }
   };
 
   function fetchAllWallpapers() {
@@ -234,7 +237,7 @@
   whoami()
 
   fetchAllWallpapers()
-  setInterval(fetchAllWallpapers, 100000)
+  setInterval(fetchAllWallpapers, 5 * 1000)
 </script>
 
 </html>

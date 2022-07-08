@@ -115,7 +115,7 @@ def upload_new_wallpaper():
             },
         )
 
-        task = handle_image.delay(new_filename)
+        task = handle_image.delay(new_filename, old_name)
         return jsonify(
             {"taskid": url_for("tasks.single_task_status", task_id=task.id), "ok": True}
         )

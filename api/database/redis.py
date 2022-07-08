@@ -62,7 +62,6 @@ def get_all_wallpapers() -> list[Wallpaper]:
     ]
 
     return all_objs
-    # Return every wallpaper
 
 
 def get_single_wallpaper(uuid: str) -> Wallpaper | Tuple[str, int]:
@@ -76,6 +75,11 @@ def get_single_wallpaper(uuid: str) -> Wallpaper | Tuple[str, int]:
         return "Still processing", 202
     # Should return URL, preview URL and data
     return {**temp, "uuid": uuid}
+
+
+def remove_single_wallpaper(uuid: str):
+    client.json().delete(WALLPAPER_UUID_PREFIX + uuid)
+    client.zrem(WALLPAPER_LOCATION, uuid)
 
 
 def add_wallpaper(uuid: str, wallpaper: Wallpaper):
