@@ -165,6 +165,7 @@ def get_wallpaper(name: str):
         temptime = t
 
     # TODO: This date parsing is prettttyyy weird
+    # https://github.com/mczachurski/wallpapper
     last_one = times[-1]
     for time in times:
         if nowsecs > float(time["t"]) * 60 * 60 * 24:
