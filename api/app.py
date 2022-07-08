@@ -19,6 +19,7 @@ from tasks import tasks
 from werkzeug.utils import secure_filename
 
 from database.redis import (
+    Wallpaper,
     WallpaperStatus,
     WallpaperTypes,
     add_wallpaper,
@@ -121,24 +122,38 @@ def upload_new_wallpaper():
     return "This is not a valid extension", 400
 
 
+def wallpaper_mapper(wallpaper: Wallpaper, extended=False):
+    to_return = {
+        "name": wallpaper["original_name"],
+        "pending": not wallpaper["status"] == WallpaperStatus.READY,
+        "id": wallpaper["uuid"],
+        "location": url_for("get_wallpaper", name=wallpaper["uuid"]),
+        "preview_url": url_for(
+            "static", filename=f"processed/{wallpaper['uuid']}/preview.png"
+        ),
+        "status": wallpaper["status"],
+        "error": wallpaper["error"] if "error" in wallpaper else None,
+    }
+    if extended:
+        to_return["data"] = wallpaper["data"]
+    return to_return
+
+
 @app.route("/wallpapers")
 def get_wallpapers():
     all_wallpaper_data = get_all_wallpapers()
-    wallpapers = [
-        {
-            "name": wallpaper["original_name"],
-            "pending": not wallpaper["status"] == WallpaperStatus.READY,
-            "id": wallpaper["uuid"],
-            "location": url_for("get_wallpaper", name=wallpaper["uuid"]),
-            "preview_url": url_for(
-                "static", filename=f"processed/{wallpaper['uuid']}/preview.png"
-            ),
-            "status": wallpaper["status"],
-            "error": wallpaper["error"] if "error" in wallpaper else None,
-        }
-        for wallpaper in all_wallpaper_data
-    ]
+    wallpapers = [wallpaper_mapper(wallpaper) for wallpaper in all_wallpaper_data]
     return jsonify(wallpapers)
+
+
+@app.route("/wallpaper/<string:name>/preview")
+def render_wallpaper_preview(name: str):
+    return render_template("wallpaper.html")
+
+
+@app.route("/wallpaper/<string:name>/details")
+def get_wallpaper_information(name: str):
+    return wallpaper_mapper(get_single_wallpaper(name), extended=True)
 
 
 @app.route("/wallpaper/<string:name>")
@@ -156,13 +171,8 @@ def get_wallpaper(name: str):
 
     times = wallpaper["data"]
 
-    nowsecs = request.args.get("time", type=int)
-    if not nowsecs:
-        now = datetime.now().time()
-        nowsecs = now.hour * 60 * 60 + now.minute * 60 + now.second
-    else:
-        # TODO: parse this as unix time
-        temptime = t
+    now = datetime.now().time()
+    nowsecs = now.hour * 60 * 60 + now.minute * 60 + now.second
 
     # TODO: This date parsing is prettttyyy weird
     # https://github.com/mczachurski/wallpapper
@@ -171,7 +181,5 @@ def get_wallpaper(name: str):
         if nowsecs > float(time["t"]) * 60 * 60 * 24:
             last_one = time
     index = last_one["i"]
-
-    print(times)
 
     return redirect(url_for("static", filename=f"processed/{name}/{index}.png"))

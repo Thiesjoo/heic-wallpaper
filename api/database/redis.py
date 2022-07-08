@@ -75,15 +75,13 @@ def get_single_wallpaper(uuid: str) -> Wallpaper | Tuple[str, int]:
         # 202 status code when result is still processing
         return "Still processing", 202
     # Should return URL, preview URL and data
-    return temp
+    return {**temp, "uuid": uuid}
 
 
 def add_wallpaper(uuid: str, wallpaper: Wallpaper):
-    print(wallpaper)
     client.json().set(
         WALLPAPER_UUID_PREFIX + uuid, Path.root_path(), wallpaper, nx=True
     )
-    print(wallpaper["date_created"])
     client.zadd(WALLPAPER_LOCATION, {uuid: wallpaper["date_created"]})
 
 

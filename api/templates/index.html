@@ -44,8 +44,9 @@
     </div>
     <form action="/upload" class="dropzone" id="my-dropzone" method="POST"></form>
   </header>
-  <h3 class="text-center text-xxl w-full">Get your dynamic wallpapers from here: <a class="underline text-emerald-600"
+  <h3 class="text-center text-xl w-full">Get your dynamic wallpapers from here: <a class="underline text-emerald-600"
       href="https://dynamicwallpaper.club/gallery" target="_blank" rel="noreferrer">dynamicwallpaper.club</a> </h3>
+  <h4 class="text-center text-md w-full m-2">Single click to copy url, double click to open in preview</h4>
   <section class="w-full mr-5 ml-5 flex justify-center flex-col">
     <h3 class="text-center text-xl text-emerald-300">All available wallpapers</h3>
     <div id="content" class="w-full h-full flex flex-wrap"></div>
@@ -80,12 +81,8 @@
     }
     const customURL = e.dataset.url;
 
-    if (user) {
-      // Save in settings
-      updateWallpaperOnAccount(customURL)
-    } else {
-      window.open(customURL, "_blank").focus()
-    }
+
+    window.open(customURL, "_blank").focus()
   }
 
   function handleClick(e) {
@@ -98,7 +95,7 @@
       navigator.clipboard
         .writeText(customURL)
         .then((x) => {
-          notyf.success(`Copied URL to your clipboard`);
+          notyf.success(`Copied URL of live wallpaper to your clipboard`);
         })
     }, 200)
   }
@@ -144,7 +141,7 @@
           copy.classList.remove("hidden");
           copy.id = y.id;
           copy.title = y.id;
-          copy.dataset.url = window.location.href + y.location.slice(1)
+          copy.dataset.url = window.location.href + y.location.slice(1) + "/preview"
 
           const img = copy.childNodes[1];
           const span = copy.childNodes[3];
@@ -155,7 +152,7 @@
             img.classList.add("blur-sm")
             span.textContent = "This image is still being processed"
           } else {
-            span.textContent = y.name.substr(0, 20) + (y.name.length > 20 ? "...." : "");
+            span.textContent = y.name.substr(0, 30) + (y.name.length > 30 ? "...." : "");
             img.src = y.preview_url;
           }
         });
