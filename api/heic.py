@@ -16,7 +16,6 @@ def get_exif(fname):
     """
     args = ["exiftool", fname]
     r = subprocess.run(args, stdout=subprocess.PIPE)
-    # TODO: Error handling
     output = r.stdout.decode("utf-8")
     return {
         line.split(":")[0].strip(): line.split(":")[1].strip()
@@ -80,8 +79,6 @@ def generate_normal_image(fname, idx):
     loaded_img.thumbnail((3840, 2160))
     loaded_img.save(
         f"{AppConfig.PROCESSED_FOLDER}/{fname}/{idx}.png",
-        quality=85,
-        optimize=True,
     )
     loaded_img.close()
 

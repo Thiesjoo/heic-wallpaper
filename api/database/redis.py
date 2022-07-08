@@ -66,11 +66,10 @@ def get_all_wallpapers() -> list[Wallpaper]:
 
 def get_single_wallpaper(uuid: str) -> Wallpaper | Tuple[str, int]:
     temp: Wallpaper = client.json().get(WALLPAPER_UUID_PREFIX + uuid)
-    if (
-        temp is not None
-        and "status" in temp
-        and temp["status"] == WallpaperStatus.PROCESSING
-    ):
+    if temp is None:
+        return "Wallpaper not found", 404
+
+    if "status" in temp and temp["status"] == WallpaperStatus.PROCESSING:
         # 202 status code when result is still processing
         return "Still processing", 202
     # Should return URL, preview URL and data

@@ -174,7 +174,6 @@ def get_wallpaper(name: str):
     now = datetime.now().time()
     nowsecs = now.hour * 60 * 60 + now.minute * 60 + now.second
 
-    # TODO: This date parsing is prettttyyy weird
     # https://github.com/mczachurski/wallpapper
     last_one = times[-1]
     for time in times:
