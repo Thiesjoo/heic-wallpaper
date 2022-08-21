@@ -15,7 +15,7 @@ from flask import (
 )
 from config import AppConfig
 from workers.image_processor import handle_image
-from tasks import tasks
+from tasks import amount_of_pending_tasks, tasks
 from werkzeug.utils import secure_filename
 
 from database.redis import (
@@ -80,6 +80,28 @@ def logging_after(response):
 @app.route("/")
 def index():
     return render_template("index.html")
+
+
+@app.route("/fixupredis")
+def fixup_redis():
+    if amount_of_pending_tasks() != 0:
+        return "There are still pending tasks, please wait a bit", 409
+
+    for filename in os.scandir(AppConfig.PROCESSED_FOLDER):
+        if not filename.is_dir():
+            app.logger.warn(f"Non file found inside processed dir: {filename.path}")
+            continue
+        (_, status) = get_single_wallpaper(filename.name)
+        app.logger.info(f"Reimporting file: {filename.name}")
+        if status == 200:
+            app.logger.info("Already exists in redis")
+            continue
+
+        f = open(f"{filename.path}/data.json")
+        data = json.loads(f.read())
+
+        add_wallpaper(filename.name, data)
+    return "Redis is now in sync with the file system!"
 
 
 @app.route("/upload", methods=["POST"])

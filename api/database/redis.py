@@ -73,7 +73,7 @@ def get_single_wallpaper(uuid: str) -> Wallpaper | Tuple[str, int]:
         # 202 status code when result is still processing
         return "Still processing", 202
     # Should return URL, preview URL and data
-    return {**temp, "uuid": uuid}
+    return {**temp, "uuid": uuid}, 200
 
 
 def remove_single_wallpaper(uuid: str):

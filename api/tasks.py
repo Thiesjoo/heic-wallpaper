@@ -53,8 +53,7 @@ def revoke_task(task_id):
     return jsonify(response)
 
 
-@tasks.route("/gc")
-def garbage_collect():
+def amount_of_pending_tasks():
     tasks: Inspect = celery.control.inspect()
 
     total_active_tasks = 0
@@ -64,8 +63,13 @@ def garbage_collect():
     total_active_tasks += sum([len(i) for i in sch.values()]) if sch else 0
     sch = tasks.reserved()
     total_active_tasks += sum([len(i) for i in sch.values()]) if sch else 0
+    return total_active_tasks
 
-    assert total_active_tasks == 0
+
+@tasks.route("/gc")
+def garbage_collect():
+
+    assert amount_of_pending_tasks() == 0
 
     print("Going to garbage collect")
 
