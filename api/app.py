@@ -91,9 +91,9 @@ def fixup_redis():
         if not filename.is_dir():
             app.logger.warn(f"Non file found inside processed dir: {filename.path}")
             continue
-        (_, status) = get_single_wallpaper(filename.name)
+        org = get_single_wallpaper(filename.name)
         app.logger.info(f"Reimporting file: {filename.name}")
-        if status == 200:
+        if type(org) == tuple:
             app.logger.info("Already exists in redis")
             continue
 
