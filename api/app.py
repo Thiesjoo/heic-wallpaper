@@ -93,7 +93,7 @@ def fixup_redis():
             continue
         org = get_single_wallpaper(filename.name)
         app.logger.info(f"Reimporting file: {filename.name}")
-        if type(org) == tuple:
+        if not (type(org) == tuple):
             app.logger.info("Already exists in redis")
             continue
 
