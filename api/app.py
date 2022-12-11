@@ -106,6 +106,10 @@ def fixup_redis():
 
 @app.route("/upload", methods=["POST"])
 def upload_new_wallpaper():
+    # Check if role is developer in header X-role
+    if request.headers.get("X-role") != "developer":
+        return "You are not allowed to upload wallpapers", 403
+
     # check if the post request has the file part
     if "file" not in request.files:
         return "You are missing the file", 400
@@ -182,7 +186,7 @@ def get_wallpaper_information(name: str):
 def get_wallpaper(name: str):
     if not name.endswith(".heic"):
         # special logic? for custom PNG's
-        assert False
+        return "Not implemented yet", 501
 
     wallpaper = get_single_wallpaper(name)
     if type(wallpaper) == tuple:

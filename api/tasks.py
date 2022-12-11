@@ -68,8 +68,8 @@ def amount_of_pending_tasks():
 
 @tasks.route("/gc")
 def garbage_collect():
-
-    assert amount_of_pending_tasks() == 0
+    if amount_of_pending_tasks() > 0:
+        return "There are still tasks pending", 400
 
     print("Going to garbage collect")
 
