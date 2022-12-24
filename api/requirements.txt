@@ -5,3 +5,6 @@ pyheif
 # Worker things
 Celery
 Redis
+
+# Sentry
+sentry-sdk[flask]
