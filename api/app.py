@@ -27,6 +27,21 @@ from database.redis import (
     get_single_wallpaper,
 )
 
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
+
+sentry_sdk.init(
+    dsn="https://169d60844720489392d6fa7c6d33215f@o4504384319258624.ingest.sentry.io/4504384322600963",
+    integrations=[
+        FlaskIntegration(),
+    ],
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
+    traces_sample_rate=1.0,
+)
+
+
 ALLOWED_EXTENSIONS = {"heic", "png", "jpg", "jpeg", "gif"}
 
 
