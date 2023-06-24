@@ -2,242 +2,258 @@
 <html>
 
 <head>
-  <title>File Upload</title>
+    <title>File Upload</title>
 
-  <!-- Dropping files -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.1/min/dropzone.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.1/min/dropzone.min.css" />
+    <!-- Dropping files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.1/min/dropzone.min.js"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.1/min/dropzone.min.css" />
 
-  <!-- Styling the page -->
-  <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Styling the page -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Toast notifications -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+    <!-- Toast notifications -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
 
 
-  <style>
-    body,
-    html {
-      margin: 0;
-      padding: 0;
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
 
-      overflow-x: hidden;
-    }
+            overflow-x: hidden;
+        }
 
-    .dropzone {
-      box-shadow: 0px 2px 20px 0px #f2f2f2;
-      border: 1px dashed #c0ccda;
-      padding: 60x;
-      border-radius: 10px;
-      background-color: #fbfdff;
-      margin-left: 15px;
-      margin-bottom: 15px;
-      margin-top: 15px;
-    }
-  </style>
+        .dropzone {
+            box-shadow: 0px 2px 20px 0px #f2f2f2;
+            border: 1px dashed #c0ccda;
+            padding: 60x;
+            border-radius: 10px;
+            background-color: #fbfdff;
+            margin-left: 15px;
+            margin-bottom: 15px;
+            margin-top: 15px;
+        }
+    </style>
 </head>
 
 <body>
-  <header>
-    <div id="login_status" class="w-full text-right p-3 font-bolder">
-      Not logged in
-    </div>
-    <form action="/upload" class="dropzone" id="my-dropzone" method="POST"></form>
-  </header>
-  <h3 class="text-center text-xl w-full">Get your dynamic wallpapers from here: <a class="underline text-emerald-600"
-      href="https://dynamicwallpaper.club/gallery" target="_blank" rel="noreferrer">dynamicwallpaper.club</a> </h3>
-  <h4 class="text-center text-md w-full m-2">Single click to copy url, double click to open in preview</h4>
-  <section class="w-full mr-5 ml-5 flex justify-center flex-col">
-    <h3 class="text-center text-xl text-emerald-300">All available wallpapers</h3>
-    <div id="content" class="w-full h-full flex flex-wrap"></div>
-  </section>
-  <footer class="absolute bottom-0 p-4 w-full justify-center flex">Thies Nieborg</footer>
+    <header>
+        <div id="login_status"
+             class="w-full text-right p-3 font-bolder">
+            Not logged in
+        </div>
+        <form action="/upload"
+              class="dropzone"
+              id="my-dropzone"
+              method="POST"></form>
+    </header>
+    <h3 class="text-center text-xl w-full">Get your dynamic wallpapers from here: <a class="underline text-emerald-600"
+           href="https://dynamicwallpaper.club/gallery"
+           target="_blank"
+           rel="noreferrer">dynamicwallpaper.club</a> </h3>
+    <h4 class="text-center text-md w-full m-2">Single click to copy url, double click to open in preview</h4>
+    <section class="w-full mr-5 ml-5 flex justify-center flex-col">
+        <h3 class="text-center text-xl text-emerald-300">All available wallpapers</h3>
+        <div id="content"
+             class="w-full h-full flex flex-wrap"></div>
+    </section>
+    <footer class="absolute bottom-0 p-4 w-full justify-center flex">Thies Nieborg</footer>
 
-  <!-- THIS IS TEMPLATE FOR ALL WALLPAPER DISPLAYS -->
-  <div class="w-80 h-40 flex-col flex justify-center align-center border p-3 m-3 hidden" onclick="handleClick(this)"
-    ondblclick="handleDoubleClick(this)" id="template">
-    <img src="" class="w-full max-h-[90%]" style="object-fit: cover" />
-    <span class="w-full text-center" id="title">Title</span>
-  </div>
-  <!-- END OF TEMPLATE -->
+    <!-- THIS IS TEMPLATE FOR ALL WALLPAPER DISPLAYS -->
+    <div class="w-80 h-40 flex-col flex justify-center align-center border p-3 m-3 hidden"
+         onclick="handleClick(this)"
+         ondblclick="handleDoubleClick(this)"
+         id="template">
+        <img src=""
+             class="w-full max-h-[90%]"
+             style="object-fit: cover" />
+        <span class="w-full text-center"
+              id="title">Title</span>
+
+        <!-- Open button -->
+
+        <!-- Select button -->
+    </div>
+    <!-- END OF TEMPLATE -->
 </body>
 
 <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
 <script type="text/javascript">
-  const notyf = new Notyf({ position: { x: "right", y: "top" } });
-  /**
-   * This weird curly brace thing is for jinja (Flask rendering engine)
-   * @type {{ "{{" }} name: string, uid: string, email: string } | undefined}
-   */
-  let user = undefined;
+    const notyf = new Notyf({ position: { x: "right", y: "top" } });
+    /**
+     * This weird curly brace thing is for jinja (Flask rendering engine)
+     * @type {{ "{{" }} name: string, uid: string, email: string } | undefined}
+     */
+    let user = undefined;
 
 
-  let timeout = null;
+    let timeout = null;
 
-  function handleDoubleClick(e) {
-    if (timeout) {
-      clearTimeout(timeout)
-      timeout = null
+    function handleDoubleClick(e) {
+        if (timeout) {
+            clearTimeout(timeout)
+            timeout = null
+        }
+        const customURL = e.dataset.url;
+
+
+        window.open(customURL, "_blank").focus()
     }
-    const customURL = e.dataset.url;
 
-
-    window.open(customURL, "_blank").focus()
-  }
-
-  function handleClick(e) {
-    const customURL = e.dataset.url;
-    if (timeout) {
-      return
+    function handleClick(e) {
+        const customURL = e.dataset.url;
+        if (timeout) {
+            return
+        }
+        timeout = setTimeout(() => {
+            timeout = null
+            navigator.clipboard
+                .writeText(customURL)
+                .then((x) => {
+                    notyf.success(`Copied URL of live wallpaper to your clipboard`);
+                })
+        }, 200)
     }
-    timeout = setTimeout(() => {
-      timeout = null
-      navigator.clipboard
-        .writeText(customURL)
-        .then((x) => {
-          notyf.success(`Copied URL of live wallpaper to your clipboard`);
-        })
-    }, 200)
-  }
 
-  Dropzone.options.myDropzone = {
-    // Prevents Dropzone from uploading dropped files immediately
-    autoProcessQueue: true,
-    uploadMultiple: false,
-    parallelUploads: 5,
-    maxFilesize: 100,
-    accept(file, done) {
-      if (!file.name.endsWith(".heic")) {
-        notyf.error("You can only upload .heic files for now")
-        return done("Sorry we do not supported files other than .heic yet");
-      }
-      return done();
-    },
-    success(file) {
-      notyf.success("File upload was a success!")
-      this.removeFile(file);
-    },
-    queuecomplete() {
-      fetchAllWallpapers()
-    }
-  };
-
-  function fetchAllWallpapers() {
-    fetch("/wallpapers")
-      .then((x) => x.json())
-      .then((x) => {
-        const final_location = document.getElementById("content");
-        const template = document.getElementById("template");
-
-        const ids = new Set([...final_location.childNodes].map(x => x.id))
-
-        x.forEach((y, i) => {
-          ids.delete(y.id)
-          let copy;
-          if (document.getElementById(y.id)) {
-            copy = document.getElementById(y.id)
-          } else {
-            copy = template.cloneNode(true);
-            final_location.appendChild(copy);
-          }
-
-          copy.classList.remove("hidden");
-          copy.id = y.id;
-          copy.title = y.id;
-          copy.dataset.url = window.location.href + y.location.slice(1) + "/preview"
-
-          const img = copy.childNodes[1];
-          const span = copy.childNodes[3];
-          img.classList.remove("blur-sm")
-
-          if (y.pending) {
-            // Pending has the task id
-            img.classList.add("blur-sm")
-            span.textContent = "This image is still being processed"
-          } else {
-            span.textContent = y.name.substr(0, 30) + (y.name.length > 30 ? "...." : "");
-            img.src = y.preview_url;
-          }
-        });
-
-        ids.forEach(y => {
-          console.log("ID:", y, "was in dom, but not in array")
-          document.getElementById(y).remove()
-        })
-      });
-  }
-
-  function updateWallpaperOnAccount(newURL) {
-    if (!user) {
-      return false
-    }
-    const myHeaders = new Headers();
-    myHeaders.append('pragma', 'no-cache');
-    myHeaders.append('cache-control', 'no-cache');
-    myHeaders.append("content-type", "application/json")
-
-    const fetchConfig = {
-      method: 'PATCH',
-      headers: myHeaders,
-      credentials: "include",
-      body: JSON.stringify({
-        backgroundURL: newURL
-      })
+    Dropzone.options.myDropzone = {
+        // Prevents Dropzone from uploading dropped files immediately
+        autoProcessQueue: true,
+        uploadMultiple: false,
+        parallelUploads: 5,
+        maxFilesize: 100,
+        accept(file, done) {
+            if (!file.name.endsWith(".heic")) {
+                notyf.error("You can only upload .heic files for now")
+                return done("Sorry we do not supported files other than .heic yet");
+            }
+            return done();
+        },
+        success(file) {
+            notyf.success("File upload was a success!")
+            this.removeFile(file);
+        },
+        queuecomplete() {
+            fetchAllWallpapers()
+        }
     };
 
-    fetch("https://auth.thies.dev/api/settings/me", fetchConfig)
-      .then(x => {
-        if (x.status != 200) {
-          throw new Error(x.error)
+    function fetchAllWallpapers() {
+        fetch("/wallpapers")
+            .then((x) => x.json())
+            .then((x) => {
+                const final_location = document.getElementById("content");
+                const template = document.getElementById("template");
+
+                const ids = new Set([...final_location.childNodes].map(x => x.id))
+
+                x.forEach((y, i) => {
+                    ids.delete(y.id)
+                    let copy;
+                    if (document.getElementById(y.id)) {
+                        copy = document.getElementById(y.id)
+                    } else {
+                        copy = template.cloneNode(true);
+                        final_location.appendChild(copy);
+                    }
+
+                    copy.classList.remove("hidden");
+                    copy.id = y.id;
+                    copy.title = y.id;
+                    copy.dataset.url = window.location.href + y.location.slice(1) + "/preview"
+
+                    const img = copy.childNodes[1];
+                    const span = copy.childNodes[3];
+                    img.classList.remove("blur-sm")
+
+                    if (y.pending) {
+                        // Pending has the task id
+                        img.classList.add("blur-sm")
+                        span.textContent = "This image is still being processed"
+                    } else {
+                        span.textContent = y.name.substr(0, 30) + (y.name.length > 30 ? "...." : "");
+                        img.src = y.preview_url;
+                    }
+                });
+
+                ids.forEach(y => {
+                    console.log("ID:", y, "was in dom, but not in array")
+                    document.getElementById(y).remove()
+                })
+            });
+    }
+
+    function updateWallpaperOnAccount(newURL) {
+        if (!user) {
+            return false
         }
+        const myHeaders = new Headers();
+        myHeaders.append('pragma', 'no-cache');
+        myHeaders.append('cache-control', 'no-cache');
+        myHeaders.append("content-type", "application/json")
 
-        return x.json()
-      })
-      .then(function (response) {
-        notyf.success("Succesfully updated wallpaper on your account!")
-        console.log(response)
-      }).catch(x => {
-        notyf.error("Something went wrong ):")
-        console.error(x)
-      })
-  }
+        const fetchConfig = {
+            method: 'PATCH',
+            headers: myHeaders,
+            credentials: "include",
+            body: JSON.stringify({
+                backgroundURL: newURL
+            })
+        };
 
-  async function whoami() {
-    const myHeaders = new Headers();
-    myHeaders.append('pragma', 'no-cache');
-    myHeaders.append('cache-control', 'no-cache');
+        fetch("https://auth.thies.dev/api/settings/me", fetchConfig)
+            .then(x => {
+                if (x.status != 200) {
+                    throw new Error(x.error)
+                }
 
-    const fetchConfig = {
-      method: 'GET',
-      headers: myHeaders,
-      credentials: "include"
-    };
+                return x.json()
+            })
+            .then(function (response) {
+                notyf.success("Succesfully updated wallpaper on your account!")
+                console.log(response)
+            }).catch(x => {
+                notyf.error("Something went wrong ):")
+                console.error(x)
+            })
+    }
 
-    await fetch("https://auth.thies.dev/auth/refresh/access", fetchConfig)
+    async function whoami() {
+        const myHeaders = new Headers();
+        myHeaders.append('pragma', 'no-cache');
+        myHeaders.append('cache-control', 'no-cache');
 
-    const test = await fetch("https://auth.thies.dev/api/users/me", fetchConfig)
-      .then(x => {
-        if (x.status != 200) {
-          throw new Error(x.error)
-        }
+        const fetchConfig = {
+            method: 'GET',
+            headers: myHeaders,
+            credentials: "include"
+        };
 
-        return x.json()
-      })
-      .then(function (response) {
-        const login_status = document.getElementById("login_status")
-        user = response;
-        login_status.textContent = `Logged in as: ${response.name} (${response.email})`
-        return true
-      }).catch(x => {
-        console.warn("User is not logged in ):")
-        return false
-      })
-  }
+        await fetch("https://auth.thies.dev/api/users/me", fetchConfig)
+            .then(x => {
+                if (x.status != 200) {
+                    throw new Error(x.error)
+                }
 
-  whoami()
+                return x.json()
+            })
+            .then(function (response) {
+                const login_status = document.getElementById("login_status")
+                user = response;
+                login_status.textContent = `Logged in as: ${response.name} (${response.email})`
+                return true
+            }).catch(x => {
+                console.warn("User is not logged in ):")
+                return false
+            })
+    }
 
-  fetchAllWallpapers()
-  setInterval(fetchAllWallpapers, 5 * 1000)
+    whoami()
+
+    fetchAllWallpapers()
+    setInterval(fetchAllWallpapers, 5 * 1000)
 </script>
 
 </html>

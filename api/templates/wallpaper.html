@@ -3,180 +3,189 @@
 <!-- TODO: Add delete button to this page -->
 
 <head>
-  <title>Preview wallpaper</title>
-  <!-- Styling the page -->
-  <script src="https://cdn.tailwindcss.com"></script>
+    <title>Preview wallpaper</title>
+    <!-- Styling the page -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Toast notifications -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+    <!-- Toast notifications -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
 
-  <style>
-    body,
-    html {
-      margin: 0;
-      padding: 0;
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
 
-      overflow-x: hidden;
-    }
-  </style>
+            overflow-x: hidden;
+        }
+    </style>
 </head>
 
 <body>
-  <header>
-    <div id="login_status" class="w-full text-right p-3 font-bolder">
-      Not logged in
+    <header>
+        <div id="login_status"
+             class="w-full text-right p-3 font-bolder">
+            Not logged in
+        </div>
+        <h3 class="text-center text-l text-emerald-300 font-bolder">Preview all times of the live wallpaper</h3>
+
+
+        <h3 class="text-center text-xl text-emerald-600 font-bolder"
+            id="title">...</h3>
+
+        <div class="flex justify-center">
+            <button class="border p-2 m-4 bg-green-200 rounded-md"
+                    onclick="selectWallpaper()">Select this wallpaper
+            </button>
+        </div>
+    </header>
+    <section class="w-full mr-5 ml-5 flex justify-center flex-col">
+        <div id="content"
+             class="w-full h-full flex flex-wrap justify-center"></div>
+    </section>
+    <footer class="absolute bottom-0 p-4 w-full justify-center flex">Thies Nieborg</footer>
+
+    <!-- THIS IS TEMPLATE FOR ALL WALLPAPER DISPLAYS -->
+    <div class="w-160 h-80 flex-col flex justify-center align-center border p-3 m-3 hidden"
+         id="template">
+        <img src=""
+             class="w-full max-h-[90%]"
+             style="object-fit: cover" />
+        <span class="w-full text-center"
+              id="title">Title</span>
     </div>
-    <h3 class="text-center text-l text-emerald-300 font-bolder">Preview all times of the live wallpaper</h3>
-
-
-    <h3 class="text-center text-xl text-emerald-600 font-bolder" id="title">...</h3>
-
-    <div class="flex justify-center">
-      <button class="border p-2 m-4 bg-green-200 rounded-md" onclick="selectWallpaper()">Select this wallpaper
-      </button>
-    </div>
-  </header>
-  <section class="w-full mr-5 ml-5 flex justify-center flex-col">
-    <div id="content" class="w-full h-full flex flex-wrap justify-center"></div>
-  </section>
-  <footer class="absolute bottom-0 p-4 w-full justify-center flex">Thies Nieborg</footer>
-
-  <!-- THIS IS TEMPLATE FOR ALL WALLPAPER DISPLAYS -->
-  <div class="w-160 h-80 flex-col flex justify-center align-center border p-3 m-3 hidden" id="template">
-    <img src="" class="w-full max-h-[90%]" style="object-fit: cover" />
-    <span class="w-full text-center" id="title">Title</span>
-  </div>
-  <!-- END OF TEMPLATE -->
+    <!-- END OF TEMPLATE -->
 </body>
 
 <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
 <script type="text/javascript">
-  const notyf = new Notyf({ position: { x: "right", y: "top" } });
-  /**
-   * This weird curly brace thing is for jinja (Flask rendering engine)
-   * @type {{ "{{" }} name: string, uid: string, email: string } | undefined}
-   */
-  let user = undefined;
-  let wallpaper = undefined;
+    const notyf = new Notyf({ position: { x: "right", y: "top" } });
+    /**
+     * This weird curly brace thing is for jinja (Flask rendering engine)
+     * @type {{ "{{" }} name: string, uid: string, email: string } | undefined}
+     */
+    let user = undefined;
+    let wallpaper = undefined;
 
-  function selectWallpaper(e) {
-    if (user && wallpaper) {
-      // Save in settings
-      updateWallpaperOnAccount(window.location.origin + wallpaper.location)
-    } else {
-      notyf.warn("Code shouldn't reach this (:")
+    function selectWallpaper(e) {
+        if (user && wallpaper) {
+            // Save in settings
+            updateWallpaperOnAccount(window.location.origin + wallpaper.location)
+        } else {
+            notyf.warn("Code shouldn't reach this (:")
+        }
     }
-  }
-  function fetchAllWallpapers() {
-    const SECONDS_IN_A_DAY = 60 * 60 * 24
+    function fetchAllWallpapers() {
+        const SECONDS_IN_A_DAY = 60 * 60 * 24
 
 
-    fetch(`details`)
-      .then((x) => {
-        if (x.status === 202) {
-          throw new Error("This wallpaper is still being processed")
-        }
+        fetch(`details`)
+            .then((x) => {
+                if (x.status === 202) {
+                    throw new Error("This wallpaper is still being processed")
+                }
 
-        return x.json()
-      })
-      .then((x) => {
-        const final_location = document.getElementById("content");
-        const template = document.getElementById("template");
-        console.log("Wallpaper details: ", x)
+                return x.json()
+            })
+            .then((x) => {
+                const final_location = document.getElementById("content");
+                const template = document.getElementById("template");
+                console.log("Wallpaper details: ", x)
 
-        document.getElementById("title").textContent = x.name
+                document.getElementById("title").textContent = x.name
 
-        wallpaper = x;
-        const base_url = x.preview_url
+                wallpaper = x;
+                const base_url = x.preview_url
 
-        x.data.forEach((y, i) => {
-          let copy = template.cloneNode(true);
-          final_location.appendChild(copy);
+                x.data.forEach((y, i) => {
+                    let copy = template.cloneNode(true);
+                    final_location.appendChild(copy);
 
-          copy.classList.remove("hidden");
-          copy.id = y.i;
-          copy.title = `Wallpaper with index ${y.i}`;
+                    copy.classList.remove("hidden");
+                    copy.id = y.i;
+                    copy.title = `Wallpaper with index ${y.i}`;
 
-          const img = copy.childNodes[1];
-          const span = copy.childNodes[3];
-          const calculation = SECONDS_IN_A_DAY * y.t
+                    const img = copy.childNodes[1];
+                    const span = copy.childNodes[3];
+                    const calculation = SECONDS_IN_A_DAY * y.t
 
-          span.textContent = `Wallpaper after ${new Date(calculation * 1000).toISOString().slice(11, 16)}`;
-          img.src = base_url.replace("preview", y.i);
-        });
+                    span.textContent = `Wallpaper after ${new Date(calculation * 1000).toISOString().slice(11, 16)}`;
+                    img.src = base_url.replace("preview", y.i);
+                });
 
-      });
-  }
-
-  function updateWallpaperOnAccount(newURL) {
-    if (!user) {
-      return false
+            });
     }
-    const myHeaders = new Headers();
-    myHeaders.append('pragma', 'no-cache');
-    myHeaders.append('cache-control', 'no-cache');
-    myHeaders.append("content-type", "application/json")
 
-    const fetchConfig = {
-      method: 'PATCH',
-      headers: myHeaders,
-      credentials: "include",
-      body: JSON.stringify({
-        backgroundURL: newURL
-      })
-    };
-
-    fetch("https://auth.thies.dev/api/settings/me", fetchConfig)
-      .then(x => {
-        if (x.status != 200) {
-          throw new Error(x.error)
+    function updateWallpaperOnAccount(newURL) {
+        if (!user) {
+            return false
         }
+        const myHeaders = new Headers();
+        myHeaders.append('pragma', 'no-cache');
+        myHeaders.append('cache-control', 'no-cache');
+        myHeaders.append("content-type", "application/json")
 
-        return x.json()
-      })
-      .then(function (response) {
-        notyf.success("Succesfully updated wallpaper on your account!")
-        console.log(response)
-      }).catch(x => {
-        notyf.error("Something went wrong ):")
-        console.error(x)
-      })
-  }
+        const fetchConfig = {
+            method: 'PATCH',
+            headers: myHeaders,
+            credentials: "include",
+            body: JSON.stringify({
+                backgroundURL: newURL
+            })
+        };
 
-  async function whoami() {
-    const myHeaders = new Headers();
-    myHeaders.append('pragma', 'no-cache');
-    myHeaders.append('cache-control', 'no-cache');
+        fetch("https://auth.thies.dev/api/settings/me", fetchConfig)
+            .then(x => {
+                if (x.status != 200) {
+                    throw new Error(x.error)
+                }
 
-    const fetchConfig = {
-      method: 'GET',
-      headers: myHeaders,
-      credentials: "include"
-    };
+                return x.json()
+            })
+            .then(function (response) {
+                notyf.success("Succesfully updated wallpaper on your account!")
+                console.log(response)
+            }).catch(x => {
+                notyf.error("Something went wrong ):")
+                console.error(x)
+            })
+    }
 
-    await fetch("https://auth.thies.dev/auth/refresh/access", fetchConfig)
+    async function whoami() {
+        const myHeaders = new Headers();
+        myHeaders.append('pragma', 'no-cache');
+        myHeaders.append('cache-control', 'no-cache');
 
-    const test = await fetch("https://auth.thies.dev/api/users/me", fetchConfig)
-      .then(x => {
-        if (x.status != 200) {
-          throw new Error(x.error)
-        }
+        const fetchConfig = {
+            method: 'GET',
+            headers: myHeaders,
+            credentials: "include"
+        };
 
-        return x.json()
-      })
-      .then(function (response) {
-        const login_status = document.getElementById("login_status")
-        user = response;
-        login_status.textContent = `Logged in as: ${response.name} (${response.email})`
-        return true
-      }).catch(x => {
-        console.warn("User is not logged in ):")
-        return false
-      })
-  }
+        await fetch("https://auth.thies.dev/auth/refresh/access", fetchConfig)
 
-  whoami()
-  fetchAllWallpapers()
+        const test = await fetch("https://auth.thies.dev/api/users/me", fetchConfig)
+            .then(x => {
+                if (x.status != 200) {
+                    throw new Error(x.error)
+                }
+
+                return x.json()
+            })
+            .then(function (response) {
+                const login_status = document.getElementById("login_status")
+                user = response;
+                login_status.textContent = `Logged in as: ${response.name} (${response.email})`
+                return true
+            }).catch(x => {
+                console.warn("User is not logged in ):")
+                return false
+            })
+    }
+
+    whoami()
+    fetchAllWallpapers()
 </script>
 
 </html>
