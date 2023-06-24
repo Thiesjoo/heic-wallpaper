@@ -13,7 +13,7 @@ INDEXED BY: key - uuid
 """
 Further more: store 1 array of uuid's
 """
-from typing import Any, Tuple, TypedDict
+from typing import Any, List, Tuple, TypedDict
 import redis
 from redis.commands.json.path import Path
 import sys
@@ -51,7 +51,7 @@ class Wallpaper(TypedDict):
     error: str
 
 
-def get_all_wallpapers() -> list[Wallpaper]:
+def get_all_wallpapers() -> List[Wallpaper]:
     all_ids = client.zrange(WALLPAPER_LOCATION, 0, -1)
     all_objs = [
         {

@@ -5,10 +5,11 @@ import base64
 import gc
 import plistlib
 import subprocess
-from pyheif import HeifTopLevelImage, open_container, HeifFile
 from config import AppConfig
-from PIL import Image
 
+from PIL import Image ,ImageSequence
+from pi_heif import register_heif_opener
+register_heif_opener()
 
 def get_exif(fname):
     """
@@ -23,64 +24,49 @@ def get_exif(fname):
     }
 
 
-def get_image_container(fname: str):
+def get_image_container(fname: str) -> Image:
     complete_file_path = f"{AppConfig.UPLOAD_FOLDER}/{fname}"
-    heif_container = open_container(complete_file_path)
-    all_images: list[HeifTopLevelImage] = heif_container.top_level_images
-    return all_images
+    
+    heic_pillow = Image.open(complete_file_path)
+    return heic_pillow
 
+def get_img_count(fname: str) -> int:
+    img = get_image_container(fname)
 
-def get_image_from_name(fname: str, idx: int):
-    return get_image_container(fname)[idx]
-
-
-def generate_preview(fname):
-    heif_file: HeifFile = get_image_from_name(fname, 0).image
-    heif_file.load()
-
-    loaded_img = Image.frombytes(
-        heif_file.mode,
-        heif_file.size,
-        heif_file.data,
-        "raw",
-        heif_file.mode,
-        heif_file.stride,
-    )
-    del heif_file.data
-    # Image data takes a lot of memory, so we want to get rid of it instantly
+    count = 0
+    for idx,frame in enumerate(ImageSequence.Iterator(img)):
+        count += 1
+    img.close()
+    del img
     gc.collect()
-    loaded_img.thumbnail((1280, 720))
-    loaded_img.save(
+    return count
+
+def get_image_from_name(fname: str, idx: int)-> Image:
+    img = get_image_container(fname)
+    return ImageSequence.Iterator(img)[idx]
+
+
+def generate_preview(fname: str):
+    heif_file = get_image_from_name(fname, 0)
+
+    heif_file.thumbnail((1280, 720))
+    heif_file.save(
         f"{AppConfig.PROCESSED_FOLDER}/{fname}/preview.png",
         quality=70,
         optimize=True,
     )
-    loaded_img.close()
+    heif_file.close()
 
 
 def generate_normal_image(fname, idx):
     img = get_image_from_name(fname, idx)
 
-    heif_file: HeifFile = img.image
-    heif_file.load()
 
-    loaded_img = Image.frombytes(
-        heif_file.mode,
-        heif_file.size,
-        heif_file.data,
-        "raw",
-        heif_file.mode,
-        heif_file.stride,
-    )
-    del heif_file.data
-    # Image data takes a lot of memory, so we want to get rid of it instantly
-    gc.collect()
-
-    loaded_img.thumbnail((3840, 2160))
-    loaded_img.save(
+    img.thumbnail((3840, 2160))
+    img.save(
         f"{AppConfig.PROCESSED_FOLDER}/{fname}/{idx}.png",
     )
-    loaded_img.close()
+    img.close()
 
 
 def get_wallpaper_config(fname):

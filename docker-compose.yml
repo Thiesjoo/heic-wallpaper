@@ -1,44 +1,44 @@
 version: "3.9"
 
 services:
-  web:
-    container_name: web
-    build:
-      context: ./api
-      target: web
-    ports:
-      - "5000:5000"
-    depends_on:
-      - redis
-    environment:
-      - FLASK_ENV=development
-      - FLASK_APP=app.py
-      - BROKER_URL=redis://redis:6379/0
-    volumes:
-      - ./api:/app
-      - ./static:/static
+    web:
+        container_name: web
+        build:
+            context: ./api
+            target: web
+        ports:
+            - "5000:5000"
+        depends_on:
+            - redis
+        environment:
+            - FLASK_ENV=development
+            - FLASK_APP=app.py
+            - BROKER_URL=redis://redis:6379/0
+        volumes:
+            - ./api:/app
+            - ./static:/static
 
-  redis:
-    container_name: redis
-    image: redislabs/rejson:2.0.9
-    ports:
-      - "6379:6379"
+    redis:
+        container_name: redis
+        image: redislabs/rejson:2.0.9
+        ports:
+            - "6379:6379"
 
-  worker:
-    build:
-      context: ./api
-      target: watchdog
-    hostname: worker
-    working_dir: /app
-    environment:
-      - BROKER_URL=redis://redis:6379/0
-    command: >
-      watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- 
-      celery -A workers.image_processor worker --loglevel=info --autoscale=12,1
-    volumes:
-      - ./api:/app:ro
-      - ./static:/static
-    links:
-      - redis
-    depends_on:
-      - redis
+    worker:
+        build:
+            context: ./api
+            target: watchdog
+        hostname: worker
+        working_dir: /app
+        environment:
+            - BROKER_URL=redis://redis:6379/0
+        command: >
+            watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- 
+            celery -A workers.image_processor worker --loglevel=info --autoscale=4,1
+        volumes:
+            - ./api:/app:ro
+            - ./static:/static
+        links:
+            - redis
+        depends_on:
+            - redis

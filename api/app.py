@@ -55,7 +55,7 @@ def allowed_file(filename):
 
 app = Flask(
     __name__,
-    static_folder="/static/",
+    static_folder=AppConfig.STATIC_FOLDER,
 )
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 300
 
@@ -122,8 +122,8 @@ def fixup_redis():
 @app.route("/upload", methods=["POST"])
 def upload_new_wallpaper():
     # Check if role is developer in header X-role
-    if request.headers.get("X-role") != "developer":
-        return "You are not allowed to upload wallpapers", 403
+    # if request.headers.get("x-role") != "developer":
+    #     return "You are not allowed to upload wallpapers", 403
 
     # check if the post request has the file part
     if "file" not in request.files:

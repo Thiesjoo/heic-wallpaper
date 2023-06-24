@@ -7,6 +7,8 @@
     <!-- Styling the page -->
     <script src="https://cdn.tailwindcss.com"></script>
 
+
+
     <!-- Toast notifications -->
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
@@ -76,12 +78,13 @@
             notyf.warn("Code shouldn't reach this (:")
         }
     }
-    function fetchAllWallpapers() {
+    function fetchThisWallpaper() {
         const SECONDS_IN_A_DAY = 60 * 60 * 24
 
 
         fetch(`details`)
             .then((x) => {
+                catch401(x)
                 if (x.status === 202) {
                     throw new Error("This wallpaper is still being processed")
                 }
@@ -137,6 +140,7 @@
 
         fetch("https://auth.thies.dev/api/settings/me", fetchConfig)
             .then(x => {
+                catch401(x)
                 if (x.status != 200) {
                     throw new Error(x.error)
                 }
@@ -163,10 +167,10 @@
             credentials: "include"
         };
 
-        await fetch("https://auth.thies.dev/auth/refresh/access", fetchConfig)
 
-        const test = await fetch("https://auth.thies.dev/api/users/me", fetchConfig)
+        await fetch("https://auth.thies.dev/api/users/me", fetchConfig)
             .then(x => {
+                catch401(x)
                 if (x.status != 200) {
                     throw new Error(x.error)
                 }
@@ -184,8 +188,15 @@
             })
     }
 
+    function catch401(e) {
+        if (e.status === 401) {
+            console.warn("User is not logged in ):")
+            window.location.href = `https://auth.thies.dev/login?next=${window.location.href}`
+        }
+    }
+
     whoami()
-    fetchAllWallpapers()
+    fetchThisWallpaper()
 </script>
 
 </html>

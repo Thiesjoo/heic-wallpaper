@@ -1,7 +1,8 @@
 flask
 # Image processing
 Pillow
-pyheif
+# pyheif -- MANUALLY INSTALLED
+pi-heif
 # Worker things
 Celery
 Redis

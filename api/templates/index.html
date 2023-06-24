@@ -54,7 +54,6 @@
            href="https://dynamicwallpaper.club/gallery"
            target="_blank"
            rel="noreferrer">dynamicwallpaper.club</a> </h3>
-    <h4 class="text-center text-md w-full m-2">Single click to copy url, double click to open in preview</h4>
     <section class="w-full mr-5 ml-5 flex justify-center flex-col">
         <h3 class="text-center text-xl text-emerald-300">All available wallpapers</h3>
         <div id="content"
@@ -64,8 +63,6 @@
 
     <!-- THIS IS TEMPLATE FOR ALL WALLPAPER DISPLAYS -->
     <div class="w-80 h-40 flex-col flex justify-center align-center border p-3 m-3 hidden"
-         onclick="handleClick(this)"
-         ondblclick="handleDoubleClick(this)"
          id="template">
         <img src=""
              class="w-full max-h-[90%]"
@@ -73,9 +70,19 @@
         <span class="w-full text-center"
               id="title">Title</span>
 
-        <!-- Open button -->
+        <!-- Show 3 buttons horizontal -->
+        <div class="flex flex-row">
+            <!-- Copy URL -->
+            <button class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-4 m-4 rounded"
+                    onclick="handleCopyClick(this)">Copy URL</button>
+            <!-- Open button -->
+            <button class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 m-4 rounded"
+                    onclick="handleOpenClick(this)">Open</button>
 
-        <!-- Select button -->
+            <!-- Select button -->
+            <button class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 m-4 rounded"
+                    onclick="handleSetClick(this)">Set</button>
+        </div>
     </div>
     <!-- END OF TEMPLATE -->
 </body>
@@ -89,33 +96,26 @@
      */
     let user = undefined;
 
+    function handleSetClick(e) {
+        const parentParent = e.parentElement.parentElement;
+        updateWallpaperOnAccount(parentParent.dataset.url)
+    }
 
-    let timeout = null;
-
-    function handleDoubleClick(e) {
-        if (timeout) {
-            clearTimeout(timeout)
-            timeout = null
-        }
-        const customURL = e.dataset.url;
-
-
+    function handleOpenClick(e) {
+        const parentParent = e.parentElement.parentElement;
+        const customURL = parentParent.dataset.url;
         window.open(customURL, "_blank").focus()
     }
 
-    function handleClick(e) {
-        const customURL = e.dataset.url;
-        if (timeout) {
-            return
-        }
-        timeout = setTimeout(() => {
-            timeout = null
-            navigator.clipboard
-                .writeText(customURL)
-                .then((x) => {
-                    notyf.success(`Copied URL of live wallpaper to your clipboard`);
-                })
-        }, 200)
+    function handleCopyClick(e) {
+        const parentParent = e.parentElement.parentElement;
+        console.log(parentParent.dataset)
+        const customURL = parentParent.dataset.url;
+        navigator.clipboard
+            .writeText(customURL)
+            .then((x) => {
+                notyf.success(`Copied URL of live wallpaper to your clipboard`);
+            })
     }
 
     Dropzone.options.myDropzone = {
@@ -142,7 +142,10 @@
 
     function fetchAllWallpapers() {
         fetch("/wallpapers")
-            .then((x) => x.json())
+            .then((x) => {
+                catch401(x)
+                return x.json()
+            })
             .then((x) => {
                 const final_location = document.getElementById("content");
                 const template = document.getElementById("template");
@@ -205,6 +208,7 @@
 
         fetch("https://auth.thies.dev/api/settings/me", fetchConfig)
             .then(x => {
+                catch401(x)
                 if (x.status != 200) {
                     throw new Error(x.error)
                 }
@@ -233,6 +237,7 @@
 
         await fetch("https://auth.thies.dev/api/users/me", fetchConfig)
             .then(x => {
+                catch401(x)
                 if (x.status != 200) {
                     throw new Error(x.error)
                 }
@@ -250,8 +255,14 @@
             })
     }
 
-    whoami()
+    function catch401(e) {
+        if (e.status === 401) {
+            console.warn("User is not logged in ):")
+            window.location.href = `https://auth.thies.dev/login?next=${window.location.href}`
+        }
+    }
 
+    whoami()
     fetchAllWallpapers()
     setInterval(fetchAllWallpapers, 5 * 1000)
 </script>

@@ -5,10 +5,8 @@ import json
 
 import time
 from celery import Celery, group
-from celery.exceptions import Ignore
 
 import sys
-from pyheif import HeifTopLevelImage, open_container, HeifFile
 from database.redis import (
     WallpaperStatus,
     update_data_of_wallpaper,
@@ -59,7 +57,6 @@ def finish_processing(prev_results, name, times, original_name):
     update_data_of_wallpaper(name, times)
 
     json_location = f"{AppConfig.PROCESSED_FOLDER}/{name}/data.json"
-    # TODO: ooit eens, Also have to write a script that imports it into redis
     with open(json_location, "w") as f:
         json.dump(
             {
@@ -90,6 +87,7 @@ def handle_image(self, name, original_name):
     if not name.endswith(".heic"):
         raise Exception("Files other than .heic cannot be handled right now")
         # TODO: Move file to correct dir and finish this task
+
     if not os.path.exists(complete_file_path):
         raise Exception("File upload did not complete")
 
@@ -118,9 +116,7 @@ def handle_image(self, name, original_name):
         print(warnings)
 
     self.update_state(state="PENDING", meta="Opening file container")
-    heif_container = open_container(complete_file_path)
-    all_images: list[HeifTopLevelImage] = heif_container.top_level_images
-    total_length = len(all_images)
+    total_length = heic.get_img_count(name)
 
     os.mkdir(f"{AppConfig.PROCESSED_FOLDER}/{name}/")
 
@@ -129,10 +125,6 @@ def handle_image(self, name, original_name):
         meta=f"Concurrently processing all image work (Preview and image resizing)",
     )
 
-    # Not sure if this takes data, but to be sure delete everything
-    del all_images
-    del heif_container
-    gc.collect()
 
     tasks = [handle_singular_image.s(name, i) for i in range(total_length)]
     tasks.append(generate_preview.s(name))
