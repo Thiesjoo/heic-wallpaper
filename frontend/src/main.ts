@@ -3,7 +3,7 @@ declare global {
         fetch(input: RequestInfo | URL, init?: RequestInit, throwError?: boolean): Promise<Response>;
     }
 }
-
+import "./utils/401";
 
 import "./assets/main.css";
 

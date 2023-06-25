@@ -32,7 +32,7 @@ function select() {
   >Created by: {{ wallpaper.created_by }}</h2>
 
   <div class="flex justify-center" v-if="userStore.loggedIn">
-    <button class="border p-2 m-4 bg-green-200 rounded-md"
+    <button class="border p-2 m-4 hover:bg-green-600 rounded-md"
             @click="select()">Select this wallpaper
     </button>
   </div>

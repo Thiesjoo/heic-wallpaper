@@ -8,6 +8,10 @@ export type User = {
     name: string;
 }
 
+export type UserSettings = {
+    backgroundURL: string;
+}
+
 export const useUserStore = defineStore("user", () => {
     const user = ref<User | null>(null);
     fetch("https://auth.thies.dev/api/users/me", {
@@ -21,6 +25,14 @@ export const useUserStore = defineStore("user", () => {
 
     const loggedIn = computed(() => user.value !== null);
 
+
+    function getSettings(): Promise<UserSettings> {
+        return fetch("https://auth.thies.dev/api/settings/me", {
+            credentials: "include",
+        })
+            .then((res) => res.json())
+
+    }
 
     function updateWallpaper(newURL: string) {
         const myHeaders = new Headers();
@@ -55,6 +67,7 @@ export const useUserStore = defineStore("user", () => {
     return {
         user: computed(() => user.value),
         loggedIn,
-        updateWallpaper
+        updateWallpaper,
+        getSettings
     }
 })
