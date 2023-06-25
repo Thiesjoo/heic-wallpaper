@@ -45,6 +45,7 @@ class WallpaperStatus(int, Enum):
 class Wallpaper(TypedDict):
     original_name: str
     date_created: int
+    create_by: str
     status: int  # WallpaperStatus
     type: int  # WallpaperTypes
     data: Any
@@ -72,6 +73,7 @@ def get_single_wallpaper(uuid: str) -> Wallpaper | Tuple[str, int]:
     if "status" in temp and temp["status"] == WallpaperStatus.PROCESSING:
         # 202 status code when result is still processing
         return "Still processing", 202
+    
     # Should return URL, preview URL and data
     return {**temp, "uuid": uuid}
 

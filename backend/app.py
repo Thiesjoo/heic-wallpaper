@@ -35,9 +35,6 @@ sentry_sdk.init(
     integrations=[
         FlaskIntegration(),
     ],
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    # We recommend adjusting this value in production.
     traces_sample_rate=1.0,
 )
 
@@ -53,6 +50,8 @@ def allowed_file(filename):
     return "." in filename and get_extension(filename) in ALLOWED_EXTENSIONS
 
 
+PRODUCTION = bool(os.environ.get("PRODUCTION", False))
+
 app = Flask(
     __name__,
     static_folder=AppConfig.STATIC_FOLDER,
@@ -66,7 +65,7 @@ os.makedirs(os.path.join(AppConfig.PROCESSED_FOLDER), exist_ok=True)
 # Max size is 100mb
 app.config["MAX_CONTENT_LENGTH"] = 100 * 1000 * 1000
 
-app.register_blueprint(tasks, url_prefix="/tasks")
+app.register_blueprint(tasks, url_prefix="/api/tasks")
 
 
 @app.errorhandler(413)
@@ -92,12 +91,7 @@ def logging_after(response):
     return response
 
 
-@app.route("/")
-def index():
-    return render_template("index.html")
-
-
-@app.route("/fixupredis")
+@app.route("/api/fixupredis")
 def fixup_redis():
     if amount_of_pending_tasks() != 0:
         return "There are still pending tasks, please wait a bit", 409
@@ -119,11 +113,14 @@ def fixup_redis():
     return "Redis is now in sync with the file system!"
 
 
-@app.route("/upload", methods=["POST"])
+@app.route("/api/upload", methods=["POST"])
 def upload_new_wallpaper():
-    # Check if role is developer in header X-role
-    # if request.headers.get("x-role") != "developer":
-    #     return "You are not allowed to upload wallpapers", 403
+    user = request.headers.get("x-User")
+    print(user)
+    if PRODUCTION and user is None:
+        return "You need to be logged in to upload a wallpaper", 401
+    else:
+        user = "unknown"
 
     # check if the post request has the file part
     if "file" not in request.files:
@@ -150,6 +147,7 @@ def upload_new_wallpaper():
             new_filename,
             {
                 "original_name": old_name,
+                "created_by": user,
                 "date_created": int(time.time()),
                 "status": WallpaperStatus.PROCESSING,
                 "type": WallpaperTypes.HEIC,
@@ -180,24 +178,24 @@ def wallpaper_mapper(wallpaper: Wallpaper, extended=False):
     return to_return
 
 
-@app.route("/wallpapers")
+@app.route("/api/wallpapers")
 def get_wallpapers():
     all_wallpaper_data = get_all_wallpapers()
     wallpapers = [wallpaper_mapper(wallpaper) for wallpaper in all_wallpaper_data]
     return jsonify(wallpapers)
 
 
-@app.route("/wallpaper/<string:name>/preview")
+@app.route("/api/wallpaper/<string:name>/preview")
 def render_wallpaper_preview(name: str):
     return render_template("wallpaper.html")
 
 
-@app.route("/wallpaper/<string:name>/details")
+@app.route("/api/wallpaper/<string:name>/details")
 def get_wallpaper_information(name: str):
     return wallpaper_mapper(get_single_wallpaper(name), extended=True)
 
 
-@app.route("/wallpaper/<string:name>")
+@app.route("/api/wallpaper/<string:name>")
 def get_wallpaper(name: str):
     if not name.endswith(".heic"):
         # special logic? for custom PNG's
