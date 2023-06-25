@@ -13,7 +13,7 @@ from flask import (
     g as app_ctx,
 )
 from backend.config import AppConfig
-from worker.image_processor import handle_image
+from backend.worker.image_processor import handle_image
 from backend.tasks import amount_of_pending_tasks, tasks
 from werkzeug.utils import secure_filename
 
@@ -51,6 +51,10 @@ def allowed_file(filename):
 
 PRODUCTION = bool(os.environ.get("PRODUCTION", False))
 
+os.makedirs(os.path.join(AppConfig.STATIC_FOLDER), exist_ok=True)
+os.makedirs(os.path.join(AppConfig.UPLOAD_FOLDER), exist_ok=True)
+os.makedirs(os.path.join(AppConfig.PROCESSED_FOLDER), exist_ok=True)
+
 app = Flask(
     __name__,
     static_folder=AppConfig.STATIC_FOLDER,
@@ -58,8 +62,7 @@ app = Flask(
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 300
 
 app.config["UPLOAD_FOLDER"] = AppConfig.UPLOAD_FOLDER
-os.makedirs(os.path.join(AppConfig.UPLOAD_FOLDER), exist_ok=True)
-os.makedirs(os.path.join(AppConfig.PROCESSED_FOLDER), exist_ok=True)
+
 
 # Max size is 100mb
 app.config["MAX_CONTENT_LENGTH"] = 100 * 1000 * 1000
