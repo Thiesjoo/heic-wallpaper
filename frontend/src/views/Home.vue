@@ -27,8 +27,9 @@ function uploaded(file: any) {
 		:autoProcessQueue="true"
 		:uploadMultiple="false"
 		:parallelUploads="5"
-		:maxFilesize="100"
 		:acceptedFiles="['heic']"
+		:maxFileSize="100000000000000000"
+		url="/api/upload"
 		@error-add="err"
 		@uploaded="uploaded"></DropZone>
 
@@ -45,6 +46,9 @@ function uploaded(file: any) {
 	<section class="w-full mr-5 ml-5 flex justify-center flex-col">
 		<h3 class="text-center text-xl text-emerald-300">All available wallpapers</h3>
 		<div id="content" class="w-full h-full flex flex-wrap">
+			<span class="text-red-600 w-full text-center" v-if="wallpaperStore.lastError">{{
+				wallpaperStore.lastError
+			}}</span>
 			<Wallpaper :wallpaper="wallpaper" v-for="wallpaper in wallpaperStore.wallpapers"></Wallpaper>
 		</div>
 	</section>

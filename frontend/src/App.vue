@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from "vue-router";
+import {useUserStore} from "@/stores/user";
+
+const userStore = useUserStore();
 </script>
 
 <template>
 	<header>
-		<div class="w-full text-right p-3 font-bolder">Logged in as: Thies Nieborg (test@thies.dev)</div>
+		<div class="w-full text-right p-3 font-bolder" v-if="userStore.loggedIn">Logged in as: {{userStore.user.name}} ({{userStore.user.email}})</div>
 		<div class="wrapper">
 			<nav>
 				<RouterLink to="/">Home</RouterLink>

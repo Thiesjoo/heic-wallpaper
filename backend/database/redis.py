@@ -19,9 +19,8 @@ from redis.commands.json.path import Path
 import sys
 from enum import Enum
 
-sys.path.append("..")
 
-from config import CeleryConfig
+from backend.config import CeleryConfig
 
 client = redis.Redis.from_url(CeleryConfig.CELERY_RESULT_BACKEND)
 
@@ -43,6 +42,7 @@ class WallpaperStatus(int, Enum):
 
 
 class Wallpaper(TypedDict):
+    uid: str
     original_name: str
     date_created: int
     create_by: str
@@ -57,7 +57,7 @@ def get_all_wallpapers() -> List[Wallpaper]:
     all_objs = [
         {
             **client.json().get(WALLPAPER_UUID_PREFIX + (uuid.decode("UTF-8"))),
-            "uuid": uuid.decode("UTF-8"),
+            "uid": uuid.decode("UTF-8"),
         }
         for uuid in all_ids
     ]
@@ -65,38 +65,38 @@ def get_all_wallpapers() -> List[Wallpaper]:
     return all_objs
 
 
-def get_single_wallpaper(uuid: str) -> Wallpaper | Tuple[str, int]:
-    temp: Wallpaper = client.json().get(WALLPAPER_UUID_PREFIX + uuid)
+def get_single_wallpaper(uid: str) -> Wallpaper | Tuple[str, int]:
+    temp: Wallpaper = client.json().get(WALLPAPER_UUID_PREFIX + uid)
     if temp is None:
         return "Wallpaper not found", 404
 
     if "status" in temp and temp["status"] == WallpaperStatus.PROCESSING:
         # 202 status code when result is still processing
         return "Still processing", 202
-    
+
     # Should return URL, preview URL and data
-    return {**temp, "uuid": uuid}
+    return {**temp, "uid": uid}
 
 
-def remove_single_wallpaper(uuid: str):
-    client.json().delete(WALLPAPER_UUID_PREFIX + uuid)
-    client.zrem(WALLPAPER_LOCATION, uuid)
+def remove_single_wallpaper(uid: str):
+    client.json().delete(WALLPAPER_UUID_PREFIX + uid)
+    client.zrem(WALLPAPER_LOCATION, uid)
 
 
-def add_wallpaper(uuid: str, wallpaper: Wallpaper):
+def add_wallpaper(uid: str, wallpaper: Wallpaper):
     client.json().set(
-        WALLPAPER_UUID_PREFIX + uuid, Path.root_path(), wallpaper, nx=True
+        WALLPAPER_UUID_PREFIX + uid, Path.root_path(), wallpaper, nx=True
     )
-    client.zadd(WALLPAPER_LOCATION, {uuid: wallpaper["date_created"]})
+    client.zadd(WALLPAPER_LOCATION, {uid: wallpaper["date_created"]})
 
 
-def update_status_of_wallpaper(uuid: str, status: int):
-    client.json().set(WALLPAPER_UUID_PREFIX + uuid, ".status", status)
+def update_status_of_wallpaper(uid: str, status: int):
+    client.json().set(WALLPAPER_UUID_PREFIX + uid, ".status", status)
 
 
-def update_data_of_wallpaper(uuid: str, data: Any):
-    client.json().set(WALLPAPER_UUID_PREFIX + uuid, ".data", data)
+def update_data_of_wallpaper(uid: str, data: Any):
+    client.json().set(WALLPAPER_UUID_PREFIX + uid, ".data", data)
 
 
-def add_error_to_wallpaper(uuid: str, err: str):
-    client.json().set(WALLPAPER_UUID_PREFIX + uuid, ".error", err)
+def add_error_to_wallpaper(uid: str, err: str):
+    client.json().set(WALLPAPER_UUID_PREFIX + uid, ".error", err)

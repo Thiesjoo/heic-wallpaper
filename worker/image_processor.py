@@ -6,23 +6,21 @@ import json
 import time
 from celery import Celery, group
 
-import sys
-from database.redis import (
+from backend.database.redis import (
     WallpaperStatus,
     update_data_of_wallpaper,
     update_status_of_wallpaper,
 )
 
-sys.path.append("..")
-
-from config import AppConfig, CeleryConfig
-import heic
+from backend.config import AppConfig, CeleryConfig
+import backend.heic as heic
 
 # Initialize Celery
 celery = Celery(
     "worker",
     broker=CeleryConfig.CELERY_BROKER_URL,
     backend=CeleryConfig.CELERY_RESULT_BACKEND,
+    include=["backend"]
 )
 
 
@@ -42,21 +40,21 @@ def remove_all_data(filename):
 
 
 @celery.task()
-def handle_singular_image(name, idx):
-    heic.generate_normal_image(name, idx)
+def handle_singular_image(fname: str, uid: str, idx: int):
+    heic.generate_normal_image(fname, uid, idx)
 
 
 @celery.task()
-def generate_preview(name):
-    heic.generate_preview(name)
+def generate_preview(fname: str, uid: str):
+    heic.generate_preview(fname, uid)
 
 
 @celery.task()
-def finish_processing(prev_results, name, times, original_name):
-    update_status_of_wallpaper(name, WallpaperStatus.READY)
-    update_data_of_wallpaper(name, times)
+def finish_processing(prev_results, fname, uid, times, original_name):
+    update_status_of_wallpaper(uid, WallpaperStatus.READY)
+    update_data_of_wallpaper(uid, times)
 
-    json_location = f"{AppConfig.PROCESSED_FOLDER}/{name}/data.json"
+    json_location = f"{AppConfig.PROCESSED_FOLDER}/{uid}/data.json"
     with open(json_location, "w") as f:
         json.dump(
             {
@@ -69,7 +67,7 @@ def finish_processing(prev_results, name, times, original_name):
             f,
         )
 
-    finish(name)
+    finish(fname)
 
 
 @celery.task
@@ -80,16 +78,16 @@ def on_chord_error(request, exc, traceback, hmmm):
 
 
 @celery.task(bind=True)
-def handle_image(self, name, original_name):
+def handle_image(self, fname: str, uid: str,  original_name: str):
     # try:
-    complete_file_path = f"{AppConfig.UPLOAD_FOLDER}/{name}"
+    complete_file_path = f"{AppConfig.UPLOAD_FOLDER}/{fname}"
 
-    if not name.endswith(".heic"):
+    if not fname.endswith(".heic"):
         raise Exception("Files other than .heic cannot be handled right now")
         # TODO: Move file to correct dir and finish this task
 
     if not os.path.exists(complete_file_path):
-        raise Exception("File upload did not complete")
+        raise Exception(f"File upload did not complete {complete_file_path}")
 
     c = heic.get_wallpaper_config(complete_file_path)
     if "si" in c:
@@ -116,9 +114,9 @@ def handle_image(self, name, original_name):
         print(warnings)
 
     self.update_state(state="PENDING", meta="Opening file container")
-    total_length = heic.get_img_count(name)
+    total_length = heic.get_img_count(fname)
 
-    os.mkdir(f"{AppConfig.PROCESSED_FOLDER}/{name}/")
+    os.mkdir(f"{AppConfig.PROCESSED_FOLDER}/{uid}/")
 
     self.update_state(
         state="PENDING",
@@ -126,11 +124,11 @@ def handle_image(self, name, original_name):
     )
 
 
-    tasks = [handle_singular_image.s(name, i) for i in range(total_length)]
-    tasks.append(generate_preview.s(name))
+    tasks = [handle_singular_image.s(fname, uid, i) for i in range(total_length)]
+    tasks.append(generate_preview.s(fname, uid))
 
     job = group(tasks)
 
-    c = (job | finish_processing.s(name, times, original_name)).delay()
+    c = (job | finish_processing.s(fname, uid, times, original_name)).delay()
 
     return "Processing"

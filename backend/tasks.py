@@ -1,9 +1,9 @@
 import os
 import shutil
 from flask import Blueprint, jsonify, url_for
-from database.redis import WallpaperStatus, get_all_wallpapers, remove_single_wallpaper
-from config import AppConfig
-from workers.image_processor import handle_image, celery
+from backend.database.redis import WallpaperStatus, get_all_wallpapers, remove_single_wallpaper
+from backend.config import AppConfig
+from worker.image_processor import handle_image, celery
 from celery.result import AsyncResult
 from celery.app.control import Inspect
 

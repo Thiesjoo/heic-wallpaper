@@ -7,18 +7,17 @@ from flask import (
     Flask,
     jsonify,
     redirect,
-    render_template,
     request,
     url_for,
     current_app,
     g as app_ctx,
 )
-from config import AppConfig
-from workers.image_processor import handle_image
-from tasks import amount_of_pending_tasks, tasks
+from backend.config import AppConfig
+from worker.image_processor import handle_image
+from backend.tasks import amount_of_pending_tasks, tasks
 from werkzeug.utils import secure_filename
 
-from database.redis import (
+from backend.database.redis import (
     Wallpaper,
     WallpaperStatus,
     WallpaperTypes,
@@ -131,8 +130,8 @@ def upload_new_wallpaper():
     if file.filename == "" or not file:
         return "You didn't select a file", 400
     if file and allowed_file(file.filename):
-        id = str(uuid4())
-        new_filename = f"{id}.{get_extension(file.filename)}"
+        uid = str(uuid4())
+        new_filename = f"{uid}.{get_extension(file.filename)}"
         app.logger.info(f"Uploading new file with name {new_filename}")
 
         file.save(os.path.join(app.config["UPLOAD_FOLDER"], new_filename))
@@ -144,7 +143,7 @@ def upload_new_wallpaper():
         old_name = secure_filename(file.filename)
 
         add_wallpaper(
-            new_filename,
+            uid,
             {
                 "original_name": old_name,
                 "created_by": user,
@@ -154,7 +153,7 @@ def upload_new_wallpaper():
             },
         )
 
-        task = handle_image.delay(new_filename, old_name)
+        task = handle_image.delay(new_filename, uid, old_name)
         return jsonify(
             {"taskid": url_for("tasks.single_task_status", task_id=task.id), "ok": True}
         )
@@ -164,17 +163,19 @@ def upload_new_wallpaper():
 def wallpaper_mapper(wallpaper: Wallpaper, extended=False):
     to_return = {
         "name": wallpaper["original_name"],
-        "pending": not wallpaper["status"] == WallpaperStatus.READY,
-        "id": wallpaper["uuid"],
-        "location": url_for("get_wallpaper", name=wallpaper["uuid"]),
+        "id": wallpaper["uid"],
+        "location": url_for("get_wallpaper", uid=wallpaper["uid"]),
         "preview_url": url_for(
-            "static", filename=f"processed/{wallpaper['uuid']}/preview.png"
+            "static", filename=f"processed/{wallpaper['uid']}/preview.png"
         ),
         "status": wallpaper["status"],
         "error": wallpaper["error"] if "error" in wallpaper else None,
+        "type": wallpaper["type"],
     }
+
     if extended:
         to_return["data"] = wallpaper["data"]
+
     return to_return
 
 
@@ -185,23 +186,14 @@ def get_wallpapers():
     return jsonify(wallpapers)
 
 
-@app.route("/api/wallpaper/<string:name>/preview")
-def render_wallpaper_preview(name: str):
-    return render_template("wallpaper.html")
+@app.route("/api/wallpaper/<string:uid>/details")
+def get_wallpaper_information(uid: str):
+    return wallpaper_mapper(get_single_wallpaper(uid), extended=True)
 
 
-@app.route("/api/wallpaper/<string:name>/details")
-def get_wallpaper_information(name: str):
-    return wallpaper_mapper(get_single_wallpaper(name), extended=True)
-
-
-@app.route("/api/wallpaper/<string:name>")
-def get_wallpaper(name: str):
-    if not name.endswith(".heic"):
-        # special logic? for custom PNG's
-        return "Not implemented yet", 501
-
-    wallpaper = get_single_wallpaper(name)
+@app.route("/api/wallpaper/<string:uid>")
+def get_wallpaper(uid: str):
+    wallpaper = get_single_wallpaper(uid)
     if type(wallpaper) == tuple:
         return wallpaper
 
@@ -220,4 +212,4 @@ def get_wallpaper(name: str):
             last_one = time
     index = last_one["i"]
 
-    return redirect(url_for("static", filename=f"processed/{name}/{index}.png"))
+    return redirect(url_for("static", filename=f"processed/{uid}/{index}.png"))

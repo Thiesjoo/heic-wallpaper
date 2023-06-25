@@ -7,7 +7,6 @@ class CeleryConfig:
 
 
 class AppConfig:
-    STATIC_FOLDER = "../static"
-    UPLOAD_FOLDER = "../static/uploads"
-    PROCESSED_FOLDER = "../static/processed"
-    DATABASE_URL = "test"
+    STATIC_FOLDER = "./static"
+    UPLOAD_FOLDER = "./static/uploads"
+    PROCESSED_FOLDER = "./static/processed"

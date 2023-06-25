@@ -5,13 +5,13 @@ import base64
 import gc
 import plistlib
 import subprocess
-from config import AppConfig
+from backend.config import AppConfig
 
 from PIL import Image ,ImageSequence
 from pi_heif import register_heif_opener
 register_heif_opener()
 
-def get_exif(fname):
+def get_exif(fname: str):
     """
     Sadly, pillow and exifread do not support heic yet
     """
@@ -46,30 +46,30 @@ def get_image_from_name(fname: str, idx: int)-> Image:
     return ImageSequence.Iterator(img)[idx]
 
 
-def generate_preview(fname: str):
+def generate_preview(fname: str, uid: str):
     heif_file = get_image_from_name(fname, 0)
 
     heif_file.thumbnail((1280, 720))
     heif_file.save(
-        f"{AppConfig.PROCESSED_FOLDER}/{fname}/preview.png",
+        f"{AppConfig.PROCESSED_FOLDER}/{uid}/preview.png",
         quality=70,
         optimize=True,
     )
     heif_file.close()
 
 
-def generate_normal_image(fname, idx):
+def generate_normal_image(fname: str, uid: str, idx: int):
     img = get_image_from_name(fname, idx)
 
 
     img.thumbnail((3840, 2160))
     img.save(
-        f"{AppConfig.PROCESSED_FOLDER}/{fname}/{idx}.png",
+        f"{AppConfig.PROCESSED_FOLDER}/{uid}/{idx}.png",
     )
     img.close()
 
 
-def get_wallpaper_config(fname):
+def get_wallpaper_config(fname: str):
     exif = get_exif(fname)
 
     if "H24" not in exif and "Solar" not in exif:

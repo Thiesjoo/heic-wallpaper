@@ -1,7 +1,14 @@
+declare global {
+    interface Window {
+        fetch(input: RequestInfo | URL, init?: RequestInit, throwError?: boolean): Promise<Response>;
+    }
+}
+
+
 import "./assets/main.css";
 
-import { createApp } from "vue";
-import { createPinia } from "pinia";
+import {createApp} from "vue";
+import {createPinia} from "pinia";
 //@ts-ignore
 import DropZone from "dropzone-vue";
 
