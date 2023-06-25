@@ -1,11 +1,19 @@
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
 	url: string;
+  size: number
 }>();
+
+
+const width = props.size
+const height = props.size * 3/4
 </script>
 
 <template>
-	<div class="w-80 h-60 flex-col flex justify-center align-center border p-3 m-3">
+	<div :style="{
+    width: `${width}rem`,
+    height: `${height}rem`,
+	}" class=" flex-col flex justify-center align-center border p-3 m-3">
 		<img :src="url" class="w-full max-h-[60%]" style="object-fit: cover" />
 		<slot></slot>
 	</div>

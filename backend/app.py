@@ -167,6 +167,7 @@ def wallpaper_mapper(wallpaper: Wallpaper, extended=False):
     to_return = {
         "name": wallpaper["original_name"],
         "id": wallpaper["uid"],
+        "created_by": wallpaper["created_by"] if "created_by" in wallpaper else "Unknown",
         "location": url_for("get_wallpaper", uid=wallpaper["uid"]),
         "preview_url": url_for(
             "static", filename=f"processed/{wallpaper['uid']}/preview.png"

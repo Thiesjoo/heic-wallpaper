@@ -45,7 +45,7 @@ function uploaded(file: any) {
 	</h3>
 	<section class="w-full mr-5 ml-5 flex justify-center flex-col">
 		<h3 class="text-center text-xl text-emerald-300">All available wallpapers</h3>
-		<div id="content" class="w-full h-full flex flex-wrap">
+		<div id="content" class="w-full h-full flex items-center justify-center flex-wrap">
 			<span class="text-red-600 w-full text-center" v-if="wallpaperStore.lastError">{{
 				wallpaperStore.lastError
 			}}</span>

@@ -11,13 +11,16 @@ const userStore = useUserStore();
 		<div class="wrapper">
 			<nav>
 				<RouterLink to="/">Home</RouterLink>
-				<RouterLink to="/account">Account</RouterLink>
+				<RouterLink to="/account" v-if="userStore.loggedIn">Account</RouterLink>
 			</nav>
 		</div>
 	</header>
 
 	<main class="flex flex-col items-center justify-center w-full pt-6">
+    <Suspense>
+
 		<RouterView />
+    </Suspense>
 	</main>
 </template>
 

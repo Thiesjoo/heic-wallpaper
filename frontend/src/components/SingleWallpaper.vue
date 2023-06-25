@@ -4,6 +4,7 @@ import {WallpaperStatus} from "@/stores/wallpaper";
 import Preview from "./Preview.vue";
 import {computed} from "vue";
 import {useUserStore} from "@/stores/user";
+import router from "@/router";
 
 
 const loadingURL = "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif"
@@ -41,14 +42,18 @@ function copyURL() {
 }
 
 function openURL() {
-//   Router navigate
-
+    router.push(`/wallpaper/${wallpaper.id}`)
 }
+
+function updateWallpaper() {
+  userStore.updateWallpaper(`${window.location.origin}/api/wallpaper/${wallpaper.id}`);
+}
+
 
 </script>
 
 <template>
-  <Preview :url="wallpaperURL">
+  <Preview :url="wallpaperURL" :size="20">
     <span class="w-full text-center font-bold" v-if="!isError">{{ wallpaper.name }}</span>
     <span class="w-full text-center font-bold" v-if="isError">This wallpaper is broekn</span>
     <!-- Show 3 buttons horizontal -->
@@ -62,14 +67,16 @@ function openURL() {
       <!-- Open button -->
       <button
           class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold px-4 m-4 rounded"
-          onclick="handleOpenClick(this)">
+      @click="openURL"
+      >
         Open
       </button>
 
       <!-- Select button -->
       <button
           class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold px-4 m-4 rounded"
-          onclick="handleSetClick(this)">
+          @click="updateWallpaper"
+      v-if="userStore.loggedIn">
         Set
       </button>
     </div>

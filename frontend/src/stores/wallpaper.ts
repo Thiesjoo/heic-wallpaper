@@ -7,9 +7,14 @@ export type Wallpaper = {
 	location: string;
 	name: string;
 	preview_url: string;
+	created_by: string;
 	status: WallpaperStatus;
 	type: WallpaperType;
 };
+
+export type WallpaperWithDetails = Wallpaper & {
+data: {i: number, t: number}[]
+}
 
 export enum WallpaperStatus {
 	READY = 1,
@@ -30,15 +35,28 @@ export const useWallpaperStore = defineStore("wallpapers", () => {
 	const lastError = ref<string>("");
 
 	// Fetch wallpapers from backend
-	const fetchWallpapers = async () => {
+	const fetchWallpapers = async (): Promise<Wallpaper[]> => {
 		try {
 			const res = await fetch("/api/wallpapers");
 			const data = await res.json();
 			wallpapers.value = data;
+			return data;
 		} catch (e: any) {
 			lastError.value = e?.message || "Unknown error";
 		}
+		return [];
 	};
+
+	const fetchSpecificWallpaper = async (id: string): Promise<WallpaperWithDetails>  => {
+		try {
+			const res = await fetch(`/api/wallpaper/${id}/details`);
+			const data = await res.json();
+			return data;
+		} catch (e: any) {
+			lastError.value = e?.message || "Unknown error";
+			throw e;
+		}
+	}
 
 	// Fetch wallpapers on store creation
 	fetchWallpapers();
@@ -46,10 +64,16 @@ export const useWallpaperStore = defineStore("wallpapers", () => {
 	// Fetch wallpapers every 10 seconds
 	setInterval(fetchWallpapers, 10000);
 
+
+	async function getWallpaperById(id: string) {
+		return await fetchSpecificWallpaper(id);
+	}
+
 	// Return wallpapers and fetch function
 	return {
 		wallpapers: computed(() => wallpapers.value),
 		fetchWallpapers,
+		getWallpaperById,
 		lastError: computed(() => lastError.value),
 	};
 });
