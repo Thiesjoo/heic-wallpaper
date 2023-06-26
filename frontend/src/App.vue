@@ -7,8 +7,8 @@ const userStore = useUserStore();
 
 <template>
   <header>
-    <div class="w-full text-right p-3 font-bolder" v-if="userStore.loggedIn">Logged in as: {{ userStore.user.name }}
-      ({{ userStore.user.email }})
+    <div class="w-full text-right p-3 font-bolder" v-if="userStore.loggedIn">Logged in as: {{ userStore?.user?.name }}
+      ({{ userStore?.user?.email }})
     </div>
     <div class="wrapper">
       <nav>

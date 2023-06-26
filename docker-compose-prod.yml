@@ -1,41 +1,33 @@
 version: "3.9"
 
 services:
-    web:
-        container_name: web
+    backend:
         build:
-            context: ./api
-            target: prod
+            context: .
+            target: backend-prod
         ports:
             - "5000:5000"
         depends_on:
             - redis
         environment:
+            - PRODUCTION=True
             - BROKER_URL=redis://redis:6379/0
-            - PRODUCTION=true
         volumes:
-            - ./api:/app
             - ./static:/static
 
     redis:
         container_name: redis
         image: redislabs/rejson:2.0.9
         ports:
-            - "6379"
+            - "6379:6379"
 
     worker:
         build:
-            context: ./api
-            target: web
-        hostname: worker
-        working_dir: /app
+            context: .
+            target: celery
         environment:
             - BROKER_URL=redis://redis:6379/0
-        command: celery -A workers.image_processor worker --loglevel=info --autoscale=4,1
         volumes:
-            - ./api:/app:ro
             - ./static:/static
-        links:
-            - redis
         depends_on:
             - redis
