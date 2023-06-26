@@ -99,19 +99,23 @@ def fixup_redis():
         return "There are still pending tasks, please wait a bit", 409
 
     for filename in os.scandir(AppConfig.PROCESSED_FOLDER):
-        if not filename.is_dir():
-            app.logger.warn(f"Non file found inside processed dir: {filename.path}")
-            continue
-        org = get_single_wallpaper(filename.name)
-        app.logger.info(f"Reimporting file: {filename.name}")
-        if not (type(org) == tuple):
-            app.logger.info("Already exists in redis")
-            continue
+        try:
+            if not filename.is_dir():
+                app.logger.warn(f"Non file found inside processed dir: {filename.path}")
+                continue
+            org = get_single_wallpaper(filename.name)
+            app.logger.info(f"Reimporting file: {filename.name}")
+            if not (type(org) == tuple):
+                app.logger.info("Already exists in redis")
+                continue
 
-        f = open(f"{filename.path}/data.json")
-        data = json.loads(f.read())
+            f = open(f"{filename.path}/data.json")
+            data = json.loads(f.read())
 
-        add_wallpaper(filename.name, data)
+            add_wallpaper(filename.name, data)
+        except Exception as e:
+            app.logger.error(f"Error while importing {filename.name}: {e}")
+            continue
     return "Redis is now in sync with the file system!"
 
 
@@ -148,11 +152,14 @@ def upload_new_wallpaper():
         add_wallpaper(
             uid,
             {
+                "uid": uid,
                 "original_name": old_name,
                 "created_by": user,
                 "date_created": int(time.time()),
                 "status": WallpaperStatus.PROCESSING,
                 "type": WallpaperTypes.HEIC,
+                "data": {},
+                "error": None
             },
         )
 
@@ -162,6 +169,14 @@ def upload_new_wallpaper():
         )
     return "This is not a valid extension", 400
 
+@app.route("/api/delete_pending")
+def delete_pending():
+    if amount_of_pending_tasks() != 0:
+        return "There are still pending tasks, please wait a bit", 409
+
+    delete_pending()
+
+    return "Redis is now in sync with the file system!"
 
 def wallpaper_mapper(wallpaper: Wallpaper, extended=False):
     to_return = {
@@ -190,11 +205,6 @@ def get_wallpapers():
     return jsonify(wallpapers)
 
 
-@app.route("/api/wallpaper/<string:uid>/details")
-def get_wallpaper_information(uid: str):
-    return wallpaper_mapper(get_single_wallpaper(uid), extended=True)
-
-
 @app.route("/api/wallpaper/<string:uid>")
 def get_wallpaper(uid: str):
     wallpaper = get_single_wallpaper(uid)
@@ -217,3 +227,7 @@ def get_wallpaper(uid: str):
     index = last_one["i"]
 
     return redirect(url_for("static", filename=f"processed/{uid}/{index}.png"))
+
+@app.route("/api/wallpaper/<string:uid>/details")
+def get_wallpaper_information(uid: str):
+    return wallpaper_mapper(get_single_wallpaper(uid), extended=True)

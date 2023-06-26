@@ -61,7 +61,7 @@ function uploaded(file: any) {
       <Wallpaper :wallpaper="wallpaper" v-for="wallpaper in activeWallpapers"></Wallpaper>
     </div>
 
-    <h3 class="text-center text-xl text-emerald-300">All pending wallpapers</h3>
+    <h3 class="text-center text-xl text-emerald-300" v-if="pendingWallpapers.length > 0">All pending wallpapers</h3>
     <div id="content" class="w-full h-full flex items-center justify-center flex-wrap">
       <Wallpaper :wallpaper="wallpaper" v-for="wallpaper in pendingWallpapers"></Wallpaper>
     </div>

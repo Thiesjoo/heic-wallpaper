@@ -9,17 +9,15 @@ INDEXED BY: key - uuid
 - (OPTIONAL) sun data
 """
 
-
 """
 Further more: store 1 array of uuid's
 """
-from typing import Any, List, Tuple, TypedDict
-import redis
-from redis.commands.json.path import Path
-import sys
 from enum import Enum
+from typing import Any, List, Tuple, TypedDict
 
+from redis.commands.json.path import Path
 
+import redis
 from backend.config import CeleryConfig
 
 client = redis.Redis.from_url(CeleryConfig.CELERY_RESULT_BACKEND)
@@ -45,11 +43,11 @@ class Wallpaper(TypedDict):
     uid: str
     original_name: str
     date_created: int
-    create_by: str
+    created_by: str
     status: int  # WallpaperStatus
     type: int  # WallpaperTypes
     data: Any
-    error: str
+    error: str | None
 
 
 def get_all_wallpapers() -> List[Wallpaper]:
@@ -100,3 +98,10 @@ def update_data_of_wallpaper(uid: str, data: Any):
 
 def add_error_to_wallpaper(uid: str, err: str):
     client.json().set(WALLPAPER_UUID_PREFIX + uid, ".error", err)
+
+
+def delete_all_pending():
+    all_wallpapers = get_all_wallpapers()
+    for wallpaper in all_wallpapers:
+        if wallpaper["status"] == WallpaperStatus.PROCESSING:
+            remove_single_wallpaper(wallpaper["uid"])
