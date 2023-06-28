@@ -5,6 +5,7 @@ services:
         build:
             context: .
             target: backend-prod
+        restart: always
         ports:
             - "5000:5000"
         depends_on:
@@ -18,6 +19,7 @@ services:
     redis:
         container_name: redis
         image: redislabs/rejson:2.0.9
+        restart: always
         ports:
             - "6379:6379"
 
@@ -25,6 +27,7 @@ services:
         build:
             context: .
             target: celery
+        restart: always
         environment:
             - BROKER_URL=redis://redis:6379/0
         volumes:
