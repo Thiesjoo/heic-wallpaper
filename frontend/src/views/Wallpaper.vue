@@ -3,6 +3,7 @@ import {useRoute} from 'vue-router'
 import Preview from "@/components/Preview.vue";
 import {useWallpaperStore} from "@/stores/wallpaper";
 import {useUserStore} from "@/stores/user";
+import {computed} from "vue";
 
 const SECONDS_IN_A_DAY = 60 * 60 * 24
 
@@ -11,7 +12,9 @@ const id = route.params.id as string
 
 const wallpaperStore = useWallpaperStore()
 const wallpaper = await wallpaperStore.getWallpaperById(id)
-
+const wallpaperData = computed(() => {
+  return wallpaper.data || [{i: 0, t: 0}]
+});
 
 const baseURL = wallpaper.preview_url
 const userStore = useUserStore();
@@ -37,7 +40,7 @@ function select() {
     </button>
   </div>
   <main class="w-full h-full flex flex-wrap justify-center">
-    <Preview :size="25" :url="baseURL.replace('preview', `${i}`)" v-for="{i, t} in wallpaper.data">
+    <Preview :size="25" :url="baseURL.replace('preview', `${i}`)" v-for="{i, t} in wallpaperData">
       <span
           class="w-full text-center">  Wallpaper after {{
           new Date(SECONDS_IN_A_DAY * t * 1000).toISOString().slice(11, 16)

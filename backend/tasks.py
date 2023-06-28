@@ -3,7 +3,7 @@ import shutil
 from flask import Blueprint, jsonify, url_for
 from backend.database.redis import WallpaperStatus, get_all_wallpapers, remove_single_wallpaper
 from backend.config import AppConfig
-from backend.worker.image_processor import handle_image, celery
+from backend.worker.image_processor import handle_all_images, celery
 from celery.result import AsyncResult
 from celery.app.control import Inspect
 
@@ -25,7 +25,7 @@ def taskreports():
 
 @tasks.route("/status/<task_id>", methods=["GET"])
 def single_task_status(task_id):
-    task = handle_image.AsyncResult(task_id)
+    task = handle_all_images.AsyncResult(task_id)
     if task.state == "PENDING":
         response = {
             "queue_state": task.state,
@@ -39,7 +39,7 @@ def single_task_status(task_id):
 
 @tasks.route("/status/<task_id>", methods=["DELETE"])
 def revoke_task(task_id):
-    task: AsyncResult = handle_image.AsyncResult(task_id)
+    task: AsyncResult = handle_all_images.AsyncResult(task_id)
 
     if task.state == "PENDING":
         task.revoke(terminate=True)

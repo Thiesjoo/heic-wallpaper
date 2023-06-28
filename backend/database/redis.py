@@ -26,8 +26,8 @@ WALLPAPER_LOCATION = "wallpapers"
 WALLPAPER_UUID_PREFIX = "wallpaper:"
 
 
-class WallpaperTypes(int, Enum):
-    NORMAL = 1
+class WallpaperType(int, Enum):
+    GENERIC = 1
     HEIC = 2
     ANIMATED = 3
 

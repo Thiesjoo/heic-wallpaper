@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Wallpaper from "@/components/SingleWallpaper.vue";
+import SingleWallpaper from "@/components/SingleWallpaper.vue";
 import {useWallpaperStore, WallpaperStatus} from "@/stores/wallpaper";
 import {computed} from "vue";
 
@@ -58,12 +58,12 @@ function uploaded(file: any) {
 			<span class="text-red-600 w-full text-center" v-if="wallpaperStore.lastError">{{
           wallpaperStore.lastError
         }}</span>
-      <Wallpaper :wallpaper="wallpaper" v-for="wallpaper in activeWallpapers"></Wallpaper>
+      <SingleWallpaper :wallpaper="wallpaper" v-for="wallpaper in activeWallpapers"></SingleWallpaper>
     </div>
 
     <h3 class="text-center text-xl text-emerald-300" v-if="pendingWallpapers.length > 0">All pending wallpapers</h3>
     <div id="content" class="w-full h-full flex items-center justify-center flex-wrap">
-      <Wallpaper :wallpaper="wallpaper" v-for="wallpaper in pendingWallpapers"></Wallpaper>
+      <SingleWallpaper :wallpaper="wallpaper" v-for="wallpaper in pendingWallpapers"></SingleWallpaper>
     </div>
   </section>
 </template>

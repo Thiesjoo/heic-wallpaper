@@ -5,6 +5,8 @@ import base64
 import gc
 import plistlib
 import subprocess
+
+from backend import image
 from backend.config import AppConfig
 
 from PIL import Image ,ImageSequence
@@ -49,23 +51,14 @@ def get_image_from_name(fname: str, idx: int)-> Image:
 def generate_preview(fname: str, uid: str):
     heif_file = get_image_from_name(fname, 0)
 
-    heif_file.thumbnail((1280, 720))
-    heif_file.save(
-        f"{AppConfig.PROCESSED_FOLDER}/{uid}/preview.png",
-        quality=70,
-        optimize=True,
-    )
+    image.generate_preview(heif_file, uid)
     heif_file.close()
 
 
 def generate_normal_image(fname: str, uid: str, idx: int):
     img = get_image_from_name(fname, idx)
 
-
-    img.thumbnail((3840, 2160))
-    img.save(
-        f"{AppConfig.PROCESSED_FOLDER}/{uid}/{idx}.png",
-    )
+    image.generate_normal_image(img, uid, idx)
     img.close()
 
 

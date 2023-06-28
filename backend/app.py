@@ -13,14 +13,14 @@ from flask import (
     g as app_ctx,
 )
 from backend.config import AppConfig
-from backend.worker.image_processor import handle_image
+from backend.worker.image_processor import handle_all_images
 from backend.tasks import amount_of_pending_tasks, tasks
 from werkzeug.utils import secure_filename
 
 from backend.database.redis import (
     Wallpaper,
     WallpaperStatus,
-    WallpaperTypes,
+    WallpaperType,
     add_wallpaper,
     get_all_wallpapers,
     get_single_wallpaper,
@@ -38,12 +38,17 @@ sentry_sdk.init(
 )
 
 
-ALLOWED_EXTENSIONS = {"heic", "png", "jpg", "jpeg", "gif"}
+ALLOWED_EXTENSIONS = {"heic", "png", "jpg", "jpeg"}
 
 
 def get_extension(filename):
     return filename.rsplit(".", 1)[1].lower()
 
+def detemine_type_from_extension(extension):
+    if extension == "heic":
+        return WallpaperType.HEIC
+    else:
+        return WallpaperType.GENERIC
 
 def allowed_file(filename):
     return "." in filename and get_extension(filename) in ALLOWED_EXTENSIONS
@@ -121,7 +126,7 @@ def fixup_redis():
 
 @app.route("/api/upload", methods=["POST"])
 def upload_new_wallpaper():
-    user = request.headers.get("x-User")
+    user = request.headers.get("x-user")
     print(user)
     if PRODUCTION and user is None:
         return "You need to be logged in to upload a wallpaper", 401
@@ -144,7 +149,7 @@ def upload_new_wallpaper():
         file.save(os.path.join(app.config["UPLOAD_FOLDER"], new_filename))
 
         app.logger.info(
-            f"File should be uploaded {os.path.exists(f'{AppConfig.UPLOAD_FOLDER}/{new_filename}')}"
+            f"File should be uploaded to {f'{AppConfig.UPLOAD_FOLDER}/{new_filename}'}: {os.path.exists(f'{AppConfig.UPLOAD_FOLDER}/{new_filename}')}"
         )
 
         old_name = secure_filename(file.filename)
@@ -157,13 +162,13 @@ def upload_new_wallpaper():
                 "created_by": user,
                 "date_created": int(time.time()),
                 "status": WallpaperStatus.PROCESSING,
-                "type": WallpaperTypes.HEIC,
+                "type": WallpaperType.HEIC,
                 "data": {},
                 "error": None
             },
         )
 
-        task = handle_image.delay(new_filename, uid, old_name)
+        task = handle_all_images.delay(new_filename, uid, old_name, detemine_type_from_extension(get_extension(file.filename)))
         return jsonify(
             {"taskid": url_for("tasks.single_task_status", task_id=task.id), "ok": True}
         )

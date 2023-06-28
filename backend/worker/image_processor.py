@@ -4,10 +4,14 @@ import shutil
 import json
 
 import time
+from typing import Any
+
 from celery import Celery, group
 
+from backend import image
 from backend.database.redis import (
     WallpaperStatus,
+    WallpaperType,
     update_data_of_wallpaper,
     update_status_of_wallpaper,
 )
@@ -40,17 +44,27 @@ def remove_all_data(filename):
 
 
 @celery.task()
-def handle_singular_image(fname: str, uid: str, idx: int):
+def heic_generate_single_image(fname: str, uid: str, idx: int):
     heic.generate_normal_image(fname, uid, idx)
 
 
 @celery.task()
-def generate_preview(fname: str, uid: str):
+def heic_generate_preview(fname: str, uid: str):
     heic.generate_preview(fname, uid)
 
 
 @celery.task()
-def finish_processing(prev_results, fname, uid, times, original_name):
+def generate_preview(full_file_name: str, uid: str):
+    image.generate_preview(image.open_image(full_file_name), uid)
+
+
+@celery.task()
+def generate_single_image(full_file_name: str, uid: str):
+    image.generate_normal_image(image.open_image(full_file_name), uid, 0)
+
+
+@celery.task()
+def finish_processing(prev_results, fname: str, uid: str, times: Any | None, original_name: str):
     update_status_of_wallpaper(uid, WallpaperStatus.READY)
     update_data_of_wallpaper(uid, times)
 
@@ -77,21 +91,12 @@ def on_chord_error(request, exc, traceback, hmmm):
     remove_all_data(hmmm)
 
 
-@celery.task(bind=True)
-def handle_image(self, fname: str, uid: str,  original_name: str):
-    # try:
+def handle_heic(self, fname: str, uid: str, original_name: str):
     complete_file_path = f"{AppConfig.UPLOAD_FOLDER}/{fname}"
-
-    if not fname.endswith(".heic"):
-        raise Exception("Files other than .heic cannot be handled right now")
-        # TODO: Move file to correct dir and finish this task
-
-    if not os.path.exists(complete_file_path):
-        raise Exception(f"File upload did not complete {complete_file_path}")
-
     c = heic.get_wallpaper_config(complete_file_path)
+
     if "si" in c:
-        raise Exception("Sun based wallpapers are not yet supported.")
+        raise Exception("NOT_IMPLEMENTED_ERROR: Sun based wallpapers are not yet supported.")
 
     warnings = ""
 
@@ -113,22 +118,46 @@ def handle_image(self, fname: str, uid: str,  original_name: str):
     if warnings:
         print(warnings)
 
-    self.update_state(state="PENDING", meta="Opening file container")
     total_length = heic.get_img_count(fname)
-
-    os.mkdir(f"{AppConfig.PROCESSED_FOLDER}/{uid}/")
 
     self.update_state(
         state="PENDING",
         meta=f"Concurrently processing all image work (Preview and image resizing)",
     )
 
-
-    tasks = [handle_singular_image.s(fname, uid, i) for i in range(total_length)]
-    tasks.append(generate_preview.s(fname, uid))
+    tasks = [heic_generate_single_image.s(fname, uid, i) for i in range(total_length)]
+    tasks.append(heic_generate_preview.s(fname, uid))
 
     job = group(tasks)
 
-    c = (job | finish_processing.s(fname, uid, times, original_name)).delay()
+    (job | finish_processing.s(fname, uid, times, original_name)).delay()
 
-    return "Processing"
+    return "Processing multiple HEIC images"
+
+
+@celery.task()
+def handle_generic(fname: str, uid: str, original_name: str):
+    complete_file_path = f"{AppConfig.UPLOAD_FOLDER}/{fname}"
+    tasks = [
+        generate_preview.s(complete_file_path, uid),
+        generate_single_image.s(complete_file_path, uid),
+    ]
+
+    job = group(tasks)
+    (job | finish_processing.s(fname, uid, None, original_name)).delay()
+    return "Processing normal image"
+
+
+@celery.task(bind=True)
+def handle_all_images(self, fname: str, uid: str, original_name: str, type: WallpaperType):
+    complete_file_path = f"{AppConfig.UPLOAD_FOLDER}/{fname}"
+    if not os.path.exists(complete_file_path):
+        raise Exception(f"File upload did not complete {complete_file_path}")
+    os.mkdir(f"{AppConfig.PROCESSED_FOLDER}/{uid}/")
+
+    if type == WallpaperType.HEIC:
+        return handle_heic(self, fname, uid, original_name)
+    elif type == WallpaperType.GENERIC:
+        return handle_generic(fname, uid, original_name)
+
+    raise ValueError("Invalid wallpaper type")

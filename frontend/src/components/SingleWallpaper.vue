@@ -36,13 +36,12 @@ const wallpaperURL = computed(() => {
 });
 
 
-
 function copyURL() {
   navigator.clipboard.writeText(`${window.location.origin}/wallpaper/${wallpaper.id}`);
 }
 
 function openURL() {
-    router.push(`/wallpaper/${wallpaper.id}`)
+  router.push(`/wallpaper/${wallpaper.id}`)
 }
 
 function updateWallpaper() {
@@ -67,7 +66,7 @@ function updateWallpaper() {
       <!-- Open button -->
       <button
           class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold px-4 m-4 rounded"
-      @click="openURL"
+          @click="openURL"
       >
         Open
       </button>
@@ -76,7 +75,7 @@ function updateWallpaper() {
       <button
           class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold px-4 m-4 rounded"
           @click="updateWallpaper"
-      v-if="userStore.loggedIn">
+          v-if="userStore.loggedIn">
         Set
       </button>
     </div>
