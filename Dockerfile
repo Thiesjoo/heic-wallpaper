@@ -43,10 +43,13 @@ CMD ["npm", "run", "start"]
 FROM frontend-base as frontend-prod
 RUN npm run build
 
-FROM backend as backend-prod
 
-CMD mkdir -p /static
-COPY --from=frontend-prod /app/dist /static
+FROM nginx:1.21-alpine as nginx-prod
+COPY --from=frontend-prod /app/dist /usr/share/nginx/html
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+
+
+FROM backend as backend-prod
 
 WORKDIR /
 RUN pip install --no-cache-dir waitress

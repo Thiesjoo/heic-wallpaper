@@ -7,7 +7,7 @@ services:
             target: backend-prod
         restart: always
         ports:
-            - "5000:5000"
+            - "5000"
         depends_on:
             - redis
         environment:
@@ -15,6 +15,19 @@ services:
             - BROKER_URL=redis://redis:6379/0
         volumes:
             - ./static:/static
+    nginx:
+        build:
+            context: .
+            target: nginx-prod
+        restart: always
+        ports:
+            - "5000:5000"
+        depends_on:
+            - backend
+        volumes:
+            - ./static:/static
+        links:
+            - backend
 
     redis:
         container_name: redis
