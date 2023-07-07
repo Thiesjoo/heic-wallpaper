@@ -8,9 +8,11 @@ def open_image(filename: str) -> Image:
 
 def generate_preview(image: Image, uid: str) -> None:
     image.thumbnail((1280, 720))
+
+
     image.save(
         f"{AppConfig.PROCESSED_FOLDER}/{uid}/preview.png",
-        quality=70,
+        quality=50,
         optimize=True,
     )
 

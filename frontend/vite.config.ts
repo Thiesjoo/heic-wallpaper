@@ -15,11 +15,13 @@ export default defineConfig({
 		// Proxy API requests to the backend
 		proxy: {
 			"/api": {
-				target: "http://localhost:5000/",
+				target: "http://backend:5000/",
+				// target: "http://localhost:5000/",
 				changeOrigin: true,
 			},
 			"/static": {
-				target: "http://localhost:5000/",
+				target: "http://backend:5000/",
+				// target: "http://localhost:5000/",
 				changeOrigin: true,
 			},
 		},

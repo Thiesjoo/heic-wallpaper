@@ -44,8 +44,14 @@ def get_img_count(fname: str) -> int:
     return count
 
 def get_image_from_name(fname: str, idx: int)-> Image:
-    img = get_image_container(fname)
-    return ImageSequence.Iterator(img)[idx]
+    img_container = get_image_container(fname)
+    heif_img = ImageSequence.Iterator(img_container)[idx]
+
+    img = heif_img.copy()
+    del heif_img
+    del img_container
+    gc.collect()
+    return img
 
 
 def generate_preview(fname: str, uid: str):
