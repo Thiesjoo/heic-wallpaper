@@ -1,56 +1,57 @@
-import {defineStore} from "pinia";
-import {computed, ref} from "vue";
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
 
 export type User = {
-    email: string;
-    uid: string;
-    passageID: string;
-    name: string;
+    email: string
+    uid: string
+    passageID: string
+    name: string
 }
 
 export type UserSettings = {
-    backgroundURL: string;
+    backgroundURL: string
 }
 
-export const useUserStore = defineStore("user", () => {
-    const user = ref<User | null>(null);
-    fetch("https://auth.thies.dev/api/users/me", {
-        credentials: "include",
-        //@ts-ignore
-    }, false)
+export const useUserStore = defineStore('user', () => {
+    const user = ref<User | null>(null)
+    fetch(
+        'https://auth.thies.dev/api/users/me',
+        {
+            credentials: 'include',
+            //@ts-ignore
+        },
+        false
+    )
         .then((res) => res.json())
         .then((data) => {
-            user.value = data;
+            user.value = data
         })
 
-    const loggedIn = computed(() => user.value !== null);
-
+    const loggedIn = computed(() => user.value !== null)
 
     function getSettings(): Promise<UserSettings> {
-        return fetch("https://auth.thies.dev/api/settings/me", {
-            credentials: "include",
-        })
-            .then((res) => res.json())
-
+        return fetch('https://auth.thies.dev/api/settings/me', {
+            credentials: 'include',
+        }).then((res) => res.json())
     }
 
     function updateWallpaper(newURL: string) {
-        const myHeaders = new Headers();
-        myHeaders.append('pragma', 'no-cache');
-        myHeaders.append('cache-control', 'no-cache');
-        myHeaders.append("content-type", "application/json")
+        const myHeaders = new Headers()
+        myHeaders.append('pragma', 'no-cache')
+        myHeaders.append('cache-control', 'no-cache')
+        myHeaders.append('content-type', 'application/json')
 
-        const fetchConfig  = {
+        const fetchConfig = {
             method: 'PATCH',
             headers: myHeaders,
-            credentials: "include",
+            credentials: 'include',
             body: JSON.stringify({
-                backgroundURL: newURL
-            })
+                backgroundURL: newURL,
+            }),
         } satisfies RequestInit
 
-        fetch("https://auth.thies.dev/api/settings/me", fetchConfig)
-            .then(x => {
+        fetch('https://auth.thies.dev/api/settings/me', fetchConfig)
+            .then((x) => {
                 if (x.status != 200) {
                     throw new Error(x.statusText)
                 }
@@ -59,15 +60,16 @@ export const useUserStore = defineStore("user", () => {
             })
             .then(function (response) {
                 console.log(response)
-            }).catch(x => {
-            console.error(x)
-        })
+            })
+            .catch((x) => {
+                console.error(x)
+            })
     }
 
     return {
         user: computed(() => user.value),
         loggedIn,
         updateWallpaper,
-        getSettings
+        getSettings,
     }
 })
