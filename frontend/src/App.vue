@@ -21,6 +21,9 @@ const userStore = useUserStore()
                 <RouterLink to="/account" v-if="userStore.loggedIn"
                     >Account</RouterLink
                 >
+                <RouterLink to="/login" v-if="!userStore.loggedIn"
+                    >Login</RouterLink
+                >
             </nav>
         </div>
     </header>

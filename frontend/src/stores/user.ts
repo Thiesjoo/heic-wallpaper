@@ -1,39 +1,36 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-
-export type User = {
-    email: string
-    uid: string
-    passageID: string
-    name: string
-}
-
-export type UserSettings = {
-    backgroundURL: string
-}
+import auth from "@/auth"
+import type { User, UserFromAPI } from '@/utils/types'
 
 export const useUserStore = defineStore('user', () => {
     const user = ref<User | null>(null)
-    fetch(
-        'https://auth.thies.dev/api/users/me',
-        {
-            credentials: 'include',
-            //@ts-ignore
-        },
-        false
-    )
-        .then((res) => res.json())
-        .then((data) => {
-            user.value = data
-        })
-
     const loggedIn = computed(() => user.value !== null)
 
-    function getSettings(): Promise<UserSettings> {
-        return fetch('https://auth.thies.dev/api/settings/me', {
-            credentials: 'include',
-        }).then((res) => res.json())
-    }
+
+
+    async function refreshUserInfo() {
+        await getUserData((await auth.getUser(true)) || undefined);
+    },
+
+    async function getUserData(cachedUser?: UserFromAPI) {
+        try {
+            console.log("Getting user data");
+            user = cachedUser || (await auth.getUser());
+            if (!user) {
+                loading.userdata = false;
+                user = null;
+                return;
+            }
+
+
+        } catch (e: any) {
+            console.error(e);
+        }
+    },
+
+
+    function getSettings(): Promise<UserSettings> {}
 
     function updateWallpaper(newURL: string) {
         const myHeaders = new Headers()
