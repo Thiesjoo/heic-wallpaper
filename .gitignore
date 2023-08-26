@@ -2,3 +2,5 @@ static/
 remotestatic/
 __pycache__
 data/
+
+.env

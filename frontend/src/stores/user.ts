@@ -72,7 +72,8 @@ export const useUserStore = defineStore('user', () => {
 
 
     return {
-        loading: computed(() => loading.value),
+        loading: computed(() => loading
+            .value),
         user: computed(() => user.value),
         loggedIn: computed(() => user.value !== null),
         updateWallpaper,

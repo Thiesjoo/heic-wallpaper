@@ -54,8 +54,6 @@ def allowed_file(filename):
     return "." in filename and get_extension(filename) in ALLOWED_EXTENSIONS
 
 
-PRODUCTION = bool(os.environ.get("PRODUCTION", False))
-
 os.makedirs(os.path.join(AppConfig.STATIC_FOLDER), exist_ok=True)
 os.makedirs(os.path.join(AppConfig.UPLOAD_FOLDER), exist_ok=True)
 os.makedirs(os.path.join(AppConfig.PROCESSED_FOLDER), exist_ok=True)
@@ -126,12 +124,7 @@ def fixup_redis():
 
 @app.route("/api/upload", methods=["POST"])
 def upload_new_wallpaper():
-    user = request.headers.get("x-user")
-    print(user)
-    if PRODUCTION and user is None:
-        return "You need to be logged in to upload a wallpaper", 401
-    else:
-        user = "unknown"
+    user = "unknown"
 
     # check if the post request has the file part
     if "file" not in request.files:
