@@ -1,36 +1,35 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import auth from "@/auth"
-import type { User, UserFromAPI } from '@/utils/types'
+import type { User, UserFromAPI, UserSettings } from '@/utils/types'
 
 export const useUserStore = defineStore('user', () => {
     const user = ref<User | null>(null)
-    const loggedIn = computed(() => user.value !== null)
-
-
+    const loading = ref<boolean>(false);
 
     async function refreshUserInfo() {
+        loading.value = true;
         await getUserData((await auth.getUser(true)) || undefined);
-    },
+        loading.value = false;
+
+    }
 
     async function getUserData(cachedUser?: UserFromAPI) {
         try {
+            loading.value = true;
+
             console.log("Getting user data");
-            user = cachedUser || (await auth.getUser());
-            if (!user) {
-                loading.userdata = false;
-                user = null;
-                return;
+            user.value = cachedUser || (await auth.getUser());
+            if (!user.value) {
+                user.value = null;
             }
-
-
         } catch (e: any) {
             console.error(e);
         }
-    },
+        loading.value = false;
 
+    }
 
-    function getSettings(): Promise<UserSettings> {}
 
     function updateWallpaper(newURL: string) {
         const myHeaders = new Headers()
@@ -63,10 +62,35 @@ export const useUserStore = defineStore('user', () => {
             })
     }
 
+    function reset(logout = false) {
+        user.value = null;
+        if (logout) {
+            auth.logout()
+        }
+    }
+
+
+
     return {
+        loading: computed(() => loading.value),
         user: computed(() => user.value),
-        loggedIn,
+        loggedIn: computed(() => user.value !== null),
         updateWallpaper,
-        getSettings,
+        getUserData,
+        refreshUserInfo,
+        reset
     }
 })
+
+
+export function enableAuth() {
+    const store = useUserStore();
+
+    const authed = (user: UserFromAPI) => {
+        store.getUserData(user);
+    };
+    const unauthed = () => {
+        store.reset()
+    };
+    auth.registerCallbacks(authed, unauthed);
+}

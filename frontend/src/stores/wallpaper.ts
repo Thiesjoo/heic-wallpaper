@@ -63,7 +63,10 @@ export const useWallpaperStore = defineStore('wallpapers', () => {
         id: string
     ): Promise<WallpaperWithDetails> => {
         try {
-            const res = await fetch(`/api/wallpaper/${id}/details`)
+            const res = await fetch(`/api/wallpaper/${id}/details`);
+            if (res.status !== 200) {
+                throw new Error("Wallpaper is not available here")
+            }
             const data = await res.json()
             return data
         } catch (e: any) {

@@ -235,4 +235,7 @@ def get_wallpaper(uid: str):
 
 @app.route("/api/wallpaper/<string:uid>/details")
 def get_wallpaper_information(uid: str):
-    return wallpaper_mapper(get_single_wallpaper(uid), extended=True)
+    wallpaper = get_single_wallpaper(uid)
+    if type(wallpaper) == tuple:
+        return wallpaper
+    return wallpaper_mapper(wallpaper, extended=True)

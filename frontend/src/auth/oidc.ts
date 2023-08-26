@@ -7,14 +7,11 @@ const userManager = new UserManager({
     client_id: import.meta.env.VITE_OIDC_CLIENT_ID,
     redirect_uri: `${window.location.origin}/login/callback`,
     response_type: 'code',
-    scope: 'openid settings email goauthentik.io/api',
+    scope: 'openid profile settings email goauthentik.io/api',
     userStore: new WebStorageStateStore({ store: window.localStorage }),
     monitorSession: true,
     monitorAnonymousSession: true,
 })
-
-//@ts-ignore
-window.test = userManager
 
 function popup(): Promise<void> {
     return new Promise((resolve, reject) => {

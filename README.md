@@ -2,6 +2,9 @@
 
 Originally only for heic wallpapers, but now it supports all image formats.
 
+
+
+
 ## Installation
 
 ```bash
@@ -10,6 +13,8 @@ pip install -r requirements.txt
 
 cd ../frontend
 npm ci
+cp .sample.env .env
+echo "Fill in the information in the .env file"
 
 cd ../
 docker compose up redis -d

@@ -7,23 +7,23 @@ const userStore = useUserStore()
 
 <template>
     <header>
-        <div
-            class="w-full text-right p-3 font-bolder"
-            v-if="userStore.loggedIn"
-        >
-            Logged in as: {{ userStore?.user?.name }} ({{
-                userStore?.user?.email
-            }})
+        <div class="w-full p-3 font-bolder flex flex-row">
+            <span v-if="userStore.loading">(Still loading ...)</span>
+            <div class="flex-grow"></div>
+            <span v-if="userStore.loggedIn">
+                Logged in as: {{ userStore.user?.name.first }} ({{
+                    userStore?.user?.email
+                }})
+            </span>
+
         </div>
         <div class="wrapper">
             <nav>
                 <RouterLink to="/">Home</RouterLink>
-                <RouterLink to="/account" v-if="userStore.loggedIn"
-                    >Account</RouterLink
-                >
-                <RouterLink to="/login" v-if="!userStore.loggedIn"
-                    >Login</RouterLink
-                >
+                <RouterLink to="/account"
+                            v-if="userStore.loggedIn">Account</RouterLink>
+                <RouterLink to="/login"
+                            v-else>Login</RouterLink>
             </nav>
         </div>
     </header>
