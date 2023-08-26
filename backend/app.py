@@ -221,6 +221,9 @@ def get_wallpaper(uid: str):
 
     times = wallpaper["data"]
 
+    if times is None:
+        return redirect(url_for("static", filename=f"processed/{uid}/0.png"))
+
     now = datetime.now().time()
     nowsecs = now.hour * 60 * 60 + now.minute * 60 + now.second
 
