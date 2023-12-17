@@ -28,7 +28,7 @@ async function onDrop(file: File) {
     return;
   }
 
-  const result = await fetch("/api/upload", {
+  const presignedURLResult = await fetch("/api/upload", {
     method: "POST",
     body: JSON.stringify({
       name: file.name,
@@ -39,14 +39,14 @@ async function onDrop(file: File) {
     }
   }).then((res) => res.json());
 
-  if (result.error) {
-    console.error(result)
+  if (presignedURLResult.error) {
+    console.error(presignedURLResult)
     toast.error("Error uploading file.")
     return;
   }
 
-
-  const {url, fields} = result.data;
+  const {url, fields} = presignedURLResult.data;
+  const {key, uid} = presignedURLResult;
   const formData = new FormData();
   Object.entries(fields as { [key: string]: string }).forEach(([key, value]) => {
     formData.append(key, value);
@@ -68,6 +68,19 @@ async function onDrop(file: File) {
     toast.error("Error uploading file.");
     return;
   }
+
+  const completeResult = await axios.post("/api/upload/complete",
+      {
+        key: key,
+        uid: uid,
+      }
+    )
+
+  if (completeResult.status !== 202) {
+    toast.error("Error processing file.");
+    return;
+  }
+
   toast.success("File uploaded successfully.",
       {
         onClick: () => {

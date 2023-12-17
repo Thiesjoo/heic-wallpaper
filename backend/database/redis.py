@@ -18,9 +18,9 @@ from typing import Any, List, Tuple, TypedDict
 from redis.commands.json.path import Path
 
 import redis
-from backend.config import CeleryConfig
+from backend.config import CeleryConfig, DatabaseConfig
 
-client = redis.Redis.from_url(CeleryConfig.CELERY_RESULT_BACKEND)
+client = redis.Redis.from_url(DatabaseConfig.DATABASE_URL)
 
 WALLPAPER_LOCATION = "wallpapers"
 WALLPAPER_UUID_PREFIX = "wallpaper:"
@@ -34,9 +34,10 @@ class WallpaperType(int, Enum):
 
 class WallpaperStatus(int, Enum):
     READY = 1
-    PROCESSING = 2
-    ERROR = 3
-    DELETED = 4
+    UPLOADING = 2
+    PROCESSING = 4
+    ERROR = 8
+    DELETED = 16
 
 
 class Wallpaper(TypedDict):
@@ -68,7 +69,8 @@ def get_single_wallpaper(uid: str) -> Wallpaper | Tuple[str, int]:
     if temp is None:
         return "Wallpaper not found", 404
 
-    if "status" in temp and temp["status"] == WallpaperStatus.PROCESSING:
+    if "status" in temp and temp["status"] in [WallpaperStatus.PROCESSING,
+                                               WallpaperStatus.UPLOADING]:
         # 202 status code when result is still processing
         return "Still processing", 202
 

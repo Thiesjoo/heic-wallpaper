@@ -1,42 +1,26 @@
-from datetime import datetime
 import json
-import os
+from datetime import datetime
 import time
 from uuid import uuid4
-from flask import (
-    Flask,
-    jsonify,
-    redirect,
-    request,
-    url_for,
-    current_app,
-    g as app_ctx,
-)
-from backend.config import AppConfig
-from backend.worker.image_processor import handle_all_images
-from backend.tasks import amount_of_pending_tasks, tasks
+
+import boto3
+from flask import Flask, request, url_for, redirect, jsonify
 from werkzeug.utils import secure_filename
 
-from backend.database.redis import (
-    Wallpaper,
-    WallpaperStatus,
-    WallpaperType,
-    add_wallpaper,
-    get_all_wallpapers,
-    get_single_wallpaper,
+from backend.config import AppConfig
+from backend.database.redis import WallpaperType, add_wallpaper, WallpaperStatus, \
+    Wallpaper, get_single_wallpaper, update_status_of_wallpaper, get_all_wallpapers
+
+app = Flask(
+    __name__,
 )
 
-import sentry_sdk
-from sentry_sdk.integrations.flask import FlaskIntegration
-
-sentry_sdk.init(
-    dsn="https://169d60844720489392d6fa7c6d33215f@o4504384319258624.ingest.sentry.io/4504384322600963",
-    integrations=[
-        FlaskIntegration(),
-    ],
-    traces_sample_rate=1.0,
-)
-
+s3 = boto3.client('s3',
+                  endpoint_url=AppConfig.UPLOAD_S3_URL,
+                  config=boto3.session.Config(signature_version='s3v4'),
+                  aws_access_key_id=AppConfig.UPLOAD_S3_ACCESS_KEY,
+                  aws_secret_access_key=AppConfig.UPLOAD_S3_SECRET_KEY,
+                  )
 
 ALLOWED_EXTENSIONS = {"heic", "png", "jpg", "jpeg"}
 
@@ -44,143 +28,98 @@ ALLOWED_EXTENSIONS = {"heic", "png", "jpg", "jpeg"}
 def get_extension(filename):
     return filename.rsplit(".", 1)[1].lower()
 
+
 def detemine_type_from_extension(extension):
     if extension == "heic":
         return WallpaperType.HEIC
     else:
         return WallpaperType.GENERIC
 
+
 def allowed_file(filename):
     return "." in filename and get_extension(filename) in ALLOWED_EXTENSIONS
 
 
-os.makedirs(os.path.join(AppConfig.STATIC_FOLDER), exist_ok=True)
-os.makedirs(os.path.join(AppConfig.UPLOAD_FOLDER), exist_ok=True)
-os.makedirs(os.path.join(AppConfig.PROCESSED_FOLDER), exist_ok=True)
-
-app = Flask(
-    __name__,
-    static_folder=AppConfig.STATIC_FOLDER,
-)
-app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 300
-
-app.config["UPLOAD_FOLDER"] = AppConfig.UPLOAD_FOLDER
-
-
-# Max size is 100mb
-app.config["MAX_CONTENT_LENGTH"] = 100 * 1000 * 1000
-
-app.register_blueprint(tasks, url_prefix="/api/tasks")
-
-
-@app.errorhandler(413)
-def too_large(e):
-    return "File is too large. Please contact admin for manual upload", 413
-
-
-@app.before_request
-def logging_before():
-    # Store the start time for the request
-    app_ctx.start_time = time.perf_counter()
-
-
-@app.after_request
-def logging_after(response):
-    # Get total time in milliseconds
-    total_time = time.perf_counter() - app_ctx.start_time
-    time_in_ms = int(total_time * 1000)
-    # Log the time taken for the endpoint
-    current_app.logger.info(
-        "%s ms %s %s %s", time_in_ms, request.method, request.path, dict(request.args)
-    )
-    return response
-
-
-@app.route("/api/fixupredis")
-def fixup_redis():
-    if amount_of_pending_tasks() != 0:
-        return "There are still pending tasks, please wait a bit", 409
-
-    for filename in os.scandir(AppConfig.PROCESSED_FOLDER):
-        try:
-            if not filename.is_dir():
-                app.logger.warn(f"Non file found inside processed dir: {filename.path}")
-                continue
-            org = get_single_wallpaper(filename.name)
-            app.logger.info(f"Reimporting file: {filename.name}")
-            if not (type(org) == tuple):
-                app.logger.info("Already exists in redis")
-                continue
-
-            f = open(f"{filename.path}/data.json")
-            data = json.loads(f.read())
-
-            add_wallpaper(filename.name, data)
-        except Exception as e:
-            app.logger.error(f"Error while importing {filename.name}: {e}")
-            continue
-    return "Redis is now in sync with the file system!"
-
-
 @app.route("/api/upload", methods=["POST"])
-def upload_new_wallpaper():
-    user = "unknown"
+def upload():
+    file_name = request.json.get('name')
 
-    # check if the post request has the file part
-    if "file" not in request.files:
-        return "You are missing the file", 400
-    file = request.files["file"]
-    # If the user does not select a file, the browser submits an
-    # empty file without a filename.
-    if file.filename == "" or not file:
-        return "You didn't select a file", 400
-    if file and allowed_file(file.filename):
-        uid = str(uuid4())
-        new_filename = f"{uid}.{get_extension(file.filename)}"
-        app.logger.info(f"Uploading new file with name {new_filename}")
+    file_type = request.json.get('type')
+    print(file_type, file_name)
+    if file_name is None or file_type is None:
+        return json.dumps({
+            'error': 'name and type are required'
+        }), 400
 
-        file.save(os.path.join(app.config["UPLOAD_FOLDER"], new_filename))
+    uid = str(uuid4())
+    new_filename = f"{uid}.{get_extension(file_name)}"
 
-        app.logger.info(
-            f"File should be uploaded to {f'{AppConfig.UPLOAD_FOLDER}/{new_filename}'}: {os.path.exists(f'{AppConfig.UPLOAD_FOLDER}/{new_filename}')}"
-        )
+    presigned_post = s3.generate_presigned_post(
+        Bucket=AppConfig.UPLOAD_S3_BUCKET,
+        Key=new_filename,
+        Fields={"acl": "public-read", "Content-Type": file_type},
+        Conditions=[
+            {"acl": "public-read"},
+            {"Content-Type": file_type}
+        ],
+        ExpiresIn=3600
+    )
 
-        old_name = secure_filename(file.filename)
+    old_name = secure_filename(file_name)
 
-        add_wallpaper(
-            uid,
-            {
-                "uid": uid,
-                "original_name": old_name,
-                "created_by": user,
-                "date_created": int(time.time()),
-                "status": WallpaperStatus.PROCESSING,
-                "type": WallpaperType.HEIC,
-                "data": {},
-                "error": None
-            },
-        )
+    add_wallpaper(
+        uid,
+        {
+            "uid": uid,
+            "original_name": old_name,
+            "created_by": "TODO: IMPLEMENT THIS",
+            "date_created": int(time.time()),
+            "status": WallpaperStatus.UPLOADING,
+            "type": detemine_type_from_extension(get_extension(file_name)),
+            "data": {},
+            "error": None
+        },
+    )
 
-        task = handle_all_images.delay(new_filename, uid, old_name, detemine_type_from_extension(get_extension(file.filename)))
-        return jsonify(
-            {"taskid": url_for("tasks.single_task_status", task_id=task.id), "ok": True}
-        )
-    return "This is not a valid extension", 400
+    return json.dumps({
+        'data': presigned_post,
+        'uid': uid,
+        'key': new_filename
+    })
 
-@app.route("/api/delete_pending")
-def delete_pending():
-    if amount_of_pending_tasks() != 0:
-        return "There are still pending tasks, please wait a bit", 409
 
-    delete_pending()
+@app.route("/api/upload/complete", methods=["POST"])
+def upload_complete():
+    uid = request.json.get('uid')
+    key = request.json.get('key')
 
-    return "Redis is now in sync with the file system!"
+    if uid is None or key is None:
+        return json.dumps({
+            'error': 'uid/key is required'
+        }), 400
+    print("Req for:", uid, key)
+
+    try:
+        s3.head_object(Bucket=AppConfig.UPLOAD_S3_BUCKET, Key=key)
+    except Exception as e:
+        print(e)
+        return json.dumps({
+            'error': 'invalid uid/key'
+        }), 400
+
+    update_status_of_wallpaper(uid, WallpaperStatus.PROCESSING)
+    print("Starting task")
+
+    return json.dumps({
+        'data': 'ok'
+    }), 202
 
 def wallpaper_mapper(wallpaper: Wallpaper, extended=False):
     to_return = {
         "name": wallpaper["original_name"],
         "id": wallpaper["uid"],
-        "created_by": wallpaper["created_by"] if "created_by" in wallpaper else "Unknown",
+        "created_by": wallpaper[
+            "created_by"] if "created_by" in wallpaper else "Unknown",
         "location": url_for("get_wallpaper", uid=wallpaper["uid"]),
         "preview_url": url_for(
             "static", filename=f"processed/{wallpaper['uid']}/preview.png"
@@ -228,6 +167,7 @@ def get_wallpaper(uid: str):
     index = last_one["i"]
 
     return redirect(url_for("static", filename=f"processed/{uid}/{index}.png"))
+
 
 @app.route("/api/wallpaper/<string:uid>/details")
 def get_wallpaper_information(uid: str):
