@@ -16,10 +16,10 @@ app = Flask(
 )
 
 s3 = boto3.client('s3',
-                  endpoint_url=AppConfig.UPLOAD_S3_URL,
+                  endpoint_url=AppConfig.UPLOAD.S3_URL,
                   config=boto3.session.Config(signature_version='s3v4'),
-                  aws_access_key_id=AppConfig.UPLOAD_S3_ACCESS_KEY,
-                  aws_secret_access_key=AppConfig.UPLOAD_S3_SECRET_KEY,
+                  aws_access_key_id=AppConfig.UPLOAD.S3_ACCESS_KEY,
+                  aws_secret_access_key=AppConfig.UPLOAD.S3_SECRET_KEY,
                   )
 
 ALLOWED_EXTENSIONS = {"heic", "png", "jpg", "jpeg"}

@@ -12,9 +12,14 @@ class DatabaseConfig:
     DATABASE_URL = os.environ.get("DATABASE_URL")
 
 
+class S3Config:
+    def __init__(self, name):
+        self.name = name
+        self.S3_URL = os.environ.get(f"{name}_S3_URL")
+        self.BUCKET = os.environ.get(f"{name}_S3_BUCKET")
+        self.S3_ACCESS_KEY = os.environ.get(f"{name}_S3_ACCESS_KEY")
+        self.S3_SECRET_KEY = os.environ.get(f"{name}_S3_SECRET_KEY")
+
 class AppConfig:
-    UPLOAD_S3_URL = os.environ.get("UPLOAD_S3_URL")
-    UPLOAD_S3_BUCKET = os.environ.get("UPLOAD_S3_BUCKET")
-    UPLOAD_S3_ACCESS_KEY = os.environ.get("UPLOAD_S3_ACCESS_KEY")
-    UPLOAD_S3_SECRET_KEY = os.environ.get("UPLOAD_S3_SECRET_KEY")
-    
+    UPLOAD = S3Config("UPLOAD")
+    RESULT = S3Config("RESULT")
