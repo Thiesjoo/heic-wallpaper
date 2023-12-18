@@ -1,5 +1,4 @@
-import os
-import shutil
+import boto3
 from flask import Blueprint, jsonify, url_for
 from backend.database.redis import WallpaperStatus, get_all_wallpapers, remove_single_wallpaper
 from backend.config import AppConfig
@@ -8,6 +7,13 @@ from celery.result import AsyncResult
 from celery.app.control import Inspect
 
 tasks = Blueprint("tasks", __name__, template_folder="templates")
+
+s3_results = boto3.client('s3',
+                          endpoint_url=AppConfig.RESULT.S3_URL,
+                          config=boto3.session.Config(signature_version='s3v4'),
+                          aws_access_key_id=AppConfig.RESULT.S3_ACCESS_KEY,
+                          aws_secret_access_key=AppConfig.RESULT.S3_SECRET_KEY,
+                          )
 
 
 @tasks.route("/", methods=["GET"])
@@ -73,17 +79,20 @@ def garbage_collect():
 
     print("Going to garbage collect")
 
-    shutil.rmtree(f"{AppConfig.UPLOAD_FOLDER}/")
-    os.mkdir(f"{AppConfig.UPLOAD_FOLDER}/")
-
     all_wallpapers = get_all_wallpapers()
     removed = 0
     for wall in all_wallpapers:
         if not wall["status"] == WallpaperStatus.READY:
             print("This wallpaper errored somewhere:", wall)
-            shutil.rmtree(
-                f"{AppConfig.PROCESSED_FOLDER}/{wall['uuid']}", ignore_errors=True
-            )
-            remove_single_wallpaper(wall["uuid"])
+
+            all_files = s3_results.list_objects_v2(Bucket=AppConfig.RESULT.BUCKET,
+                                                   Prefix=f"{wall['uid']}/")
+            if not all_files["KeyCount"] == 0:
+                for file in all_files["Contents"]:
+                    print("Removing file:", file)
+                    s3_results.delete_object(Bucket=AppConfig.RESULT.BUCKET,
+                                             Key=file["Key"])
+
+            remove_single_wallpaper(wall["uid"])
             removed += 1
     return f"Removed {removed} folders", 200

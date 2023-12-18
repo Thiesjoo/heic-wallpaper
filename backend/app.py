@@ -4,12 +4,14 @@ import time
 from uuid import uuid4
 
 import boto3
+
 from flask import Flask, request, url_for, redirect, jsonify
 from werkzeug.utils import secure_filename
 
 from backend.config import AppConfig
 from backend.database.redis import WallpaperType, add_wallpaper, WallpaperStatus, \
-    Wallpaper, get_single_wallpaper, update_status_of_wallpaper, get_all_wallpapers
+    Wallpaper, get_single_wallpaper, update_status_of_wallpaper, get_all_wallpapers, \
+    add_error_to_wallpaper
 from backend.tasks import tasks
 
 from backend.worker.image_processor import handle_all_images
@@ -19,6 +21,8 @@ app = Flask(
 )
 app.register_blueprint(tasks, url_prefix="/api/tasks")
 
+
+
 s3 = boto3.client('s3',
                   endpoint_url=AppConfig.UPLOAD.S3_URL,
                   config=boto3.session.Config(signature_version='s3v4'),
@@ -26,8 +30,26 @@ s3 = boto3.client('s3',
                   aws_secret_access_key=AppConfig.UPLOAD.S3_SECRET_KEY,
                   )
 
-ALLOWED_EXTENSIONS = {"heic", "png", "jpg", "jpeg"}
+s3.put_bucket_lifecycle_configuration(
+    Bucket=AppConfig.UPLOAD.BUCKET,
+    LifecycleConfiguration={
+        'Rules': [
+            {
+                'ID': 'delete_temp_files',
+                'Status': 'Enabled',
+                'Filter': {
+                    'Prefix': '',
+                },
+                'Expiration': {
+                    'Days': 1,
+                },
+            },
+        ],
+    },
+)
 
+
+ALLOWED_EXTENSIONS = {"heic", "png", "jpg", "jpeg"}
 
 def get_extension(filename):
     return filename.rsplit(".", 1)[1].lower()
@@ -113,6 +135,7 @@ def upload_complete():
     update_status_of_wallpaper(uid, WallpaperStatus.PROCESSING)
     task = handle_all_images.delay(key, uid, detemine_type_from_extension(
         get_extension(key)))
+    add_error_to_wallpaper(uid, url_for("tasks.single_task_status", task_id=task.id))
 
     return json.dumps({
         'data': 'ok',

@@ -53,7 +53,6 @@ def heic_generate_preview(key: str, uid: str):
     img = image.open_image(s3_uploads, key)
     image.generate_preview(s3_results, heic.get_image_from_name(img, 0), uid)
 
-
 @celery.task()
 def generate_preview(key: str, uid: str):
     img = image.open_image(s3_uploads, key)
@@ -77,15 +76,17 @@ def finish_processing(prev_results, key: str, uid: str, times: Any | None):
 @celery.task
 def on_chord_error(request, exc, traceback, hmmm):
     print("Task {0!r} raised error: {1!r}".format(request.id, exc))
+    print(hmmm)
 
 
 def handle_heic(self, key: str, uid: str):
     img = image.open_image(s3_uploads, key)
-    c = heic.get_wallpaper_config(img)
-
-    if "si" in c:
-        raise Exception(
-            "NOT_IMPLEMENTED_ERROR: Sun based wallpapers are not yet supported.")
+    try:
+        c = heic.get_wallpaper_config(img)
+    except Exception as e:
+        update_status_of_wallpaper(uid, WallpaperStatus.ERROR)
+        finish(key)
+        return "Error while processing HEIC image",str(e)
 
     warnings = ""
 
