@@ -51,7 +51,7 @@ def heic_generate_single_image(key: str, uid: str, idx: int):
 @celery.task()
 def heic_generate_preview(key: str, uid: str):
     img = image.open_image(s3_uploads, key)
-    image.generate_normal_image(s3_results, heic.get_image_from_name(img, 0), uid, 0)
+    image.generate_preview(s3_results, heic.get_image_from_name(img, 0), uid)
 
 
 @celery.task()

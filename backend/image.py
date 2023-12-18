@@ -21,16 +21,16 @@ def generate_preview(s3_instance: BaseClient, image: Image, uid: str) -> None:
         tmp,
         quality=50,
         optimize=True,
-        format=image.format,
+        format='PNG',
     )
     tmp.seek(0)
 
     s3_instance.put_object(
         Bucket=AppConfig.RESULT.BUCKET,
-        Key=f"{uid}/preview.jpg",
+        Key=f"{uid}/preview.png",
         Body=tmp.getvalue(),
         ACL="public-read",
-        ContentType="image/jpeg",
+        ContentType="image/png",
     )
 
 
