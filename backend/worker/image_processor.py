@@ -45,16 +45,19 @@ s3_results = boto3.client('s3',
 
 def finish(key: str) -> None:
     print(f"Removing uploaded file: {key}")
-    s3_uploads.delete_object(Bucket=AppConfig.UPLOAD.S3_BUCKET, Key=str)
+    s3_uploads.delete_object(Bucket=AppConfig.UPLOAD.BUCKET, Key=key)
 
 
 @celery.task()
-def heic_generate_single_image(fname: str, uid: str, idx: int):
+def heic_generate_single_image(key: str, uid: str, idx: int):
+    img = image.open_image(s3_uploads, key)
+    image.generate_normal_image(s3_results, heic.get_image_from_name(img, idx), uid, idx)
 
 
 @celery.task()
-def heic_generate_preview(fname: str, uid: str):
-    heic.generate_preview(fname, uid)
+def heic_generate_preview(key: str, uid: str):
+    img = image.open_image(s3_uploads, key)
+    image.generate_normal_image(s3_results, heic.get_image_from_name(img, 0), uid, 0)
 
 
 @celery.task()
@@ -82,9 +85,9 @@ def on_chord_error(request, exc, traceback, hmmm):
     print("Task {0!r} raised error: {1!r}".format(request.id, exc))
 
 
-def handle_heic(self, fname: str, uid: str):
-    complete_file_path = f"{AppConfig.UPLOAD_FOLDER}/{fname}"
-    c = heic.get_wallpaper_config(complete_file_path)
+def handle_heic(self, key: str, uid: str):
+    img = image.open_image(s3_uploads, key)
+    c = heic.get_wallpaper_config(img)
 
     if "si" in c:
         raise Exception(
@@ -110,19 +113,19 @@ def handle_heic(self, fname: str, uid: str):
     if warnings:
         print(warnings)
 
-    total_length = heic.get_img_count(fname)
+    total_length = heic.get_img_count(img)
 
     self.update_state(
         state="PENDING",
         meta=f"Concurrently processing all image work (Preview and image resizing)",
     )
 
-    tasks = [heic_generate_single_image.s(fname, uid, i) for i in range(total_length)]
-    tasks.append(heic_generate_preview.s(fname, uid))
+    tasks = [heic_generate_single_image.s(key, uid, i) for i in range(total_length)]
+    tasks.append(heic_generate_preview.s(key, uid))
 
     job = group(tasks)
 
-    (job | finish_processing.s(fname, uid, times, original_name)).delay()
+    (job | finish_processing.s(key, uid, times)).delay()
 
     return "Processing multiple HEIC images"
 
@@ -141,12 +144,8 @@ def handle_generic(key: str, uid: str):
 
 @celery.task(bind=True)
 def handle_all_images(self, key: str, uid: str, type: WallpaperType):
-    # create s3 dir
-    s3_results.put_object(Bucket=AppConfig.RESULT.S3_BUCKET, Key=uid)
-
     if type == WallpaperType.HEIC:
-        # return handle_heic(self, fname, uid)
-        pass
+        return handle_heic(self, key, uid)
     elif type == WallpaperType.GENERIC:
         return handle_generic(key, uid)
 

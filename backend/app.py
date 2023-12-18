@@ -10,10 +10,14 @@ from werkzeug.utils import secure_filename
 from backend.config import AppConfig
 from backend.database.redis import WallpaperType, add_wallpaper, WallpaperStatus, \
     Wallpaper, get_single_wallpaper, update_status_of_wallpaper, get_all_wallpapers
+from backend.tasks import tasks
+
+from backend.worker.image_processor import handle_all_images
 
 app = Flask(
     __name__,
 )
+app.register_blueprint(tasks, url_prefix="/api/tasks")
 
 s3 = boto3.client('s3',
                   endpoint_url=AppConfig.UPLOAD.S3_URL,
@@ -55,7 +59,7 @@ def upload():
     new_filename = f"{uid}.{get_extension(file_name)}"
 
     presigned_post = s3.generate_presigned_post(
-        Bucket=AppConfig.UPLOAD_S3_BUCKET,
+        Bucket=AppConfig.UPLOAD.BUCKET,
         Key=new_filename,
         Fields={"acl": "public-read", "Content-Type": file_type},
         Conditions=[
@@ -100,7 +104,7 @@ def upload_complete():
     print("Req for:", uid, key)
 
     try:
-        s3.head_object(Bucket=AppConfig.UPLOAD_S3_BUCKET, Key=key)
+        file = s3.head_object(Bucket=AppConfig.UPLOAD.BUCKET, Key=key)
     except Exception as e:
         print(e)
         return json.dumps({
@@ -108,11 +112,15 @@ def upload_complete():
         }), 400
 
     update_status_of_wallpaper(uid, WallpaperStatus.PROCESSING)
-    print("Starting task")
+    print("Starting task", file)
+    task = handle_all_images.delay(key, uid, detemine_type_from_extension(
+        get_extension(key)))
 
     return json.dumps({
-        'data': 'ok'
+        'data': 'ok',
+        "task": url_for("tasks.single_task_status", task_id=task.id)
     }), 202
+
 
 def wallpaper_mapper(wallpaper: Wallpaper, extended=False):
     to_return = {

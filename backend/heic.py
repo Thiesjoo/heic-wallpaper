@@ -6,6 +6,8 @@ import gc
 import plistlib
 import subprocess
 
+from botocore.client import BaseClient
+
 from backend import image
 from backend.config import AppConfig
 
@@ -13,28 +15,7 @@ from PIL import Image ,ImageSequence
 from pi_heif import register_heif_opener
 register_heif_opener()
 
-def get_exif(fname: str):
-    """
-    Sadly, pillow and exifread do not support heic yet
-    """
-    args = ["exiftool", fname]
-    r = subprocess.run(args, stdout=subprocess.PIPE)
-    output = r.stdout.decode("utf-8")
-    return {
-        line.split(":")[0].strip(): line.split(":")[1].strip()
-        for line in output.split("\n")[:-1]
-    }
-
-
-def get_image_container(fname: str) -> Image:
-    complete_file_path = f"{AppConfig.UPLOAD_FOLDER}/{fname}"
-    
-    heic_pillow = Image.open(complete_file_path)
-    return heic_pillow
-
-def get_img_count(fname: str) -> int:
-    img = get_image_container(fname)
-
+def get_img_count(img: Image) -> int:
     count = 0
     for idx,frame in enumerate(ImageSequence.Iterator(img)):
         count += 1
@@ -43,8 +24,7 @@ def get_img_count(fname: str) -> int:
     gc.collect()
     return count
 
-def get_image_from_name(fname: str, idx: int)-> Image:
-    img_container = get_image_container(fname)
+def get_image_from_name(img_container: Image, idx: int)-> Image:
     heif_img = ImageSequence.Iterator(img_container)[idx]
 
     img = heif_img.copy()
@@ -54,34 +34,23 @@ def get_image_from_name(fname: str, idx: int)-> Image:
     return img
 
 
-def generate_preview(fname: str, uid: str):
-    heif_file = get_image_from_name(fname, 0)
 
-    image.generate_preview(heif_file, uid)
-    heif_file.close()
+def get_wallpaper_config(image: Image):
+    info = image.info
 
+    xmp = str(info.get("xmp"))
+    if xmp == "None":
+        raise Exception("This is not a valid live wallpaper")
 
-def generate_normal_image(fname: str, uid: str, idx: int):
-    img = get_image_from_name(fname, idx)
-
-    image.generate_normal_image(img, uid, idx)
-    img.close()
-
-
-def get_wallpaper_config(fname: str):
-    exif = get_exif(fname)
-
-    if "H24" not in exif and "Solar" not in exif:
-        raise Exception(
-            "This is not a live wallpaper. We only support live wallpapers atm"
-        )
-
-    if "Solar" in exif:
-        data = exif["Solar"]
-    else:
-        data = exif["H24"]
-
-    dec = base64.b64decode(data)
-    config = plistlib.loads(dec)
+    start = xmp.find("apple_desktop:h24=\"")
+    end = xmp.find("\"/>", start)
+    if (start == -1 or end == -1):
+        raise Exception("Not H24 heic, maybe solar")
+    try:
+        h24 = base64.b64decode(xmp[start + 19: end])
+        config = plistlib.loads(h24)
+    except:
+        print(xmp)
+        raise Exception("This is not a valid live wallpaper")
 
     return config
