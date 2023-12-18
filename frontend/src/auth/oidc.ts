@@ -1,4 +1,4 @@
-import { UserManager, WebStorageStateStore } from 'oidc-client-ts'
+import {User, UserManager, WebStorageStateStore} from 'oidc-client-ts'
 import type { AuthMethod } from '.'
 import type { UserFromAPI } from '@/utils/types'
 
@@ -12,6 +12,9 @@ const userManager = new UserManager({
     monitorSession: true,
     monitorAnonymousSession: true,
 })
+
+//@ts-ignore
+window.test = userManager
 
 function popup(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -46,7 +49,12 @@ function parseBoolean(str: string | boolean | undefined) {
 }
 
 async function getUser(fullRefresh = false): Promise<UserFromAPI | null> {
-    let tempuser = await userManager.getUser()
+    let tempuser: null | User = null;
+    try {
+        tempuser = await userManager.getUser();
+    } catch(e) {
+        console.error("Failed to get user: ", e);
+    }
     if (!tempuser) {
         console.warn('Getting user, but user is null')
         return null

@@ -1,7 +1,7 @@
-import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import {defineStore} from 'pinia'
+import {computed, ref} from 'vue'
 import auth from "@/auth"
-import type { User, UserFromAPI, UserSettings } from '@/utils/types'
+import type {User, UserFromAPI, UserSettings} from '@/utils/types'
 
 export const useUserStore = defineStore('user', () => {
     const user = ref<User | null>(null)
@@ -9,7 +9,11 @@ export const useUserStore = defineStore('user', () => {
 
     async function refreshUserInfo() {
         loading.value = true;
-        await getUserData((await auth.getUser(true)) || undefined);
+        try {
+            await this.getUserData((await auth.getUser(true)) || undefined);
+        } catch (e) {
+            this.reset()
+        }
         loading.value = false;
 
     }
@@ -68,7 +72,6 @@ export const useUserStore = defineStore('user', () => {
             auth.logout()
         }
     }
-
 
 
     return {
