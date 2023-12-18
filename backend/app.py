@@ -101,7 +101,6 @@ def upload_complete():
         return json.dumps({
             'error': 'uid/key is required'
         }), 400
-    print("Req for:", uid, key)
 
     try:
         file = s3.head_object(Bucket=AppConfig.UPLOAD.BUCKET, Key=key)
@@ -112,7 +111,6 @@ def upload_complete():
         }), 400
 
     update_status_of_wallpaper(uid, WallpaperStatus.PROCESSING)
-    print("Starting task", file)
     task = handle_all_images.delay(key, uid, detemine_type_from_extension(
         get_extension(key)))
 
@@ -129,9 +127,7 @@ def wallpaper_mapper(wallpaper: Wallpaper, extended=False):
         "created_by": wallpaper[
             "created_by"] if "created_by" in wallpaper else "Unknown",
         "location": url_for("get_wallpaper", uid=wallpaper["uid"]),
-        "preview_url": url_for(
-            "static", filename=f"processed/{wallpaper['uid']}/preview.png"
-        ),
+        "preview_url": f"{AppConfig.RESULT.S3_URL}/{AppConfig.RESULT.BUCKET}/{wallpaper['uid']}/preview.png",
         "status": wallpaper["status"],
         "error": wallpaper["error"] if "error" in wallpaper else None,
         "type": wallpaper["type"],
@@ -162,7 +158,7 @@ def get_wallpaper(uid: str):
     times = wallpaper["data"]
 
     if times is None:
-        return redirect(url_for("static", filename=f"processed/{uid}/0.png"))
+        return redirect(f"{AppConfig.RESULT.S3_URL}/{AppConfig.RESULT.BUCKET}/{uid}/0.png")
 
     now = datetime.now().time()
     nowsecs = now.hour * 60 * 60 + now.minute * 60 + now.second
@@ -174,7 +170,7 @@ def get_wallpaper(uid: str):
             last_one = time
     index = last_one["i"]
 
-    return redirect(url_for("static", filename=f"processed/{uid}/{index}.png"))
+    return redirect(f"{AppConfig.RESULT.S3_URL}/{AppConfig.RESULT.BUCKET}/{uid}/{index}.png")
 
 
 @app.route("/api/wallpaper/<string:uid>/details")
