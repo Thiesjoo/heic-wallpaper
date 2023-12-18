@@ -24,8 +24,13 @@ const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/heif", "ima
 
 async function onDrop(file: File) {
   if (!allowedTypes.includes(file.type)) {
-    toast.error("Invalid file type.");
-    return;
+    if (file.name.endsWith(".heic") || file.name.endsWith(".heif")) {
+      console.warn("No type for: ", file)
+    } else {
+      console.warn(file)
+      toast.error("Invalid file type.");
+      return;
+    }
   }
 
   const presignedURLResult = await fetch("/api/upload", {
@@ -74,7 +79,7 @@ async function onDrop(file: File) {
         key: key,
         uid: uid,
       }
-    )
+  )
 
   if (completeResult.status !== 202) {
     toast.error("Error processing file.");
