@@ -10,9 +10,9 @@ export const useUserStore = defineStore('user', () => {
     async function refreshUserInfo() {
         loading.value = true;
         try {
-            await this.getUserData((await auth.getUser(true)) || undefined);
+            await getUserData((await auth.getUser(true)) || undefined);
         } catch (e) {
-            this.reset()
+            reset()
         }
         loading.value = false;
 

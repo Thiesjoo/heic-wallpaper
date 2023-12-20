@@ -65,7 +65,8 @@ async function onDrop(file: File) {
 
   const fileUploadResult = await axios.post(url, formData, {
     onUploadProgress: function (progressEvent) {
-      toast.update(progressToast, {content: `Uploading file: ${Math.round((progressEvent.loaded / progressEvent.total) * 100)}%`});
+      const percent = progressEvent.total ? Math.round((progressEvent.loaded / progressEvent.total) * 100) : 0;
+      toast.update(progressToast, {content: `Uploading file: ${percent}%`});
     }
   })
   toast.dismiss(progressToast)
@@ -89,7 +90,7 @@ async function onDrop(file: File) {
   toast.success("File uploaded successfully.",
       {
         onClick: () => {
-          //   browse to that wallpaper
+          // TODO: browse to that wallpaper
         }
       })
 }
