@@ -1,0 +1,41 @@
+image:
+  repository: ghcr.io/thiesjoo/heic-wallpaper
+  tag: latest
+  digest: ""
+  pullPolicy: Always
+
+worker:
+  replicas: 1
+
+service:
+  frontend:
+    enabled: true
+    type: ClusterIP
+    port: 5000
+    name: httptest
+    protocol: TCP
+    labels: {}
+  backend:
+    enabled: true
+    type: ClusterIP
+    port: 5000
+    name: httptest2
+    protocol: TCP
+    labels: {}
+
+ingress:
+  enabled: true
+  host: lol.brievenbus.app
+
+heicwallpaper:
+  results_s3_secret_name: "heicwallpaper-s3-result"
+  upload_s3_secret_name: "heicwallpaper-s3-upload"
+
+redis:
+  architecture: standalone
+  auth:
+    enabled: false
+  image:
+    repository: redislabs/rejson
+    tag: 2.0.9
+    pullPolicy: IfNotPresent
