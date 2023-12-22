@@ -23,3 +23,5 @@ class S3Config:
 class AppConfig:
     UPLOAD = S3Config("UPLOAD")
     RESULT = S3Config("RESULT")
+
+    PUBLIC_URL = os.environ.get("PUBLIC_URL")

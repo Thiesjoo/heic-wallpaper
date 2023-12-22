@@ -123,7 +123,7 @@ def upload_complete():
         }), 400
 
     try:
-        file = s3.head_object(Bucket=AppConfig.UPLOAD.BUCKET, Key=key)
+        s3.head_object(Bucket=AppConfig.UPLOAD.BUCKET, Key=key)
     except Exception as e:
         print(e)
         return json.dumps({
@@ -141,6 +141,10 @@ def upload_complete():
     }), 202
 
 
+def _get_url_for_wallpaper(wallpaper: Wallpaper, index: int | str) -> str:
+    return f"{AppConfig.PUBLIC_URL}/{wallpaper['uid']}/{index}.png"
+
+
 def wallpaper_mapper(wallpaper: Wallpaper, extended=False):
     to_return = {
         "name": wallpaper["original_name"],
@@ -148,7 +152,7 @@ def wallpaper_mapper(wallpaper: Wallpaper, extended=False):
         "created_by": wallpaper[
             "created_by"] if "created_by" in wallpaper else "Unknown",
         "location": url_for("get_wallpaper", uid=wallpaper["uid"]),
-        "preview_url": f"{AppConfig.RESULT.S3_URL}/{AppConfig.RESULT.BUCKET}/{wallpaper['uid']}/preview.png",
+        "preview_url": _get_url_for_wallpaper(wallpaper, "preview"),
         "status": wallpaper["status"],
         "error": wallpaper["error"] if "error" in wallpaper else None,
         "type": wallpaper["type"],
@@ -179,7 +183,7 @@ def get_wallpaper(uid: str):
     times = wallpaper["data"]
 
     if times is None:
-        return redirect(f"{AppConfig.RESULT.S3_URL}/{AppConfig.RESULT.BUCKET}/{uid}/0.png")
+        return redirect(_get_url_for_wallpaper(wallpaper, 0))
 
     now = datetime.now().time()
     nowsecs = now.hour * 60 * 60 + now.minute * 60 + now.second
@@ -191,7 +195,7 @@ def get_wallpaper(uid: str):
             last_one = time
     index = last_one["i"]
 
-    return redirect(f"{AppConfig.RESULT.S3_URL}/{AppConfig.RESULT.BUCKET}/{uid}/{index}.png")
+    return redirect(_get_url_for_wallpaper(wallpaper, index))
 
 
 @app.route("/api/wallpaper/<string:uid>/details")
