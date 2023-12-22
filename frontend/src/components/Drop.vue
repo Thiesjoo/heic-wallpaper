@@ -49,6 +49,7 @@ function onDrop(e: any) {
   e.preventDefault()
   visible.value = false
   const files: File[] = Array.from(e.dataTransfer.files)
+  console.log(files, e)
   if (files.length) {
     files.forEach((file) => {
       $emit('drop', file)

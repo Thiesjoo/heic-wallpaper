@@ -50,27 +50,25 @@ async function onDrop(file: File) {
     return;
   }
 
-  const {url, fields} = presignedURLResult.data;
+  const url = presignedURLResult.data;
   const {key, uid} = presignedURLResult;
-  const formData = new FormData();
-  Object.entries(fields as { [key: string]: string }).forEach(([key, value]) => {
-    formData.append(key, value);
-  });
-  formData.append("file", file);
 
   const progressToast = toast.info("Uploading file: 0%", {
     timeout: 0,
     closeOnClick: false,
   });
 
-  const fileUploadResult = await axios.post(url, formData, {
+  const fileUploadResult = await axios.put(url, file, {
+    headers: {
+      'Content-Type': file.type,
+    },
     onUploadProgress: function (progressEvent) {
       const percent = progressEvent.total ? Math.round((progressEvent.loaded / progressEvent.total) * 100) : 0;
       toast.update(progressToast, {content: `Uploading file: ${percent}%`});
     }
   })
   toast.dismiss(progressToast)
-  if (fileUploadResult.status !== 204) {
+  if (fileUploadResult.status !== 200) {
     toast.error("Error uploading file.");
     return;
   }

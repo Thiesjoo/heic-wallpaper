@@ -69,9 +69,8 @@ def allowed_file(filename):
 @app.route("/api/upload", methods=["POST"])
 def upload():
     file_name = request.json.get('name')
-
     file_type = request.json.get('type')
-    print(file_type, file_name)
+
     if file_name is None or file_type is None:
         return json.dumps({
             'error': 'name and type are required'
@@ -80,16 +79,13 @@ def upload():
     uid = str(uuid4())
     new_filename = f"{uid}.{get_extension(file_name)}"
 
-    presigned_post = s3.generate_presigned_post(
-        Bucket=AppConfig.UPLOAD.BUCKET,
-        Key=new_filename,
-        Fields={
-            # "acl": "public-read",
-            "Content-Type": file_type},
-        Conditions=[
-            # {"acl": "public-read"},
-            {"Content-Type": file_type}
-        ],
+    presigned_post = s3.generate_presigned_url(
+        ClientMethod='put_object',
+        Params={
+            'Bucket': AppConfig.UPLOAD.BUCKET,
+            'Key': new_filename,
+            'ContentType': file_type
+        },
         ExpiresIn=3600
     )
 
