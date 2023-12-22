@@ -83,9 +83,11 @@ def upload():
     presigned_post = s3.generate_presigned_post(
         Bucket=AppConfig.UPLOAD.BUCKET,
         Key=new_filename,
-        Fields={"acl": "public-read", "Content-Type": file_type},
+        Fields={
+            # "acl": "public-read",
+            "Content-Type": file_type},
         Conditions=[
-            {"acl": "public-read"},
+            # {"acl": "public-read"},
             {"Content-Type": file_type}
         ],
         ExpiresIn=3600
