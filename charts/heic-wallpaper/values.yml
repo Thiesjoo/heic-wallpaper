@@ -40,6 +40,11 @@ redis:
     repository: redis/redis-stack
     tag: 6.2.6-v10-arm64
     pullPolicy: IfNotPresent
+  commonConfiguration: |-
+    appendonly yes
+    protected-mode no
+    save ""
+
   master:
     args:
       - -c
