@@ -29,6 +29,8 @@ spec:
           env:
             - name: BROKER_URL
               value: "redis://{{ .Release.Name }}-redis-master:6379/0"
+            - name: PUBLIC_URL
+              value: "{{ $.Values.heicwallpaper.public_url }}"
             - name: DATABASE_URL
               value: "redis://{{ .Release.Name }}-redis-master:6379/0"
           ports:
