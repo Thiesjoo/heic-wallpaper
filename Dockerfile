@@ -40,10 +40,10 @@ COPY frontend .
 FROM frontend-base as frontend
 CMD ["npm", "run", "start"]
 
-FROM frontend-base as frontend-prod
+FROM frontend as frontend-prod
 ENV VITE_OIDC_AUTHORITY=$VITE_OIDC_AUTHORITY
 ENV VITE_OIDC_CLIENT_ID=$VITE_OIDC_CLIENT_ID
-CMD ["env"]
+RUN env
 RUN npm run build
 
 
