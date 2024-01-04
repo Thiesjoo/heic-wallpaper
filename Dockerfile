@@ -41,8 +41,8 @@ FROM frontend-base as frontend
 CMD ["npm", "run", "start"]
 
 FROM frontend as frontend-prod
-ENV VITE_OIDC_AUTHORITY=$VITE_OIDC_AUTHORITY
-ENV VITE_OIDC_CLIENT_ID=$VITE_OIDC_CLIENT_ID
+ARG VITE_OIDC_AUTHORITY
+ARG VITE_OIDC_CLIENT_ID
 RUN env
 RUN npm run build
 
