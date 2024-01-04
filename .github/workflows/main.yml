@@ -16,10 +16,10 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Build the Docker image
-        # Push tag celery as worker
-        # Push tag nginx-prod as frontend
-        # Push tag backend-prod as backend
+        env:
+            VITE_OIDC_AUTHORITY: ${{ vars.VITE_OIDC_AUTHORITY }}
+            VITE_OIDC_CLIENT_ID: ${{ vars.VITE_OIDC_CLIENT_ID }}
         run: |
-            docker buildx build --platform linux/amd64,linux/arm64 --push -t ghcr.io/thiesjoo/heic-wallpaper/worker:latest -t ghcr.io/thiesjoo/heic-wallpaper/celery:${{ github.sha }} --target celery .
-            docker buildx build --platform linux/amd64,linux/arm64 --push -t ghcr.io/thiesjoo/heic-wallpaper/frontend:latest -t ghcr.io/thiesjoo/heic-wallpaper/nginx-prod:${{ github.sha }} --target nginx-prod .
-            docker buildx build --platform linux/amd64,linux/arm64 --push -t ghcr.io/thiesjoo/heic-wallpaper/backend:latest -t ghcr.io/thiesjoo/heic-wallpaper/backend-prod:${{ github.sha }} --target backend-prod .
+            docker buildx build --platform linux/amd64,linux/arm64 --push -t ghcr.io/thiesjoo/heic-wallpaper/worker:latest -t ghcr.io/thiesjoo/heic-wallpaper/worker:${{ github.sha }} --target celery .
+            docker buildx build --platform linux/amd64,linux/arm64 --push -t ghcr.io/thiesjoo/heic-wallpaper/frontend:latest -t ghcr.io/thiesjoo/heic-wallpaper/frontend:${{ github.sha }} --target nginx-prod .
+            docker buildx build --platform linux/amd64,linux/arm64 --push -t ghcr.io/thiesjoo/heic-wallpaper/backend:latest -t ghcr.io/thiesjoo/heic-wallpaper/backend:${{ github.sha }} --target backend-prod .
