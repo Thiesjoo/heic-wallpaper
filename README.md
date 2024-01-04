@@ -35,6 +35,5 @@ BROKER_URL=redis://localhost:6379 celery -A backend.worker.image_processor worke
 And for the frontend
 ```bash
 cd frontend
-npm i
 npm run start
 ```
