@@ -26,6 +26,8 @@ spec:
                 name: {{ $.Values.heicwallpaper.results_s3_secret_name }}
             - secretRef:
                 name: {{ $.Values.heicwallpaper.upload_s3_secret_name }}
+            - secretRef:
+                name: {{ $.Values.heicwallpaper.authentik_secret_name }}
           env:
             - name: BROKER_URL
               value: "redis://{{ .Release.Name }}-redis-master:6379/0"

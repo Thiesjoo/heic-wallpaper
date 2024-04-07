@@ -30,6 +30,7 @@ ingress:
 heicwallpaper:
   results_s3_secret_name: "heicwallpaper-s3-result"
   upload_s3_secret_name: "heicwallpaper-s3-upload"
+  authentik_secret_name: "authentik-tokens-heicwallpaper"
   public_url: "https://static.wallpaper.thies.dev"
 
 redis:

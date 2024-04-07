@@ -35,6 +35,8 @@ spec:
                 name: {{ $.Values.heicwallpaper.results_s3_secret_name }}
             - secretRef:
                 name: {{ $.Values.heicwallpaper.upload_s3_secret_name }}
+            - secretRef:
+                name: {{ $.Values.heicwallpaper.authentik_secret_name }}
           resources:
             limits:
               cpu: 1000m

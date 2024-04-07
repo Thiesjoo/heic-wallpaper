@@ -2,9 +2,6 @@
 
 Originally only for heic wallpapers, but now it supports all image formats.
 
-
-
-
 ## Installation
 
 ```bash
