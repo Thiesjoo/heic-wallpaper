@@ -11,3 +11,5 @@ Redis
 
 # Sentry
 sentry-sdk[flask]
+
+pyjwt

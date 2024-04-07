@@ -48,7 +48,7 @@ function openURL() {
 }
 
 function updateWallpaper() {
-  userStore.updateWallpaper(getApiWallpaperURL(wallpaper))
+  userStore.updateWallpaper(wallpaper.id)
 }
 
 function openURLOfError() {

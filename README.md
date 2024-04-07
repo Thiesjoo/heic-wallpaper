@@ -17,7 +17,7 @@ cp .sample.env .env
 echo "Fill in the information in the .env file"
 
 cd ../
-docker compose up redis -d
+docker compose up redis minio -d
 ```
 ## Usage
 Run the project with the following commands:

@@ -24,7 +24,7 @@ const baseURL = wallpaper.preview_url
 const userStore = useUserStore()
 
 function select() {
-    userStore.updateWallpaper(getApiWallpaperURL(wallpaper))
+    userStore.updateWallpaper(wallpaper.id)
 }
 
 function copyURL() {

@@ -1,19 +1,18 @@
 import json
-from datetime import datetime
 import time
+from datetime import datetime
 from uuid import uuid4
 
 import boto3
-
 from flask import Flask, request, url_for, redirect, jsonify
 from werkzeug.utils import secure_filename
 
+from backend import jwt_authentik
 from backend.config import AppConfig
 from backend.database.redis import WallpaperType, add_wallpaper, WallpaperStatus, \
     Wallpaper, get_single_wallpaper, update_status_of_wallpaper, get_all_wallpapers, \
     add_error_to_wallpaper
 from backend.tasks import tasks
-
 from backend.worker.image_processor import handle_all_images
 
 app = Flask(
@@ -21,7 +20,7 @@ app = Flask(
 )
 app.register_blueprint(tasks, url_prefix="/api/tasks")
 
-
+AppConfig.validate()
 
 s3 = boto3.client('s3',
                   endpoint_url=AppConfig.UPLOAD.S3_URL,
@@ -48,14 +47,14 @@ s3.put_bucket_lifecycle_configuration(
     },
 )
 
-
 ALLOWED_EXTENSIONS = {"heic", "png", "jpg", "jpeg"}
+
 
 def get_extension(filename):
     return filename.rsplit(".", 1)[1].lower()
 
 
-def detemine_type_from_extension(extension):
+def determine_type_from_extension(extension):
     if extension == "heic":
         return WallpaperType.HEIC
     else:
@@ -99,7 +98,7 @@ def upload():
             "created_by": "TODO: IMPLEMENT THIS",
             "date_created": int(time.time()),
             "status": WallpaperStatus.UPLOADING,
-            "type": detemine_type_from_extension(get_extension(file_name)),
+            "type": determine_type_from_extension(get_extension(file_name)),
             "data": {},
             "error": None
         },
@@ -131,7 +130,7 @@ def upload_complete():
         }), 400
 
     update_status_of_wallpaper(uid, WallpaperStatus.PROCESSING)
-    task = handle_all_images.delay(key, uid, detemine_type_from_extension(
+    task = handle_all_images.delay(key, uid, determine_type_from_extension(
         get_extension(key)))
     add_error_to_wallpaper(uid, url_for("tasks.single_task_status", task_id=task.id))
 
@@ -204,3 +203,20 @@ def get_wallpaper_information(uid: str):
     if type(wallpaper) == tuple:
         return wallpaper
     return wallpaper_mapper(wallpaper, extended=True)
+
+
+@app.patch("/api/user/set")
+def set_user():
+    if not request.json.get("token") or not request.json.get("wallpaper_uid"):
+        return json.dumps({
+            "error": "token and wallpaper_uid are required"
+        }), 400
+
+    result, error = jwt_authentik.set_user_wallpaper(request.json.get("token"),
+                                                     request.json.get("wallpaper_uid"))
+    if not result:
+        return json.dumps({
+            "error": error
+        }), 400
+
+    return 'ok', 200

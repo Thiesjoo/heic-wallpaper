@@ -15,7 +15,6 @@ export const useUserStore = defineStore('user', () => {
             reset()
         }
         loading.value = false;
-
     }
 
     async function getUserData(cachedUser?: UserFromAPI) {
@@ -35,22 +34,29 @@ export const useUserStore = defineStore('user', () => {
     }
 
 
-    function updateWallpaper(newURL: string) {
+    async function updateWallpaper(newUID: string) {
         const myHeaders = new Headers()
         myHeaders.append('pragma', 'no-cache')
         myHeaders.append('cache-control', 'no-cache')
         myHeaders.append('content-type', 'application/json')
+
+        // await auth.getUser(true);
+        const token = await auth.getToken();
+        if (!token) {
+            throw new Error("No token found");
+        }
 
         const fetchConfig = {
             method: 'PATCH',
             headers: myHeaders,
             credentials: 'include',
             body: JSON.stringify({
-                backgroundURL: newURL,
+                wallpaper_uid: newUID,
+                token: token
             }),
         } satisfies RequestInit
 
-        fetch('https://auth.thies.dev/api/settings/me', fetchConfig)
+        fetch('api/user/set', fetchConfig)
             .then((x) => {
                 if (x.status != 200) {
                     throw new Error(x.statusText)
