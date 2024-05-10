@@ -1,4 +1,6 @@
 flask
+python-dotenv
+boto3
 # Image processing
 Pillow
 # pyheif -- MANUALLY INSTALLED
@@ -9,3 +11,6 @@ Redis
 
 # Sentry
 sentry-sdk[flask]
+
+pyjwt
+requests

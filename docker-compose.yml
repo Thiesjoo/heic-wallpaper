@@ -1,49 +1,16 @@
-version: "3.9"
+version: '3'
 
 services:
-    frontend:
-        build:
-            context: .
-            target: frontend
-        ports:
-            - "5173:5173"
-        depends_on:
-            - backend
-        volumes:
-            - ./frontend:/app
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - ./minio_data:/data
+  redis:
+    image: redislabs/rejson:2.0.9
+    ports:
+      - '6379:6379'
 
-    backend:
-        build:
-            context: .
-            target: backend
-        ports:
-            - "5000:5000"
-        depends_on:
-            - redis
-        environment:
-            - FLASK_ENV=development
-            - FLASK_APP=app.py
-            - BROKER_URL=redis://redis:6379/0
-        volumes:
-            - ./backend:/backend
-            - ./static:/static
-
-    redis:
-        container_name: redis
-        image: redislabs/rejson:2.0.9
-        ports:
-            - "6379:6379"
-
-    worker:
-        build:
-            context: .
-            target: celery-watching
-        environment:
-            - BROKER_URL=redis://redis:6379/0
-        volumes:
-            - ./backend:/backend:ro
-            - ./static:/static
-        links:
-            - redis
-        depends_on:
-            - redis

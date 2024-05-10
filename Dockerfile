@@ -2,7 +2,7 @@ FROM python:3.11-alpine as backend
 
 WORKDIR /backend
 
-RUN apk add --no-cache libffi-dev libheif-dev libde265-dev exiftool
+RUN apk add --no-cache libffi-dev libheif-dev libde265-dev
 RUN apk add zlib-dev jpeg-dev
 
 COPY backend/requirements.txt ./
@@ -28,7 +28,7 @@ CMD ["celery", "-A", "backend.worker.image_processor", "worker", "-l", "info"]
 
 
 #Build frontend
-FROM node:16-alpine as frontend-base
+FROM node:18-alpine as frontend-base
 
 WORKDIR /app
 
@@ -40,7 +40,10 @@ COPY frontend .
 FROM frontend-base as frontend
 CMD ["npm", "run", "start"]
 
-FROM frontend-base as frontend-prod
+FROM frontend as frontend-prod
+ARG VITE_OIDC_AUTHORITY
+ARG VITE_OIDC_CLIENT_ID
+RUN env
 RUN npm run build
 
 

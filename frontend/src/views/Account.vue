@@ -40,7 +40,7 @@ const currentWallpaper = computedAsync(async () => {
                        v-if="currentWallpaper"></Wallpaper>
         </div>
         <div v-else>
-            You do not have a wallpaper configured
+            You do not have a wallpaper configured with this site.
         </div>
 
         <button @click="userStore.reset"

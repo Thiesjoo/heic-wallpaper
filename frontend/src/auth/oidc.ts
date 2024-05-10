@@ -1,17 +1,24 @@
-import { UserManager, WebStorageStateStore } from 'oidc-client-ts'
-import type { AuthMethod } from '.'
-import type { UserFromAPI } from '@/utils/types'
+import {Log, User, UserManager, WebStorageStateStore} from 'oidc-client-ts'
+import type {AuthMethod} from '.'
+import type {UserFromAPI} from '@/utils/types'
 
 const userManager = new UserManager({
     authority: `${import.meta.env.VITE_OIDC_AUTHORITY}`,
     client_id: import.meta.env.VITE_OIDC_CLIENT_ID,
     redirect_uri: `${window.location.origin}/login/callback`,
     response_type: 'code',
-    scope: 'openid profile settings email goauthentik.io/api',
-    userStore: new WebStorageStateStore({ store: window.localStorage }),
+    scope: 'openid profile settings email',
+    userStore: new WebStorageStateStore({store: window.localStorage}),
     monitorSession: true,
     monitorAnonymousSession: true,
 })
+
+Log.setLogger(console);
+Log.setLevel(Log.DEBUG);
+
+
+//@ts-ignore
+window.test = userManager
 
 function popup(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -46,7 +53,12 @@ function parseBoolean(str: string | boolean | undefined) {
 }
 
 async function getUser(fullRefresh = false): Promise<UserFromAPI | null> {
-    let tempuser = await userManager.getUser()
+    let tempuser: null | User = null;
+    try {
+        tempuser = await userManager.getUser();
+    } catch (e) {
+        console.error("Failed to get user: ", e);
+    }
     if (!tempuser) {
         console.warn('Getting user, but user is null')
         return null

@@ -1,11 +1,6 @@
-import gc
-import os
-import shutil
-import json
-
-import time
 from typing import Any
 
+import boto3
 from celery import Celery, group
 
 from backend import image
@@ -27,76 +22,71 @@ celery = Celery(
     include=["backend"]
 )
 
+s3_uploads = boto3.client('s3',
+                          endpoint_url=AppConfig.UPLOAD.S3_URL,
+                          config=boto3.session.Config(signature_version='s3v4'),
+                          aws_access_key_id=AppConfig.UPLOAD.S3_ACCESS_KEY,
+                          aws_secret_access_key=AppConfig.UPLOAD.S3_SECRET_KEY,
+                          )
 
-def finish(filename):
-    print(f"Removing uploaded file: {filename}")
-    try:
-        os.remove(f"{AppConfig.UPLOAD_FOLDER}/{filename}")
-    except:
-        pass
-
-
-def remove_all_data(filename):
-    try:
-        shutil.rmtree(f"{AppConfig.PROCESSED_FOLDER}/{filename}/")
-    except:
-        pass
-
-
-@celery.task()
-def heic_generate_single_image(fname: str, uid: str, idx: int):
-    heic.generate_normal_image(fname, uid, idx)
+s3_results = boto3.client('s3',
+                          endpoint_url=AppConfig.RESULT.S3_URL,
+                          config=boto3.session.Config(signature_version='s3v4'),
+                          aws_access_key_id=AppConfig.RESULT.S3_ACCESS_KEY,
+                          aws_secret_access_key=AppConfig.RESULT.S3_SECRET_KEY,
+                          )
 
 
-@celery.task()
-def heic_generate_preview(fname: str, uid: str):
-    heic.generate_preview(fname, uid)
+def finish(key: str) -> None:
+    print(f"Removing uploaded file: {key}")
+    s3_uploads.delete_object(Bucket=AppConfig.UPLOAD.BUCKET, Key=key)
 
 
 @celery.task()
-def generate_preview(full_file_name: str, uid: str):
-    image.generate_preview(image.open_image(full_file_name), uid)
+def heic_generate_single_image(key: str, uid: str, idx: int):
+    img = image.open_image(s3_uploads, key)
+    image.generate_normal_image(s3_results, heic.get_image_from_name(img, idx), uid, idx)
 
 
 @celery.task()
-def generate_single_image(full_file_name: str, uid: str):
-    image.generate_normal_image(image.open_image(full_file_name), uid, 0)
+def heic_generate_preview(key: str, uid: str):
+    img = image.open_image(s3_uploads, key)
+    image.generate_preview(s3_results, heic.get_image_from_name(img, 0), uid)
+
+@celery.task()
+def generate_preview(key: str, uid: str):
+    img = image.open_image(s3_uploads, key)
+    image.generate_preview(s3_results, img, uid)
 
 
 @celery.task()
-def finish_processing(prev_results, fname: str, uid: str, times: Any | None, original_name: str):
+def generate_single_image(key: str, uid: str):
+    img = image.open_image(s3_uploads, key)
+    image.generate_normal_image(s3_results, img, uid, 0)
+
+
+@celery.task()
+def finish_processing(prev_results, key: str, uid: str, times: Any | None):
     update_status_of_wallpaper(uid, WallpaperStatus.READY)
     update_data_of_wallpaper(uid, times)
 
-    json_location = f"{AppConfig.PROCESSED_FOLDER}/{uid}/data.json"
-    with open(json_location, "w") as f:
-        json.dump(
-            {
-                "date_created": int(time.time()),
-                "status": 1,  # This is executed at the end, so wallpaper is ready
-                "type": 2,  # This function only handles heic files for now
-                "data": times,
-                "original_name": original_name,
-            },
-            f,
-        )
-
-    finish(fname)
+    finish(key)
 
 
 @celery.task
 def on_chord_error(request, exc, traceback, hmmm):
     print("Task {0!r} raised error: {1!r}".format(request.id, exc))
-    # TODO: This is gonna cause a whole bunch of errors because processes are still writing to this folder
-    remove_all_data(hmmm)
+    print(hmmm)
 
 
-def handle_heic(self, fname: str, uid: str, original_name: str):
-    complete_file_path = f"{AppConfig.UPLOAD_FOLDER}/{fname}"
-    c = heic.get_wallpaper_config(complete_file_path)
-
-    if "si" in c:
-        raise Exception("NOT_IMPLEMENTED_ERROR: Sun based wallpapers are not yet supported.")
+def handle_heic(self, key: str, uid: str):
+    img = image.open_image(s3_uploads, key)
+    try:
+        c = heic.get_wallpaper_config(img)
+    except Exception as e:
+        update_status_of_wallpaper(uid, WallpaperStatus.ERROR)
+        finish(key)
+        return "Error while processing HEIC image",str(e)
 
     warnings = ""
 
@@ -118,46 +108,40 @@ def handle_heic(self, fname: str, uid: str, original_name: str):
     if warnings:
         print(warnings)
 
-    total_length = heic.get_img_count(fname)
+    total_length = heic.get_img_count(img)
 
     self.update_state(
         state="PENDING",
         meta=f"Concurrently processing all image work (Preview and image resizing)",
     )
 
-    tasks = [heic_generate_single_image.s(fname, uid, i) for i in range(total_length)]
-    tasks.append(heic_generate_preview.s(fname, uid))
+    tasks = [heic_generate_single_image.s(key, uid, i) for i in range(total_length)]
+    tasks.append(heic_generate_preview.s(key, uid))
 
     job = group(tasks)
 
-    (job | finish_processing.s(fname, uid, times, original_name)).delay()
+    (job | finish_processing.s(key, uid, times)).delay()
 
     return "Processing multiple HEIC images"
 
 
 @celery.task()
-def handle_generic(fname: str, uid: str, original_name: str):
-    complete_file_path = f"{AppConfig.UPLOAD_FOLDER}/{fname}"
+def handle_generic(key: str, uid: str):
     tasks = [
-        generate_preview.s(complete_file_path, uid),
-        generate_single_image.s(complete_file_path, uid),
+        generate_preview.s(key, uid),
+        generate_single_image.s(key, uid),
     ]
 
     job = group(tasks)
-    (job | finish_processing.s(fname, uid, None, original_name)).delay()
+    (job | finish_processing.s(key, uid, None)).delay()
     return "Processing normal image"
 
 
 @celery.task(bind=True)
-def handle_all_images(self, fname: str, uid: str, original_name: str, type: WallpaperType):
-    complete_file_path = f"{AppConfig.UPLOAD_FOLDER}/{fname}"
-    if not os.path.exists(complete_file_path):
-        raise Exception(f"File upload did not complete {complete_file_path}")
-    os.mkdir(f"{AppConfig.PROCESSED_FOLDER}/{uid}/")
-
+def handle_all_images(self, key: str, uid: str, type: WallpaperType):
     if type == WallpaperType.HEIC:
-        return handle_heic(self, fname, uid, original_name)
+        return handle_heic(self, key, uid)
     elif type == WallpaperType.GENERIC:
-        return handle_generic(fname, uid, original_name)
+        return handle_generic(key, uid)
 
     raise ValueError("Invalid wallpaper type")

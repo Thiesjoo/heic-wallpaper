@@ -30,9 +30,10 @@ export type WallpaperWithDetails = Wallpaper & {
 
 export enum WallpaperStatus {
     READY = 1,
-    PROCESSING = 2,
-    ERROR = 3,
-    DELETED = 4,
+    UPLOADING = 2,
+    PROCESSING = 4,
+    ERROR = 8,
+    DELETED = 16,
 }
 
 export enum WallpaperType {
