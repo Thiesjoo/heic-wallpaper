@@ -4,6 +4,7 @@ from datetime import datetime
 from uuid import uuid4
 
 import boto3
+import pytz
 from flask import Flask, request, url_for, redirect, jsonify
 from werkzeug.utils import secure_filename
 
@@ -155,6 +156,7 @@ def wallpaper_mapper(wallpaper: Wallpaper, extended=False):
         "status": wallpaper["status"],
         "error": wallpaper["error"] if "error" in wallpaper else None,
         "type": wallpaper["type"],
+        "data": wallpaper["data"]
     }
 
     if extended:
@@ -172,6 +174,14 @@ def get_wallpapers():
 
 @app.route("/api/wallpaper/<string:uid>")
 def get_wallpaper(uid: str):
+    tz = pytz.utc
+    if request.args.get("tz"):
+        timezone = request.args.get("tz")
+        try:
+            tz = pytz.timezone(timezone)
+        except pytz.exceptions.UnknownTimeZoneError:
+            return "Invalid timezone", 400
+
     wallpaper = get_single_wallpaper(uid)
     if type(wallpaper) == tuple:
         return wallpaper
@@ -184,7 +194,7 @@ def get_wallpaper(uid: str):
     if times is None:
         return redirect(_get_url_for_wallpaper(wallpaper, 0))
 
-    now = datetime.now().time()
+    now = datetime.now(tz).time()
     nowsecs = now.hour * 60 * 60 + now.minute * 60 + now.second
 
     # https://github.com/mczachurski/wallpapper
