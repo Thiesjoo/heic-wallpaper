@@ -10,7 +10,7 @@ import os
 
 import authentik_integration
 import wallpaper_utils
-import change_wallpaper
+import heicwallpaper_utils
 
 config_location = f"{wallpaper_utils.get_config_dir('heic-wallpaper')}/config.json"
 
@@ -90,11 +90,11 @@ elif "uuid" in args:
             exit(1)
         print(f"Changing wallpaper to {wallpaper_url}")
 
-        uuid = change_wallpaper.get_uuid_from_url(wallpaper_url)
+        uuid = heicwallpaper_utils.get_uuid_from_url(wallpaper_url)
     else:
-        uuid = change_wallpaper.get_uuid_from_url(args.uuid)
+        uuid = heicwallpaper_utils.get_uuid_from_url(args.uuid)
 
     print(f"Changing wallpaper to {uuid}")
-    change_wallpaper.make_available_offline(uuid)
-    path = change_wallpaper.get_correct_photo_for_wallpaper(uuid)
+    heicwallpaper_utils.make_available_offline(uuid)
+    path = heicwallpaper_utils.get_correct_photo_for_wallpaper(uuid)
     wallpaper_utils.set_wallpaper(path)

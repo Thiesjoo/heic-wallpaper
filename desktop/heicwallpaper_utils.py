@@ -126,20 +126,10 @@ def get_correct_photo_for_wallpaper(wallpaper_uuid: str):
     return f'{wallpaper_path}/{index}.png'
 
 
-def main():
-    uuid = "68333b06-c07c-4a45-b0c8-71f6d64072b9"
-
-    make_available_offline(uuid)
-    path = get_correct_photo_for_wallpaper(uuid)
-    wallpaper_utils.set_wallpaper(path)
-
-
-if __name__ == '__main__':
-    main()
-
 # TODO:
 # Install as a service
 # Bundle for multiple platforms inside GH Actions
+# If settings to "account", refetch every day or so
 
 # BACKEND:
 # Better validation for images
