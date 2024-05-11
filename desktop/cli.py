@@ -33,9 +33,15 @@ wallpaper_subparser.add_argument(
     help="The UUID or URL of the wallpaper to change to. Specify 'account' to change to the account wallpaper",
 )
 
-args = parser.parse_args()
-print(args)
+service_subparser = global_subparsers.add_parser("service",
+                                                    help="Install as a service")
+service_subparser.add_argument(
+    "action",
+    help="The action to perform",
+    choices=["install", "uninstall", "start", "stop", "restart"],
+)
 
+args = parser.parse_args()
 
 def write_to_config(key, value):
     if not os.path.exists(config_location):
@@ -91,10 +97,17 @@ elif "uuid" in args:
         print(f"Changing wallpaper to {wallpaper_url}")
 
         uuid = heicwallpaper_utils.get_uuid_from_url(wallpaper_url)
+        write_to_config("wallpaper", "account")
     else:
         uuid = heicwallpaper_utils.get_uuid_from_url(args.uuid)
+        write_to_config("wallpaper", uuid)
 
     print(f"Changing wallpaper to {uuid}")
     heicwallpaper_utils.make_available_offline(uuid)
     path = heicwallpaper_utils.get_correct_photo_for_wallpaper(uuid)
     wallpaper_utils.set_wallpaper(path)
+elif "action" in args:
+    # TODO: Implement service installation
+    pass
+else:
+    parser.print_help()
