@@ -57,7 +57,7 @@ def read_from_config(key):
 
 if args.auth:
     if args.auth == "login":
-        print("Logging in")
+        print("Trying to log in")
         if read_from_config("access_token") is None:
             access, id = authentik_integration.login_request()
             write_to_config("access_token", access)
@@ -65,9 +65,9 @@ if args.auth:
         else:
             print("Already logged in")
             access = read_from_config("access_token")
-
-        print(access)
-        print(authentik_integration.get_user(access))
+        user = authentik_integration.get_user(access)
+        print(f"Welcome {user['name']}")
+        print("You can now use the wallpaper command to change the wallpaper")
     elif args.auth == "logout":
         print("Logging out")
         write_to_config("access_token", None)

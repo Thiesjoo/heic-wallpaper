@@ -9,7 +9,7 @@ SCOPES = "openid profile email offline_access settings"
 def login_request():
     form_data = {
         "client_id": AUTHENTIK_CLIENT_ID,
-        "scopes": SCOPES,
+        "scope": SCOPES,
     }
     request = requests.post(f"{AUTHENTIK_URL}/application/o/device/", data=form_data,
                             headers={
@@ -41,7 +41,6 @@ def login_request():
 
         request.raise_for_status()
         if "access_token" in auth_response:
-            print("Access token:", auth_response["access_token"], auth_response)
             return auth_response["access_token"], auth_response["id_token"]
         else:
             raise ValueError("No access token in response")
@@ -53,6 +52,13 @@ def get_user(token: str):
     request = requests.get(f"{AUTHENTIK_URL}/application/o/userinfo/", headers={
         "Authorization": f"Bearer {token}",
     })
-    print(request.text)
     request.raise_for_status()
     return request.json()
+
+
+def get_user_background_url(token: str):
+    user = get_user(token)
+    assert "settings" in user
+    if "backgroundURL" not in user["settings"]:
+        return None
+    return user["settings"]["backgroundURL"]
