@@ -5,7 +5,7 @@ import os
 import authentik_integration
 import wallpaper_utils
 import heicwallpaper_utils
-from desktop import service
+import service
 
 config_location = f"{wallpaper_utils.get_config_dir('heic-wallpaper')}/config.json"
 

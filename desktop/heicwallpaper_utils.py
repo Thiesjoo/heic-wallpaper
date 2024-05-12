@@ -138,7 +138,6 @@ def get_correct_photo_for_wallpaper(wallpaper_uuid: str):
 
 
 # TODO:
-# Install as a service
 # Bundle for multiple platforms inside GH Actions
 
 # BACKEND:
