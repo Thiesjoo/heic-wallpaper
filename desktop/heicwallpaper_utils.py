@@ -69,6 +69,17 @@ def fetch_and_save_wallpaper(wallpaper_uuid: str, index: int | Literal["preview"
 def make_available_offline(wallpaper_uuid: str):
     os.makedirs(CONFIG_DIR, exist_ok=True)
     wallpaper_path = f'{CONFIG_DIR}/{wallpaper_uuid}/'
+
+    if os.path.exists(wallpaper_path):
+        # make sure the data.json file is there
+        if not os.path.exists(f'{wallpaper_path}/data.json'):
+            os.remove(wallpaper_path)
+            make_available_offline(wallpaper_uuid)
+            return
+
+        print(f"Wallpaper {wallpaper_uuid} is already available offline")
+        return
+
     os.makedirs(wallpaper_path, exist_ok=True)
 
     print(f"Fetching wallpaper {wallpaper_uuid} for offline use")
@@ -129,7 +140,6 @@ def get_correct_photo_for_wallpaper(wallpaper_uuid: str):
 # TODO:
 # Install as a service
 # Bundle for multiple platforms inside GH Actions
-# If settings to "account", refetch every day or so
 
 # BACKEND:
 # Better validation for images
