@@ -18,7 +18,6 @@ from backend.worker.image_processor import handle_all_images
 
 from logging.config import dictConfig
 
-sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 dictConfig(
     {
         "version": 1,
