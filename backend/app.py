@@ -18,6 +18,7 @@ from backend.worker.image_processor import handle_all_images
 
 from logging.config import dictConfig
 
+sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 dictConfig(
     {
         "version": 1,
@@ -249,4 +250,6 @@ def set_user():
             "error": error
         }), 400
 
-    return 'ok', 200
+    return {
+        "ok": True
+    }, 200

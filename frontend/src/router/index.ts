@@ -31,8 +31,14 @@ const router = createRouter({
             path: "/login/callback",
             name: "Login Callback",
             component: () => import("../views/LoginCallback.vue")
+        },
+        {
+            path: "/login/silent-callback",
+            name: "Login Silent Callback",
+            component: () => import("../views/LoginCallback_Silent.vue")
         }
     ],
+    
 })
 
 export default router

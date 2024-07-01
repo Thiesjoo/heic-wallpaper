@@ -2,6 +2,7 @@ import {defineStore} from 'pinia'
 import {computed, ref} from 'vue'
 import auth from "@/auth"
 import type {User, UserFromAPI, UserSettings} from '@/utils/types'
+import { useToast } from 'vue-toastification'
 
 export const useUserStore = defineStore('user', () => {
     const user = ref<User | null>(null)
@@ -40,7 +41,7 @@ export const useUserStore = defineStore('user', () => {
         myHeaders.append('cache-control', 'no-cache')
         myHeaders.append('content-type', 'application/json')
 
-        // await auth.getUser(true);
+        await auth.getUser(true);
         const token = await auth.getToken();
         if (!token) {
             throw new Error("No token found");
@@ -55,6 +56,7 @@ export const useUserStore = defineStore('user', () => {
                 token: token
             }),
         } satisfies RequestInit
+        const toast = useToast();
 
         fetch('api/user/set', fetchConfig)
             .then((x) => {
@@ -65,9 +67,11 @@ export const useUserStore = defineStore('user', () => {
                 return x.json()
             })
             .then(function (response) {
+                toast.success("Wallpaper updated successfully!")
                 console.log(response)
             })
             .catch((x) => {
+                toast.error("Failed to update wallpaper, see console for more info.")
                 console.error(x)
             })
     }

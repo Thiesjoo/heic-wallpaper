@@ -20,6 +20,7 @@ from redis.commands.json.path import Path
 import redis
 from backend.config import CeleryConfig, DatabaseConfig
 
+DatabaseConfig.validate()
 client = redis.Redis.from_url(DatabaseConfig.DATABASE_URL)
 
 WALLPAPER_LOCATION = "wallpapers"

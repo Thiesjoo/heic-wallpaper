@@ -3,12 +3,16 @@ import { useUserStore } from '@/stores/user'
 import Wallpaper from '@/components/SingleWallpaper.vue'
 import { useWallpaperStore, type WallpaperWithDetails } from '@/stores/wallpaper'
 import { computedAsync } from '@vueuse/core'
+import { useRouter } from 'vue-router';
 
 const userStore = useUserStore()
 const wallpaperStore = useWallpaperStore()
 
+const router = useRouter()
+
 if (!userStore.loggedIn) {
-    throw new Error("Not logged in");
+    console.warn('User is not logged in, redirecting to login page')
+    router.push({ name: 'Login' })
 }
 
 const currentWallpaper = computedAsync(async () => {

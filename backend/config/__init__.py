@@ -9,7 +9,12 @@ class CeleryConfig:
     CELERY_RESULT_BACKEND = os.environ.get("BROKER_URL")
 
 class DatabaseConfig:
-    DATABASE_URL = os.environ.get("DATABASE_URL")
+    DATABASE_URL = os.environ.get("DATABASE_URL", None)
+
+    @staticmethod
+    def validate():
+        if DatabaseConfig.DATABASE_URL is None :
+            raise ValueError("DATABASE_URL is required")
 
 class S3Config:
     def __init__(self, name):

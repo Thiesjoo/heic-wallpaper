@@ -6,8 +6,9 @@ const userManager = new UserManager({
     authority: `${import.meta.env.VITE_OIDC_AUTHORITY}`,
     client_id: import.meta.env.VITE_OIDC_CLIENT_ID,
     redirect_uri: `${window.location.origin}/login/callback`,
+    silent_redirect_uri: `${window.location.origin}/login/silent-callback`,
     response_type: 'code',
-    scope: 'openid profile settings email',
+    scope: 'openid profile settings email offline_access',
     userStore: new WebStorageStateStore({store: window.localStorage}),
     monitorSession: true,
     monitorAnonymousSession: true,
@@ -42,6 +43,13 @@ export function callback() {
     })
 }
 
+export function silentCallback() {
+    userManager.signinSilentCallback().then(() => {
+        console.log('SILENT CALLBACK: User signed in!')
+    })
+}
+
+
 function parseBoolean(str: string | boolean | undefined) {
     if (typeof str === 'boolean') {
         return str
@@ -64,12 +72,16 @@ async function getUser(fullRefresh = false): Promise<UserFromAPI | null> {
         return null
     }
 
+
+
     if (fullRefresh) {
         tempuser = await userManager.signinSilent()
         if (!tempuser) {
             console.log('Full refresh failed, returning null')
             return null
         }
+
+        console.log('Full refresh succeeded', tempuser)
     }
 
     const prof = tempuser.profile
@@ -98,7 +110,7 @@ async function getUser(fullRefresh = false): Promise<UserFromAPI | null> {
             widgetsAvailable: [],
         },
     } satisfies UserFromAPI
-
+    console.log('Returning user', user)
     return user
 }
 
@@ -126,6 +138,7 @@ function registerCallbacks(
         }
     })
     userManager.events.addUserSignedOut(() => {
+        console.log('User signed out event, passing through to callback!')
         signedOutCallback()
     })
 }

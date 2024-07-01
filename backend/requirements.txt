@@ -13,6 +13,7 @@ Redis
 sentry-sdk[flask]
 
 pyjwt
+cryptography
 requests
 
 pytz
