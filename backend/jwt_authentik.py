@@ -1,5 +1,6 @@
 # https://authentik.thies.dev/application/o/wallpaper-dev/jwks/
 
+from flask import app
 import jwt
 import requests
 
@@ -13,7 +14,7 @@ jwks_client = jwt.PyJWKClient(f"{client_url}jwks/", cache_jwk_set=True, lifespan
 def validate_access_token(token: str):
     try:
         signing_key = jwks_client.get_signing_key_from_jwt(token)
-        print(signing_key)
+        app.logger.debug(signing_key)
         data = jwt.decode(
             token,
             signing_key.key,
@@ -31,7 +32,7 @@ def validate_access_token(token: str):
         )
         return data
     except jwt.exceptions.PyJWTError as err:
-        print(f"Error: {err}")
+        app.logger.error(f"Error: {err}")
         return False
 
 
@@ -39,7 +40,7 @@ def get_user_id(token: str):
     data = validate_access_token(token)
 
     if data:
-        print(data)
+        app.logger.debug(data)
         return data["sub"]
     return False
 
@@ -48,14 +49,12 @@ def set_user_wallpaper(token: str, wallpaper_uid: str):
     user_id = get_user_id(token)
     if user_id:
         try:
-            print(AppConfig.AUTHENTIK_TOKEN)
-
             original_attributes = requests.get(
                 f"{AppConfig.AUTHENTIK_API_URL}/api/v3/core/users/{user_id}/",
                 headers={"Authorization": f"Bearer {AppConfig.AUTHENTIK_TOKEN}"}
             ).json()["attributes"]
 
-            print("original_attributes: ", original_attributes)
+            app.logger.debug("original_attributes: ", original_attributes)
             if "settings" not in original_attributes:
                 original_attributes["settings"] = {}
 
@@ -67,12 +66,12 @@ def set_user_wallpaper(token: str, wallpaper_uid: str):
                 headers={"Authorization": f"Bearer {AppConfig.AUTHENTIK_TOKEN}"}
             )
 
-            print("res: ", result.json())
+            app.logger.debug("res: ", result.json())
 
             if result.status_code != 200:
                 return False, "Error setting wallpaper"
         except Exception as e:
-            print("Exeception in setting:",e)
+            app.logger.debug("Exeception in setting:",e)
             return False, "Error setting wallpaper"
 
         return True, "Wallpaper set"

@@ -16,6 +16,27 @@ from backend.database.redis import WallpaperType, add_wallpaper, WallpaperStatus
 from backend.tasks import tasks
 from backend.worker.image_processor import handle_all_images
 
+from logging.config import dictConfig
+
+dictConfig(
+    {
+        "version": 1,
+        "formatters": {
+            "default": {
+                "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
+            }
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "stream": "ext://sys.stdout",
+                "formatter": "default",
+            }
+        },
+        "root": {"level": "DEBUG", "handlers": ["console"]},
+    }
+)
+
 app = Flask(
     __name__,
 )
@@ -125,7 +146,6 @@ def upload_complete():
     try:
         s3.head_object(Bucket=AppConfig.UPLOAD.BUCKET, Key=key)
     except Exception as e:
-        print(e)
         return json.dumps({
             'error': 'invalid uid/key'
         }), 400

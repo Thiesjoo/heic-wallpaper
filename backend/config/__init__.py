@@ -11,9 +11,6 @@ class CeleryConfig:
 class DatabaseConfig:
     DATABASE_URL = os.environ.get("DATABASE_URL")
 
-
-
-
 class S3Config:
     def __init__(self, name):
         self.name = name
