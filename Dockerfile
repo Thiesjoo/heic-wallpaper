@@ -2,8 +2,8 @@ FROM python:3.11-alpine as backend
 
 WORKDIR /backend
 
-RUN apk add --no-cache libffi-dev libheif-dev libde265-dev
-RUN apk add zlib-dev jpeg-dev
+RUN apk add --no-cache libffi-dev libheif-dev libde265-dev gcc
+RUN apk add --no-cache zlib-dev jpeg-dev
 
 COPY backend/requirements.txt ./
 RUN pip3 install --no-cache-dir -r requirements.txt
