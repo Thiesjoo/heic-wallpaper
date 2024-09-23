@@ -198,7 +198,7 @@ def set_wallpaper(file_loc: str, first_run: bool = True):
         # From https://stackoverflow.com/questions/1977694/change-desktop-background
         # Tested on Windows 10. -- @1j01
         import ctypes
-        SPI_SETDESKWALLPAPER = 20
+        SPI_SETDESKWALLPAPER = 20 #0x0014
         ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, file_loc, 0)  # type: ignore
     elif desktop_env == "mac":
         # From https://stackoverflow.com/questions/431205/how-can-i-programatically-change-the-background-in-mac-os-x
