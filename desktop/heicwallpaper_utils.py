@@ -54,25 +54,27 @@ def check_if_uuid_exists(wallpaper_uuid: str):
 
 
 def fetch_and_save_wallpaper(wallpaper_uuid: str, index: int | Literal["preview"]):
-    wallpaper_path = f'{CONFIG_DIR}/{wallpaper_uuid}/'
+    wallpaper_path = os.path.join(CONFIG_DIR, wallpaper_uuid)
+    file_path = os.path.join(wallpaper_path, f"{index}.png")
 
-    if not os.path.exists(f'{wallpaper_path}/{index}.png'):
+    if not os.path.exists(file_path):
+        print("Fresh download: ", wallpaper_uuid, index)
         request = requests.get(url_from_uuid_and_index(wallpaper_uuid, index))
         request.raise_for_status()
 
-        with open(f'{wallpaper_path}/{index}.png', 'wb') as f:
+        with open(file_path, 'wb') as f:
             f.write(request.content)
 
-    return f'{wallpaper_path}/{index}.png'
+    return file_path
 
 
 def make_available_offline(wallpaper_uuid: str):
     os.makedirs(CONFIG_DIR, exist_ok=True)
-    wallpaper_path = f'{CONFIG_DIR}/{wallpaper_uuid}/'
+    wallpaper_path = os.path.join(CONFIG_DIR, wallpaper_uuid)
 
     if os.path.exists(wallpaper_path):
         # make sure the data.json file is there
-        if not os.path.exists(f'{wallpaper_path}/data.json'):
+        if not os.path.exists(os.path.join(wallpaper_path, "data.json")):
             os.remove(wallpaper_path)
             make_available_offline(wallpaper_uuid)
             return
@@ -95,7 +97,7 @@ def make_available_offline(wallpaper_uuid: str):
 
     fetch_and_save_wallpaper(wallpaper_uuid, "preview")
 
-    with open(f'{wallpaper_path}/data.json', 'wb') as f:
+    with open(os.path.join(wallpaper_path, "data.json"), 'wb') as f:
         f.write(json.dumps(json_data).encode())
 
     print(f"Wallpaper {wallpaper_uuid} is now available offline")
@@ -108,11 +110,11 @@ def get_correct_photo_for_wallpaper(wallpaper_uuid: str):
     :param wallpaper_uuid:
     :return:
     """
-    wallpaper_path = f'{CONFIG_DIR}/{wallpaper_uuid}/'
+    wallpaper_path = os.path.join(CONFIG_DIR, wallpaper_uuid)
     if not os.path.exists(wallpaper_path):
         raise ValueError("Wallpaper is not saved for offline use")
 
-    with open(f'{wallpaper_path}/data.json', 'rb') as f:
+    with open(os.path.join(wallpaper_path, "data.json"), 'rb') as f:
         data_raw = f.read()
 
     if data_raw is None:
@@ -133,8 +135,8 @@ def get_correct_photo_for_wallpaper(wallpaper_uuid: str):
         if nowsecs > float(time["t"]) * 60 * 60 * 24:
             last_one = time
     index = last_one["i"]
-
-    return f'{wallpaper_path}/{index}.png'
+    
+    return os.path.join(wallpaper_path, f"{index}.png")
 
 
 # TODO:

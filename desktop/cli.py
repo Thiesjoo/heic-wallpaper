@@ -7,7 +7,7 @@ import wallpaper_utils
 import heicwallpaper_utils
 import service
 
-config_location = f"{wallpaper_utils.get_config_dir('heic-wallpaper')}/config.json"
+config_location = os.path.join(wallpaper_utils.get_config_dir('heic-wallpaper'), "config.json")
 
 parser = argparse.ArgumentParser(
     description="A CLI tool to change the wallpaper. When no arguments are provided, the wallpaper will be changed to the configured wallpaper. When no wallpaper is configured, no changes will be made",
@@ -42,6 +42,7 @@ args = parser.parse_args()
 def write_to_config(key, value):
     if not os.path.exists(config_location):
         data = {}
+        os.makedirs(os.path.dirname(config_location), exist_ok=True)
     else:
         with open(config_location, "r") as f:
             data = json.load(f)
@@ -92,8 +93,11 @@ def set_wallpaper_from_uuid_args(uuid_from_args: str):
         write_to_config("wallpaper", uuid)
 
     print(f"Changing wallpaper to {uuid}")
+
+    print(heicwallpaper_utils.CONFIG_DIR)
     heicwallpaper_utils.make_available_offline(uuid)
     path = heicwallpaper_utils.get_correct_photo_for_wallpaper(uuid)
+    print("Setting wallpaper to path: ",path)
     wallpaper_utils.set_wallpaper(path)
 
 
