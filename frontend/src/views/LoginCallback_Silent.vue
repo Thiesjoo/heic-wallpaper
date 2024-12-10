@@ -5,8 +5,8 @@ import { defineComponent } from "vue";
 import { silentCallback } from "@/auth/oidc";
 
 export default defineComponent({
-	mounted() {
-		silentCallback();
-	},
+  mounted() {
+    silentCallback();
+  },
 });
 </script>

@@ -5,8 +5,8 @@ import { defineComponent } from "vue";
 import { callback } from "@/auth/oidc";
 
 export default defineComponent({
-	mounted() {
-		callback();
-	},
+  mounted() {
+    callback();
+  },
 });
 </script>
