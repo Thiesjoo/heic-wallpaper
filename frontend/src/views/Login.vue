@@ -13,7 +13,6 @@ async function start() {
 }
 
 start()
-
 </script>
 
 <template>

@@ -45,6 +45,7 @@ export enum WallpaperType {
 export const useWallpaperStore = defineStore('wallpapers', () => {
     // This store should manage all available wallpapers
     const wallpapers = ref<Wallpaper[]>([])
+    const isFetched = ref(false)
     const lastError = ref<string>('')
 
     // Fetch wallpapers from backend
@@ -53,6 +54,7 @@ export const useWallpaperStore = defineStore('wallpapers', () => {
             const res = await fetch('/api/wallpapers')
             const data = await res.json()
             wallpapers.value = data
+            isFetched.value = true
             return data
         } catch (e: any) {
             lastError.value = e?.message || 'Unknown error'
@@ -91,6 +93,7 @@ export const useWallpaperStore = defineStore('wallpapers', () => {
         wallpapers: computed(() => wallpapers.value),
         fetchWallpapers,
         getWallpaperById,
+        isFetched: computed(() => isFetched.value),
         lastError: computed(() => lastError.value),
     }
 })

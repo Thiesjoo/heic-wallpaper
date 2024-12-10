@@ -98,7 +98,7 @@ async function getUser(fullRefresh = false): Promise<UserFromAPI | null> {
         [key: string]: string | boolean | undefined
     }
 
-    const name = prof.name.split(' ', 1)
+    const name = prof.name.split(' ', 2)
     const user = {
         name: {
             first: name[0],

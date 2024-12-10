@@ -1,127 +1,58 @@
-<script setup lang="ts">
-import {getApiWallpaperURL, type Wallpaper} from '@/stores/wallpaper'
-import {WallpaperStatus} from '@/stores/wallpaper'
-import Preview from './Preview.vue'
+<script lang="ts" setup>
+import {type Wallpaper, WallpaperStatus} from '@/stores/wallpaper'
 import {computed} from 'vue'
-import {useUserStore} from '@/stores/user'
-import router from '@/router'
-import {getRouterWallpaperURL} from '@/stores/wallpaper'
-
-const loadingURL = 'https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif'
-const errorURL =
-    'https://w7.pngwing.com/pngs/595/505/png-transparent-computer-icons-error-closeup-miscellaneous-text-logo.png'
+import {useRouter} from "vue-router";
 
 const props = defineProps<{
-  wallpaper: Wallpaper
+    wallpaper: Wallpaper
 }>()
 
-const userStore = useUserStore()
 const wallpaper = props.wallpaper
 
 const isLoading = computed(() => {
-  return wallpaper.status === WallpaperStatus.PROCESSING
+    return wallpaper.status === WallpaperStatus.PROCESSING
 })
 
 const isError = computed(() => {
-  return (
-      wallpaper.status === WallpaperStatus.DELETED ||
-      wallpaper.status === WallpaperStatus.ERROR
-  )
+    return (
+        wallpaper.status === WallpaperStatus.DELETED ||
+        wallpaper.status === WallpaperStatus.ERROR
+    )
 })
+const router = useRouter();
 
-const wallpaperURL = computed(() => {
-  if (isError.value) {
-    return errorURL
-  }
-  if (isLoading.value) {
-    return loadingURL
-  }
-  return wallpaper.preview_url
-})
 
-function copyURL() {
-  navigator.clipboard.writeText(getApiWallpaperURL(wallpaper))
-}
-
-function openURL() {
-  router.push(getRouterWallpaperURL(wallpaper))
-}
-
-function updateWallpaper() {
-  userStore.updateWallpaper(wallpaper.id)
-}
-
-function openURLOfError() {
-  if (isError.value || isLoading.value) {
-    if (wallpaper.error && wallpaper.error.startsWith('/api/tasks')) {
-      window.location.href = wallpaper.error
+function click() {
+    if (isError.value || isLoading.value) {
+        return
     }
-  }
+    router.push(`/wallpaper/${wallpaper.id}`)
 }
-
-
 </script>
 
 <template>
-  <div @click="openURLOfError">
-    <Preview :url="wallpaperURL" :size="20">
-        <span class="w-full text-center font-bold" v-if="!isError">{{
-            wallpaper.name
-          }}</span>
-      <span class="w-full text-center font-bold" v-if="isError"
-      >This wallpaper is broken</span
-      >
-      <div class="flex flex-row h-16" v-if="!isLoading && !isError">
-        <!-- Copy URL -->
-        <button
-            class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold px-4 m-4 rounded"
-            @click="copyURL"
-        >
-          Copy
-        </button>
-        <!-- Open button -->
-        <button
-            class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold px-4 m-4 rounded"
-            @click="openURL"
-        >
-          Open
-        </button>
-
-        <!-- Select button -->
-        <button
-            class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold px-4 m-4 rounded disabled:bg-blue-300 disabled:hover:bg-blue-300"
-            @click="updateWallpaper"
-            :disabled="true"
-            v-if="userStore.loggedIn"
-        >
-          Set
-        </button>
-      </div>
-    </Preview>
-  </div>
+    <a-card :hoverable="!isLoading&&!isError" :loading="isLoading" :style="{
+        cursor: 'pointer',
+        width: '350px',
+    }" :title="wallpaper.name" @click="click">
+        <template #cover>
+           <span v-if="isError" class="w-full text-center font-bold">
+              This wallpaper is broken
+            </span>
+            <img
+                    v-else-if="!isLoading"
+                    :src="wallpaper.preview_url"
+                    :style="{
+                        height: '200px',
+                        objectFit: 'cover',
+                    }"
+            />
+        </template>
+        <a-card-meta description="Created by ..., on ...">
+        </a-card-meta>
+    </a-card>
 </template>
 
 <style scoped>
-h1 {
-  font-weight: 500;
-  font-size: 2.6rem;
-  position: relative;
-  top: -10px;
-}
 
-h3 {
-  font-size: 1.2rem;
-}
-
-.greetings h1,
-.greetings h3 {
-  text-align: center;
-}
-
-@media (min-width: 1024px) {
-  .greetings h1,
-  .greetings h3 {
-    text-align: left;
-  }
-}
 </style>

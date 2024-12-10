@@ -89,6 +89,8 @@ def allowed_file(filename):
 
 @app.route("/api/upload", methods=["POST"])
 def upload():
+    # TODO: login??
+    # TODO: Max size
     file_name = request.json.get('name')
     file_type = request.json.get('type')
 

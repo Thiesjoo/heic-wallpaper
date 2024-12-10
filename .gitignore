@@ -7,3 +7,6 @@ data/
 minio_data/
 .idea/
 .vscode/
+
+env/
+celerybeat-schedule.db

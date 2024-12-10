@@ -1,69 +1,90 @@
-<script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import { useUserStore } from '@/stores/user'
+<script lang="ts" setup>
+import {RouterLink, RouterView, useRoute} from 'vue-router'
+import {useUserStore} from '@/stores/user'
+import {theme} from 'ant-design-vue';
+import {computed} from "vue";
+import {UploadOutlined} from "@ant-design/icons-vue";
+import {startManualUpload} from "@/utils/onDrop";
 
 const userStore = useUserStore()
+
+const route = useRoute()
+const selectedKeys = computed(() => [route.path])
+const initials = computed(() => {
+    return userStore.user?.name.first?.charAt(0) + userStore.user?.name.last?.charAt(0)
+})
 </script>
 
 <template>
-    <header>
-        <div class="w-full p-3 font-bolder flex flex-row">
-            <span v-if="userStore.loading">(Still loading ...)</span>
-            <div class="flex-grow"></div>
-            <span v-if="userStore.loggedIn">
-                Logged in as: {{ userStore.user?.name.first }} ({{
-                    userStore?.user?.email
-                }})
-            </span>
+    <a-config-provider
+            :theme="{
+      algorithm: theme.darkAlgorithm,
+    }"
+    >
+        <a-layout>
+            <a-layout-header :style="{ position: 'fixed', zIndex: 1, width: '100%' }">
+                <a-flex justify="space-between">
+                    <a-flex :style="{
+                        minWidth: '200px',
+                    }">
+                        <div class="logo"/>
+                        <a-menu
+                                v-model:selected-keys="selectedKeys"
+                                :style="{ lineHeight: '64px',minWidth: '200px' }"
+                                mode="horizontal"
+                                theme="dark"
+                        >
+                            <a-menu-item key="/">
+                                <RouterLink to="/">Gallery</RouterLink>
+                            </a-menu-item>
+                            <a-menu-item v-if="!userStore.loggedIn" key="/login">
+                                <RouterLink to="/login">Login</RouterLink>
+                            </a-menu-item>
+                        </a-menu>
+                    </a-flex>
 
-        </div>
-        <div class="wrapper">
-            <nav>
-                <RouterLink to="/">Home</RouterLink>
-                <RouterLink to="/account"
-                            v-if="userStore.loggedIn">Account</RouterLink>
-                <RouterLink to="/login"
-                            v-else>Login</RouterLink>
-            </nav>
-        </div>
-    </header>
+                    <a-flex align="center" justify="center">
+                        <template v-if="userStore.loggedIn">
+                            <a-button size="large" type="default" @click="startManualUpload" title="You can also drop your images anywhere on this page.">
+                                <template #icon>
+                                    <UploadOutlined/>
+                                </template>
+                                Upload
+                            </a-button>
+                            <a-divider type="vertical"/>
+                            <a-dropdown>
+                                <a-avatar :size="48" :style="{ backgroundColor: '#f56a00', verticalAlign: 'middle' }">
+                                    {{ initials }}
+                                </a-avatar>
+                                <template #overlay>
+                                    <a-menu>
+                                        <a-menu-item key="0">
+                                            <RouterLink to="/account">Account</RouterLink>
+                                        </a-menu-item>
+                                        <a-menu-divider/>
+                                        <a-menu-item key="3">
+                                            <a
+                                                    @click="userStore.reset"
+                                            >Logout</a>
+                                        </a-menu-item>
+                                    </a-menu>
+                                </template>
 
-    <main class="flex flex-col items-center justify-center w-full pt-6">
-        <Suspense>
-            <RouterView />
-            <template #fallback> Loading... </template>
-        </Suspense>
-    </main>
+                            </a-dropdown>
+                        </template>
+                    </a-flex>
+                </a-flex>
+            </a-layout-header>
+            <a-layout-content :style="{ padding: '0 50px', marginTop: '72px', minHeight: 'calc(100vh - 72px)' }">
+                <Suspense>
+                    <RouterView/>
+                    <template #fallback> Loading...</template>
+                </Suspense>
+            </a-layout-content>
+        </a-layout>
+    </a-config-provider>
 </template>
 
 <style scoped>
-header {
-    line-height: 1.5;
-    max-height: 100vh;
-}
 
-nav {
-    width: 100%;
-    font-size: 12px;
-    text-align: center;
-    margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-    color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-    background-color: transparent;
-}
-
-nav a {
-    display: inline-block;
-    padding: 0 1rem;
-    border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-    border: 0;
-}
 </style>

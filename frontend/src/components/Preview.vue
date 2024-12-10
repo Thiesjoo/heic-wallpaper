@@ -14,7 +14,7 @@ const height = (props.size * 3) / 4
             width: `${width}rem`,
             height: `${height}rem`,
         }"
-        class="flex-col flex justify-center align-center border p-3 m-3"
+        class="flex-col flex justify-center align-center"
     >
         <img :src="url" class="w-full max-h-[60%]" style="object-fit: cover" />
         <slot></slot>

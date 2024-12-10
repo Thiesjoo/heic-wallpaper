@@ -14,7 +14,8 @@ import { createPinia } from 'pinia'
 //@ts-ignore
 import DropZone from 'dropzone-vue'
 
-import Drop2 from "./components/Drop.vue"
+import Antd from 'ant-design-vue';
+import 'ant-design-vue/dist/reset.css';
 
 import App from './App.vue'
 import router from './router'
@@ -30,6 +31,7 @@ app.use(DropZone)
 app.use(Toast)
 app.use(createPinia())
 app.use(router)
+app.use(Antd)
 
 app.mount('#app')
 
