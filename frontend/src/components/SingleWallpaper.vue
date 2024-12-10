@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { type Wallpaper, WallpaperStatus } from "@/stores/wallpaper";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 
 const props = defineProps<{
@@ -27,14 +27,19 @@ function click() {
   }
   router.push(`/wallpaper/${wallpaper.id}`);
 }
+
+const previewError = ref(false);
+const canInteract = computed(() => {
+  return !isLoading.value && !isError.value && !previewError.value;
+});
 </script>
 
 <template>
   <a-card
-    :hoverable="!isLoading && !isError"
-    :loading="isLoading"
+    :hoverable="canInteract"
+    :loading="isLoading || previewError"
     :style="{
-      cursor: 'pointer',
+      cursor: canInteract ? 'pointer' : 'not-allowed',
       width: '350px',
     }"
     :title="wallpaper.name"
@@ -45,12 +50,13 @@ function click() {
         This wallpaper is broken
       </span>
       <img
-        v-else-if="!isLoading"
+        v-else-if="!isLoading && !previewError"
         :src="wallpaper.preview_url"
         :style="{
           height: '200px',
           objectFit: 'cover',
         }"
+        @error="previewError = true"
       />
     </template>
     <a-card-meta description="Created by ..., on ..."> </a-card-meta>
