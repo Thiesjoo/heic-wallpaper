@@ -11,6 +11,9 @@ class CeleryConfig:
 class DatabaseConfig:
     DATABASE_URL = os.environ.get("DATABASE_URL", None)
 
+    MAX_AGE_FOR_PENDING = 60 * 60  # 1h
+    CLEANUP_INTERVAL = 30  # 30s
+
     @staticmethod
     def validate():
         if DatabaseConfig.DATABASE_URL is None :

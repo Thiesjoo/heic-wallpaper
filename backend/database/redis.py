@@ -8,6 +8,7 @@ INDEXED BY: key - uuid
 - type (normal or heic)
 - (OPTIONAL) sun data
 """
+import time
 
 """
 Further more: store 1 array of uuid's
@@ -104,7 +105,13 @@ def add_error_to_wallpaper(uid: str, err: str):
 
 
 def delete_all_pending():
+    deleted = set()
     all_wallpapers = get_all_wallpapers()
     for wallpaper in all_wallpapers:
-        if wallpaper["status"] == WallpaperStatus.PROCESSING:
-            remove_single_wallpaper(wallpaper["uid"])
+        if wallpaper["status"] == WallpaperStatus.PROCESSING and (
+                wallpaper["date_created"] + DatabaseConfig.MAX_AGE_FOR_PENDING
+                ) < int(time.time()):
+                deleted.add(wallpaper["uid"])
+                remove_single_wallpaper(wallpaper["uid"])
+
+    return deleted

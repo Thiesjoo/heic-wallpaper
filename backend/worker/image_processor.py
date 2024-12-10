@@ -8,11 +8,12 @@ from backend.database.redis import (
     WallpaperStatus,
     WallpaperType,
     update_data_of_wallpaper,
-    update_status_of_wallpaper,
+    update_status_of_wallpaper, delete_all_pending,
 )
 
-from backend.config import AppConfig, CeleryConfig
+from backend.config import AppConfig, CeleryConfig, DatabaseConfig
 import backend.heic as heic
+
 
 # Initialize Celery
 celery = Celery(
@@ -21,6 +22,13 @@ celery = Celery(
     backend=CeleryConfig.CELERY_RESULT_BACKEND,
     include=["backend"]
 )
+
+celery.conf.beat_schedule = {
+    'remove_old_images': {
+        'task': 'backend.worker.image_processor.remove_broken_images',
+        'schedule': DatabaseConfig.CLEANUP_INTERVAL,
+    }
+}
 
 s3_uploads = boto3.client('s3',
                           endpoint_url=AppConfig.UPLOAD.S3_URL,
@@ -145,3 +153,11 @@ def handle_all_images(self, key: str, uid: str, type: WallpaperType):
         return handle_generic(key, uid)
 
     raise ValueError("Invalid wallpaper type")
+
+@celery.task()
+def remove_broken_images():
+    deleted_uuids = delete_all_pending()
+
+    for uuid in deleted_uuids:
+        s3_results.delete_object(Bucket=AppConfig.RESULT.BUCKET, Key=uuid)
+
