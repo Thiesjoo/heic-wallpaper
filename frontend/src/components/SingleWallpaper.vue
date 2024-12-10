@@ -71,7 +71,6 @@ function openURLOfError() {
       <span class="w-full text-center font-bold" v-if="isError"
       >This wallpaper is broken</span
       >
-      <!-- Show 3 buttons horizontal -->
       <div class="flex flex-row h-16" v-if="!isLoading && !isError">
         <!-- Copy URL -->
         <button
@@ -90,8 +89,9 @@ function openURLOfError() {
 
         <!-- Select button -->
         <button
-            class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold px-4 m-4 rounded"
+            class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold px-4 m-4 rounded disabled:bg-blue-300 disabled:hover:bg-blue-300"
             @click="updateWallpaper"
+            :disabled="true"
             v-if="userStore.loggedIn"
         >
           Set

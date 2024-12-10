@@ -162,7 +162,7 @@ def upload_complete():
 
 
 def _get_url_for_wallpaper(wallpaper: Wallpaper, index: int | str) -> str:
-    return f"{AppConfig.PUBLIC_URL}/{wallpaper['uid']}/{index}.png"
+    return f"{AppConfig.PUBLIC_ASSET_URL}/{wallpaper['uid']}/{index}.png"
 
 
 def wallpaper_mapper(wallpaper: Wallpaper, extended=False):
@@ -233,7 +233,6 @@ def get_wallpaper_information(uid: str):
     if type(wallpaper) == tuple:
         return wallpaper
     return wallpaper_mapper(wallpaper, extended=True)
-
 
 @app.patch("/api/user/set")
 def set_user():

@@ -33,6 +33,8 @@ spec:
               value: "redis://{{ .Release.Name }}-redis-master:6379/0"
             - name: PUBLIC_URL
               value: "{{ $.Values.heicwallpaper.public_url }}"
+            - name: PUBLIC_ASSET_URL
+              value: "{{ $.Values.heicwallpaper.public_asset_url }}"
             - name: DATABASE_URL
               value: "redis://{{ .Release.Name }}-redis-master:6379/0"
           ports:
@@ -40,4 +42,3 @@ spec:
               protocol: TCP
           resources: {}
       restartPolicy: Always
-status: {}

@@ -16,6 +16,4 @@ export type UserSettings = {
     widgetsAvailable: unknown[]
 }
 
-export type UserFromAPI = Omit<User, 'settings'> & {
-    settings: Omit<User['settings'], 'widgets' | 'favorites'>
-}
+export type UserFromAPI = User

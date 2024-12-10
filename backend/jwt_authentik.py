@@ -13,7 +13,6 @@ jwks_client = jwt.PyJWKClient(f"{client_url}jwks/", cache_jwk_set=True, lifespan
 def validate_access_token(token: str):
     try:
         signing_key = jwks_client.get_signing_key_from_jwt(token)
-        print(signing_key, flush=True)
         data = jwt.decode(
             token,
             signing_key.key,
@@ -35,14 +34,13 @@ def validate_access_token(token: str):
         return False
 
 
-def get_user_id(token: str):
+def get_user_id(token: str) -> str:
     data = validate_access_token(token)
 
     if data:
-        print(data)
         return data["sub"]
-    return False
-
+    
+    raise Exception("Invalid token")
 
 def set_user_wallpaper(token: str, wallpaper_uid: str):
     user_id = get_user_id(token)
@@ -53,18 +51,17 @@ def set_user_wallpaper(token: str, wallpaper_uid: str):
                 headers={"Authorization": f"Bearer {AppConfig.AUTHENTIK_TOKEN}"}
             ).json()
 
-            print("original_attributes: ", original_attributes, flush=True)
-
             if "attributes" not in original_attributes:
                 raise Exception("No attributes found")
 
             original_attributes = original_attributes["attributes"]
 
             print("original_attributes: ", original_attributes, flush=True)
+
             if "settings" not in original_attributes:
                 original_attributes["settings"] = {}
 
-            original_attributes["settings"]["backgroundURL"] = f"{AppConfig.PUBLIC_URL}/{wallpaper_uid}"
+            original_attributes["settings"]["backgroundURL"] = f"{AppConfig.PUBLIC_URL}/api/wallpaper/{wallpaper_uid}"
 
             result = requests.patch(
                 f"{AppConfig.AUTHENTIK_API_URL}/api/v3/core/users/{user_id}/",
@@ -73,7 +70,6 @@ def set_user_wallpaper(token: str, wallpaper_uid: str):
             )
 
             print("res: ", result.json(), flush=True)
-
             if result.status_code != 200:
                 return False, "Error setting wallpaper"
         except Exception as e:

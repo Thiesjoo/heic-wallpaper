@@ -29,6 +29,7 @@ class AppConfig:
     RESULT = S3Config("RESULT")
 
     PUBLIC_URL = os.environ.get("PUBLIC_URL")
+    PUBLIC_ASSET_URL = os.environ.get("PUBLIC_ASSET_URL")
     AUTHENTIK_TOKEN = os.environ.get("AUTHENTIK_TOKEN")
     AUTHENTIK_API_URL = os.environ.get("AUTHENTIK_API_URL")
     AUTHENTIK_CLIENT_ID = os.environ.get("AUTHENTIK_CLIENT_ID")
@@ -41,6 +42,8 @@ class AppConfig:
                     raise ValueError(f"{attr} is required for {s3.name}")
         if AppConfig.PUBLIC_URL is None:
             raise ValueError("PUBLIC_URL is required")
+        if AppConfig.PUBLIC_ASSET_URL is None:
+            raise ValueError("PUBLIC_ASSET_URL is required")
         if AppConfig.AUTHENTIK_TOKEN is None:
             raise ValueError("AUTHENTIK_TOKEN is required")
         if AppConfig.AUTHENTIK_API_URL is None:

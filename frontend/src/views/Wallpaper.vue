@@ -46,8 +46,9 @@ function copyURL() {
 
     <div class="flex justify-center" v-if="userStore.loggedIn">
         <button
-            class="border p-2 m-4 hover:bg-green-600 rounded-md"
+            class="text-black  p-2 m-4 rounded-md disabled:bg-green-900 disabled:hover:bg-green-900 bg-green-700 hover:bg-green-800  "
             @click="select()"
+            :disabled="userStore.loading"
         >
             Select this wallpaper
         </button>

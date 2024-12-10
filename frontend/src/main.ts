@@ -39,7 +39,6 @@ const store = useUserStore();
 (
     async () => {
         await store.getUserData();
-        await store.refreshUserInfo()
     }
 )()
 

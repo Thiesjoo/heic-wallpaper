@@ -19,29 +19,25 @@ export const useUserStore = defineStore('user', () => {
     }
 
     async function getUserData(cachedUser?: UserFromAPI) {
+        loading.value = true;
         try {
-            loading.value = true;
-
-            console.log("Getting user data");
-            user.value = cachedUser || (await auth.getUser());
-            if (!user.value) {
-                user.value = null;
-            }
+            console.log("Getting user data", cachedUser ? "cached" : "");
+            user.value = cachedUser || (await auth.getUser()) || null
         } catch (e: any) {
             console.error(e);
         }
         loading.value = false;
-
     }
 
 
     async function updateWallpaper(newUID: string) {
+        loading.value = true;
+
         const myHeaders = new Headers()
         myHeaders.append('pragma', 'no-cache')
         myHeaders.append('cache-control', 'no-cache')
         myHeaders.append('content-type', 'application/json')
 
-        await auth.getUser(true);
         const token = await auth.getToken();
         if (!token) {
             throw new Error("No token found");
@@ -58,7 +54,7 @@ export const useUserStore = defineStore('user', () => {
         } satisfies RequestInit
         const toast = useToast();
 
-        fetch('api/user/set', fetchConfig)
+        fetch('/api/user/set', fetchConfig)
             .then((x) => {
                 if (x.status != 200) {
                     throw new Error(x.statusText)
@@ -74,19 +70,22 @@ export const useUserStore = defineStore('user', () => {
                 toast.error("Failed to update wallpaper, see console for more info.")
                 console.error(x)
             })
+
+        loading.value = false;
     }
 
     function reset(logout = false) {
+        loading.value = true;
         user.value = null;
         if (logout) {
             auth.logout()
         }
+        loading.value = false;
     }
 
 
     return {
-        loading: computed(() => loading
-            .value),
+        loading,
         user: computed(() => user.value),
         loggedIn: computed(() => user.value !== null),
         updateWallpaper,
@@ -100,11 +99,11 @@ export const useUserStore = defineStore('user', () => {
 export function enableAuth() {
     const store = useUserStore();
 
-    const authed = (user: UserFromAPI) => {
+    const authedCallback = (user: UserFromAPI) => {
         store.getUserData(user);
     };
-    const unauthed = () => {
+    const unauthedCallback = () => {
         store.reset()
     };
-    auth.registerCallbacks(authed, unauthed);
+    auth.registerCallbacks(authedCallback, unauthedCallback);
 }

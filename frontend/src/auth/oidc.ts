@@ -2,6 +2,11 @@ import {Log, User, UserManager, WebStorageStateStore} from 'oidc-client-ts'
 import type {AuthMethod} from '.'
 import type {UserFromAPI} from '@/utils/types'
 
+
+// Intended flow
+// 1. User authenticates by clicking a button, popup opens, blah blah blah
+// 2. User info must always be up to date (By using /info endpoint) (Let's say no longer than access token length)
+
 const userManager = new UserManager({
     authority: `${import.meta.env.VITE_OIDC_AUTHORITY}`,
     client_id: import.meta.env.VITE_OIDC_CLIENT_ID,
@@ -12,11 +17,11 @@ const userManager = new UserManager({
     userStore: new WebStorageStateStore({store: window.localStorage}),
     monitorSession: true,
     monitorAnonymousSession: true,
+    automaticSilentRenew: true,
 })
 
 Log.setLogger(console);
 Log.setLevel(Log.DEBUG);
-
 
 //@ts-ignore
 window.test = userManager
@@ -61,46 +66,45 @@ function parseBoolean(str: string | boolean | undefined) {
 }
 
 async function getUser(fullRefresh = false): Promise<UserFromAPI | null> {
-    let tempuser: null | User = null;
+    let tempUser: null | User = null;
     try {
-        tempuser = await userManager.getUser();
+        tempUser = await userManager.getUser();
     } catch (e) {
         console.error("Failed to get user: ", e);
     }
-    if (!tempuser) {
+    if (!tempUser) {
         console.warn('Getting user, but user is null')
         return null
     }
-
-
+    console.log("Token expires in", tempUser.expires_in)
 
     if (fullRefresh) {
-        tempuser = await userManager.signinSilent()
-        if (!tempuser) {
+        console.log("Full request asked")
+        tempUser = await userManager.signinSilent()
+        if (!tempUser) {
             console.log('Full refresh failed, returning null')
             return null
         }
 
-        console.log('Full refresh succeeded', tempuser)
+        console.log('Full refresh succeeded', tempUser)
     }
 
-    const prof = tempuser.profile
+    const prof = tempUser.profile
     if (!prof || !prof.name || !prof.email || !prof.settings) {
-        console.warn('User is missing some data', tempuser)
+        console.warn('User is missing some data', tempUser)
         return null
     }
     const settings = prof.settings as {
         [key: string]: string | boolean | undefined
     }
 
-    const name = prof.name.split(' ')
-
+    const name = prof.name.split(' ', 1)
     const user = {
         name: {
             first: name[0],
             last: name[1],
         },
-        email: prof.email,
+        email: prof.email as string,
         settings: {
             showSeconds: parseBoolean(settings.showSeconds),
             showDate: parseBoolean(settings.showDate),
@@ -139,6 +143,12 @@ function registerCallbacks(
     })
     userManager.events.addUserSignedOut(() => {
         console.log('User signed out event, passing through to callback!')
+        signedOutCallback()
+    })
+
+    userManager.events.addSilentRenewError(() => {
+        console.warn("Silent renew error, logging user out")
+        userManager.signoutSilent()
         signedOutCallback()
     })
 }
