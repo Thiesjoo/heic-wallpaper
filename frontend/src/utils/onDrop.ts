@@ -12,9 +12,11 @@ const allowedTypes = [
 ];
 
 export async function onDrop(file: File) {
+  let type = file.type;
   if (!allowedTypes.includes(file.type)) {
     if (file.name.endsWith(".heic") || file.name.endsWith(".heif")) {
       console.warn("No type for: ", file);
+      type = "image/heic";
     } else {
       console.warn(file);
       toast.error("Invalid file type.");
@@ -22,11 +24,16 @@ export async function onDrop(file: File) {
     }
   }
 
+  if (file.size > 100 * 1024 * 1024) {
+    toast.error("File size must be less than 50MB.");
+    return;
+  }
+
   const presignedURLResult = await fetch("/api/upload", {
     method: "POST",
     body: JSON.stringify({
       name: file.name,
-      type: file.type,
+      type: type,
     }),
     headers: {
       "Content-Type": "application/json",
@@ -39,17 +46,22 @@ export async function onDrop(file: File) {
     return;
   }
 
-  const url = presignedURLResult.data;
-  const { key, uid } = presignedURLResult;
+  const { fields, url } = presignedURLResult.data;
 
   const progressToast = toast.info("Uploading file: 0%", {
     timeout: 0,
     closeOnClick: false,
   });
 
-  const fileUploadResult = await axios.put(url, file, {
+  const formData = new FormData();
+  for (const key in fields) {
+    formData.append(key, fields[key]);
+  }
+  formData.append("file", file);
+
+  const fileUploadResult = await axios.post(url, formData, {
     headers: {
-      "Content-Type": file.type,
+      "Content-Type": "multipart/form-data",
     },
     onUploadProgress: function (progressEvent) {
       const percent = progressEvent.total
@@ -59,11 +71,12 @@ export async function onDrop(file: File) {
     },
   });
   toast.dismiss(progressToast);
-  if (fileUploadResult.status !== 200) {
+  if (fileUploadResult.status !== 204) {
     toast.error("Error uploading file.");
     return;
   }
 
+  const { key, uid } = presignedURLResult;
   const completeResult = await axios.post("/api/upload/complete", {
     key: key,
     uid: uid,

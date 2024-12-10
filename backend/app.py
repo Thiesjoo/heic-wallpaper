@@ -69,8 +69,12 @@ s3.put_bucket_lifecycle_configuration(
     },
 )
 
-ALLOWED_EXTENSIONS = {"heic", "png", "jpg", "jpeg"}
-
+ALLOWED_EXTENSIONS = {
+    "png": "image/png",
+    "jpg": "image/jpeg",
+    "jpeg": "image/jpeg",
+    "heic": "image/heic",
+}
 
 def get_extension(filename):
     return filename.rsplit(".", 1)[1].lower()
@@ -87,10 +91,11 @@ def allowed_file(filename):
     return "." in filename and get_extension(filename) in ALLOWED_EXTENSIONS
 
 
+max_file_size = 100 * 1024 * 1024  # 100MB
+
 @app.route("/api/upload", methods=["POST"])
 def upload():
     # TODO: login??
-    # TODO: Max size
     file_name = request.json.get('name')
     file_type = request.json.get('type')
 
@@ -99,16 +104,29 @@ def upload():
             'error': 'name and type are required'
         }), 400
 
+    if not allowed_file(file_name):
+        return json.dumps({
+            'error': 'Invalid file type'
+        }), 400
+
+    if not ALLOWED_EXTENSIONS[get_extension(file_name)] == file_type:
+        return json.dumps({
+            'error': 'Invalid file type'
+        }), 400
+
     uid = str(uuid4())
     new_filename = f"{uid}.{get_extension(file_name)}"
 
-    presigned_post = s3.generate_presigned_url(
-        ClientMethod='put_object',
-        Params={
-            'Bucket': AppConfig.UPLOAD.BUCKET,
-            'Key': new_filename,
-            'ContentType': file_type
+    presigned_post = s3.generate_presigned_post(
+        Bucket=AppConfig.UPLOAD.BUCKET,
+        Key=new_filename,
+        Fields={
+            "Content-Type": file_type
         },
+        Conditions=[
+            {"Content-Type": file_type},
+            ["content-length-range", 1, max_file_size]
+        ],
         ExpiresIn=3600
     )
 
