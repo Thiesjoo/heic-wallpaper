@@ -142,7 +142,7 @@ def set_wallpaper(file_loc: str, first_run: bool = True):
             subprocess.Popen(args2)
         args = ["xfdesktop", "--reload"]
         subprocess.Popen(args)
-    elif desktop_env == "razor-qt": # TODO: implement reload of desktop when possible
+    elif desktop_env == "razor-qt":
         if first_run:
             import configparser
             desktop_conf = configparser.ConfigParser()
@@ -162,7 +162,6 @@ def set_wallpaper(file_loc: str, first_run: bool = True):
             except Exception:
                 pass
         else:
-            # TODO: reload desktop when possible
             pass
     elif desktop_env in ["fluxbox", "jwm", "openbox", "afterstep"]:
         # http://fluxbox-wiki.org/index.php/Howto_set_the_background

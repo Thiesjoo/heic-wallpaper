@@ -10,3 +10,5 @@ minio_data/
 
 env/
 celerybeat-schedule.db
+
+node_modules/

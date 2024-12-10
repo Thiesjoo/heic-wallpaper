@@ -8,7 +8,7 @@
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --noEmit -p tsconfig.app.json --composite false",
-    "prepare": "husky"
+    "prepare": "cd ../ && husky"
   },
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",
