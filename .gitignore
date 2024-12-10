@@ -3,7 +3,7 @@ remotestatic/
 __pycache__
 data/
 
-.env
+**/.env
 minio_data/
 .idea/
 .vscode/

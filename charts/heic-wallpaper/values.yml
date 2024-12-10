@@ -31,8 +31,8 @@ heicwallpaper:
   results_s3_secret_name: "heicwallpaper-s3-result"
   upload_s3_secret_name: "heicwallpaper-s3-upload"
   authentik_secret_name: "authentik-tokens-heicwallpaper"
-  public_url: "https://static.wallpaper.thies.dev"
-  public_asset_url: "https://wallpaper.thies.dev"
+  public_asset_url: "https://static.wallpaper.thies.dev"
+  public_url: "https://wallpaper.thies.dev"
 
 redis:
   architecture: standalone
