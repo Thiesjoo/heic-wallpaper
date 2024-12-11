@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import SingleWallpaper from "@/components/SingleWallpaper.vue";
+import WallpaperPreviewCard from "@/components/WallpaperPreviewCard.vue";
 import { useWallpaperStore, WallpaperStatus } from "@/stores/wallpaper";
 import Drop from "@/components/Drop.vue";
 import { onDrop } from "@/utils/onDrop";
@@ -58,9 +58,9 @@ const data = computed(() => {
   >
     <template #renderItem="{ item }">
       <a-list-item>
-        <SingleWallpaper :wallpaper="item"></SingleWallpaper>
+        <WallpaperPreviewCard :wallpaper="item"></WallpaperPreviewCard>
       </a-list-item>
     </template>
-    <!--     Pagination or infinite scroll-->
+    <!--   TODO:  Pagination or infinite scroll-->
   </a-list>
 </template>

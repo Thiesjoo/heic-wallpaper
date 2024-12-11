@@ -1,10 +1,10 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 import { useRoute } from "vue-router";
-import Preview from "@/components/Preview.vue";
 import { getApiWallpaperURL, useWallpaperStore } from "@/stores/wallpaper";
 import { useUserStore } from "@/stores/user";
 import { computed } from "vue";
 import formatDate from "@/utils/formatDates";
+import ImagePreviewCard from "@/components/ImagePreviewCard.vue";
 
 const SECONDS_IN_A_DAY = 60 * 60 * 24;
 
@@ -30,13 +30,9 @@ function copyURL() {
 </script>
 
 <template>
-  <h3 class="text-center text-l text-emerald-300 font-bolder">
-    Preview all times of the live wallpaper
-  </h3>
-
-  <h3 class="text-center text-xl text-emerald-600 font-bolder">
+  <h1 class="text-center text-2xl text-emerald-300 font-bolder">
     {{ wallpaper.name }}
-  </h3>
+  </h1>
   <h2 class="text-center text-m text-emerald-600 font-bolder">
     Created by: {{ wallpaper.owner.first_name }} {{ wallpaper.owner.last_name }}
   </h2>
@@ -45,37 +41,44 @@ function copyURL() {
     {{ formatDate(wallpaper.date_modified) }}
   </h2>
 
-  <div class="flex justify-center" v-if="userStore.loggedIn">
-    <button
-      class="text-black p-2 m-4 rounded-md disabled:bg-green-900 disabled:hover:bg-green-900 bg-green-700 hover:bg-green-800"
-      @click="select()"
-      :disabled="userStore.loading"
-    >
-      Select this wallpaper
-    </button>
+  <div class="flex justify-center max-w-50vw">
+    <div v-if="userStore.loggedIn" class="flex justify-center">
+      <button
+        :disabled="userStore.loading"
+        class="text-black p-2 m-4 rounded-md disabled:bg-green-900 disabled:hover:bg-green-900 bg-green-700 hover:bg-green-800"
+        @click="select()"
+      >
+        Select this wallpaper
+      </button>
+    </div>
+
+    <div class="flex justify-center">
+      <button
+        class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold px-4 m-4 rounded"
+        @click="copyURL"
+      >
+        Copy URL
+      </button>
+    </div>
   </div>
 
-  <div class="flex justify-center">
-    <!-- Copy URL -->
-    <button
-      class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold px-4 m-4 rounded"
-      @click="copyURL"
-    >
-      Copy
-    </button>
-  </div>
-  <main class="w-full h-full flex flex-wrap justify-center">
-    <Preview
-      :size="25"
-      :url="baseURL.replace('preview', `${i}`)"
-      v-for="{ i, t } in wallpaperData"
-    >
-      <span class="w-full text-center">
-        Wallpaper after
-        {{
-          new Date(SECONDS_IN_A_DAY * t * 1000).toISOString().slice(11, 16)
-        }}</span
-      >
-    </Preview>
-  </main>
+  <a-divider></a-divider>
+  <a-list
+    :data-source="wallpaperData"
+    :grid="{ gutter: 16, xs: 1, sm: 1, md: 2, lg: 3, xl: 4, xxl: 5 }"
+    :loading="!wallpaperStore.isFetched"
+  >
+    <template #renderItem="{ item: { i, t } }">
+      <a-list-item>
+        <ImagePreviewCard :url="baseURL.replace('preview', `${i}`)">
+          <span class="w-full text-center">
+            Wallpaper after
+            {{
+              new Date(SECONDS_IN_A_DAY * t * 1000).toISOString().slice(11, 16)
+            }}
+          </span>
+        </ImagePreviewCard>
+      </a-list-item>
+    </template>
+  </a-list>
 </template>
