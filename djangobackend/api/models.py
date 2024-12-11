@@ -1,6 +1,7 @@
 import logging
 
 from django.db import models
+from django.urls import reverse
 
 from core.models import User
 from djangobackend import settings
@@ -41,6 +42,10 @@ class Wallpaper(models.Model):
 
     def index_url(self, index: int):
         return f"{settings.CONFIG.PUBLIC_ASSET_URL}/{self.uid}/{index}.png"
+
+    def live_url(self):
+        api_url = reverse("api.views.get_current_wallpaper", kwargs={"id": self.id})
+        return f"{settings.CONFIG.PUBLIC_URL}{api_url}"
 
     def delete(self, *args, **kwargs):
         from api.services import s3_service

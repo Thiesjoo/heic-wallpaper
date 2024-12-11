@@ -3,6 +3,11 @@ import { type Wallpaper, WallpaperStatus } from "@/stores/wallpaper";
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import formatDate from "@/utils/formatDates";
+import {
+  HeartOutlined,
+  PlusOutlined,
+  HeartFilled,
+} from "@ant-design/icons-vue";
 
 const props = defineProps<{
   wallpaper: Wallpaper;
@@ -33,11 +38,15 @@ const previewError = ref(false);
 const canInteract = computed(() => {
   return !isLoading.value && !isError.value && !previewError.value;
 });
+
+const showActions = ref(false);
 </script>
 
 <template>
   <a-card
     :hoverable="canInteract"
+    @mouseenter="showActions = true"
+    @mouseleave="showActions = false"
     :loading="isLoading || previewError"
     :style="{
       cursor: canInteract ? 'pointer' : 'not-allowed',
@@ -66,6 +75,14 @@ const canInteract = computed(() => {
       )}`"
     >
     </a-card-meta>
+
+    <template #actions>
+      <!--      TODO: Likes-->
+      <!--      <heart-outlined key="setting" />-->
+      <!--      <heart-filled key="setting" />-->
+      <!--      TODO: Playlists/screens-->
+      <!--      <plus-outlined key="edit" />-->
+    </template>
   </a-card>
 </template>
 

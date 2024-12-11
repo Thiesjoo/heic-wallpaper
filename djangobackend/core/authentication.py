@@ -1,4 +1,7 @@
+import logging
+
 import jwt
+import requests
 
 from django.conf import settings
 from rest_framework import authentication
@@ -29,6 +32,7 @@ class AuthViaAuthentik(authentication.BaseAuthentication):
                 audience=f"{settings.CONFIG.AUTHENTIK_CLIENT_ID}",
                 options={
                     "verify_signature": True,
+                    # Allow expired tokens in debug mode, so we can test with old tokens
                     "verify_exp": not settings.DEBUG,
                     "verify_nbf": True,
                     "verify_iat": True,
@@ -59,6 +63,38 @@ class AuthViaAuthentik(authentication.BaseAuthentication):
 
             return (user, None)
         except Exception as err:
-            print(f"Error: {err}")
+            logging.error(f"Error authenticating: {err}")
             raise AuthenticationFailed from err
 
+
+def set_user_wallpaper(sub: str, wallpaper_url: str):
+    logging.debug(f"Setting wallpaper for {sub} to {wallpaper_url}")
+    try:
+        original_attributes = requests.get(
+            f"{settings.CONFIG.AUTHENTIK_API_URL}/api/v3/core/users/{sub}/",
+            headers={"Authorization": f"Bearer {settings.CONFIG.AUTHENTIK_TOKEN}"}
+        ).json()
+
+        if "attributes" not in original_attributes:
+            raise Exception("No attributes found")
+        original_attributes = original_attributes["attributes"]
+        if "settings" not in original_attributes:
+            original_attributes["settings"] = {}
+
+        logging.debug(f"Original attributes: {original_attributes}")
+
+        original_attributes["settings"]["backgroundURL"] = wallpaper_url
+
+        result = requests.patch(
+            f"{settings.CONFIG.AUTHENTIK_API_URL}/api/v3/core/users/{sub}/",
+            json={"attributes": original_attributes},
+            headers={"Authorization": f"Bearer {settings.CONFIG.AUTHENTIK_TOKEN}"}
+        )
+
+        if result.status_code != 200:
+            return False, "Error setting wallpaper"
+    except Exception as e:
+        logging.error(f"Error setting wallpaper: {e}")
+        return False, "Error setting wallpaper"
+
+    return True, "Wallpaper set"

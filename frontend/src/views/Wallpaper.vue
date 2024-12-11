@@ -37,28 +37,21 @@ function copyURL() {
     Created by: {{ wallpaper.owner.first_name }} {{ wallpaper.owner.last_name }}
   </h2>
   <h2 class="text-center text-m text-emerald-600 font-bolder">
-    Created at: {{ formatDate(wallpaper.date_created) }} and updated at:
-    {{ formatDate(wallpaper.date_modified) }}
+    Created at: {{ formatDate(wallpaper.date_created) }}
+    <template v-if="wallpaper.date_created !== wallpaper.date_modified">
+      and last updated at: {{ formatDate(wallpaper.date_modified) }}
+    </template>
   </h2>
 
   <div class="flex justify-center max-w-50vw">
-    <div v-if="userStore.loggedIn" class="flex justify-center">
-      <button
-        :disabled="userStore.loading"
-        class="text-black p-2 m-4 rounded-md disabled:bg-green-900 disabled:hover:bg-green-900 bg-green-700 hover:bg-green-800"
-        @click="select()"
-      >
-        Select this wallpaper
-      </button>
+    <div v-if="userStore.loggedIn" class="flex justify-center m-2">
+      <a-button :loading="userStore.loading" @click="select()">
+        Set this as your wallpaper
+      </a-button>
     </div>
 
-    <div class="flex justify-center">
-      <button
-        class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold px-4 m-4 rounded"
-        @click="copyURL"
-      >
-        Copy URL
-      </button>
+    <div class="flex justify-center m-2">
+      <a-button @click="copyURL"> Copy URL </a-button>
     </div>
   </div>
 

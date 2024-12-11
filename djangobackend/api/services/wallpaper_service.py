@@ -48,7 +48,7 @@ def get_current_image_url_for_wallpaper(id: int, timezone: pytz.timezone = pytz.
         return wallpaper.index_url(0)
 
     now = datetime.now(timezone).time()
-    print(now, times)
+    print(now)
     nowsecs = now.hour * 60 * 60 + now.minute * 60 + now.second
 
     # https://github.com/mczachurski/wallpapper

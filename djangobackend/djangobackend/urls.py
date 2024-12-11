@@ -12,8 +12,9 @@ router.register(r'wallpapers', api_views.WallpapersViewSet)
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
     path('api/users/whoami/', core_views.WhoamiView.as_view()),
+    path('api/users/set/', core_views.SetSettingsView.as_view()),
     path('api/', include(router.urls)),
-    path('api/wallpaper/<int:id>/', api_views.get_current_wallpaper),
+    path('api/wallpaper/<int:id>/', api_views.get_current_wallpaper, name="api.views.get_current_wallpaper"),
     path('api/upload/', api_views.upload_view),
     path('api/upload/complete/', api_views.upload_complete),
 ]

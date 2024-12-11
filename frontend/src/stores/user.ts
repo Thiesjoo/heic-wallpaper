@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 import auth from "@/auth";
-import type { User, UserFromAPI, UserSettings } from "@/utils/types";
+import type { User, UserFromAPI } from "@/utils/types";
 import { useToast } from "vue-toastification";
 
 export const useUserStore = defineStore("user", () => {
@@ -36,24 +36,19 @@ export const useUserStore = defineStore("user", () => {
     myHeaders.append("pragma", "no-cache");
     myHeaders.append("cache-control", "no-cache");
     myHeaders.append("content-type", "application/json");
-
-    const token = await auth.getToken();
-    if (!token) {
-      throw new Error("No token found");
-    }
+    myHeaders.append("Authorization", `Bearer ${await auth.getToken()}`);
 
     const fetchConfig = {
       method: "PATCH",
       headers: myHeaders,
       credentials: "include",
       body: JSON.stringify({
-        wallpaper_uid: newUID,
-        token: token,
+        wallpaper: newUID,
       }),
     } satisfies RequestInit;
     const toast = useToast();
 
-    fetch("/api/user/set", fetchConfig)
+    fetch("/api/users/set/", fetchConfig)
       .then((x) => {
         if (x.status != 200) {
           throw new Error(x.statusText);
@@ -68,9 +63,10 @@ export const useUserStore = defineStore("user", () => {
       .catch((x) => {
         toast.error("Failed to update wallpaper, see console for more info.");
         console.error(x);
+      })
+      .finally(() => {
+        loading.value = false;
       });
-
-    loading.value = false;
   }
 
   function reset(logout = false) {

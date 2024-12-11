@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { useUserStore } from "@/stores/user";
-import Wallpaper from "@/components/SingleWallpaper.vue";
 import { useWallpaperStore } from "@/stores/wallpaper";
 import { computedAsync } from "@vueuse/core";
 import { useRouter } from "vue-router";
+import WallpaperPreviewCard from "@/components/WallpaperPreviewCard.vue";
 
 const userStore = useUserStore();
 const wallpaperStore = useWallpaperStore();
@@ -11,8 +11,7 @@ const wallpaperStore = useWallpaperStore();
 const router = useRouter();
 
 if (!userStore.loggedIn) {
-  console.warn("User is not logged in, redirecting to login page");
-  router.push({ name: "Login" });
+  router.push("/login");
 }
 
 const currentWallpaper = computedAsync(async () => {
@@ -21,10 +20,15 @@ const currentWallpaper = computedAsync(async () => {
     return undefined;
   }
 
-  currentURL = currentURL.substring(currentURL.lastIndexOf("/") + 1).trim();
-  if (currentURL.length === 36) {
-    return await wallpaperStore.getWallpaperById(currentURL);
+  const host = new URL(currentURL).hostname;
+  if (host !== window.location.hostname) {
+    return undefined;
   }
+
+  const secondLastSlash = currentURL.lastIndexOf("/", currentURL.length - 2);
+
+  currentURL = currentURL.substring(secondLastSlash + 1).trim();
+  return await wallpaperStore.getWallpaperById(currentURL);
 }, undefined);
 </script>
 <template>
@@ -38,21 +42,12 @@ const currentWallpaper = computedAsync(async () => {
 
     <div class="flex flex-col items-center" v-if="currentWallpaper">
       Actual wallpaper
-      <Wallpaper
-        :wallpaper="currentWallpaper"
-        v-if="currentWallpaper"
-      ></Wallpaper>
+      <template v-if="currentWallpaper">
+        <WallpaperPreviewCard
+          :wallpaper="currentWallpaper"
+        ></WallpaperPreviewCard>
+      </template>
     </div>
     <div v-else>You do not have a wallpaper configured with this site.</div>
-
-    <button
-      @click="userStore.reset"
-      type="button"
-      class="mt-5 inline-flex justify-center rounded-md border border-transparent shadow-sm px-5 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:w-auto sm:text-sm"
-    >
-      <div class="flex flex-row justify-center items-center">
-        <span>Logout</span>
-      </div>
-    </button>
   </div>
 </template>

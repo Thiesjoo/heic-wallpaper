@@ -1,3 +1,4 @@
+import pytz
 from django.shortcuts import redirect
 from rest_framework import viewsets, permissions, mixins, serializers, status
 from rest_framework.decorators import api_view
@@ -33,8 +34,9 @@ class WallpapersViewSet(mixins.RetrieveModelMixin,
 @api_view(['GET'])
 def get_current_wallpaper(request, **kwargs):
     wallpaper_id = kwargs.get('id')
+    timezone = request.GET.get('tz', "UTC")
 
-    result = get_current_image_url_for_wallpaper(wallpaper_id)
+    result = get_current_image_url_for_wallpaper(wallpaper_id, pytz.timezone(timezone))
     if result is None:
         return Response({
             "error": "Wallpaper not found"
