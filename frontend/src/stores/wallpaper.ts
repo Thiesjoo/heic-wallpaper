@@ -13,9 +13,15 @@ export type Wallpaper = {
   date_created: string;
   date_modified: string;
 
-  owner: any;
+  owner: {
+    first_name: string;
+    last_name: string;
+  };
 
   preview_url: string;
+};
+export type WallpaperWithDetails = Wallpaper & {
+  data: { i: number; t: number }[] | undefined;
 };
 
 export function getUserWallpaperURL(wallpaper: Wallpaper) {
@@ -29,10 +35,6 @@ export function getApiWallpaperURL(wallpaper: Wallpaper) {
 export function getRouterWallpaperURL(wallpaper: Wallpaper) {
   return `/wallpaper/${wallpaper.id}`;
 }
-
-export type WallpaperWithDetails = Wallpaper & {
-  data: { i: number; t: number }[] | undefined;
-};
 
 export enum WallpaperStatus {
   READY = 1,
@@ -72,7 +74,7 @@ export const useWallpaperStore = defineStore("wallpapers", () => {
     id: string,
   ): Promise<WallpaperWithDetails> => {
     try {
-      const res = await fetch(`/api/wallpaper/${id}/details`);
+      const res = await fetch(`/api/wallpapers/${id}/`);
       if (res.status !== 200) {
         throw new Error("Wallpaper is not available here");
       }

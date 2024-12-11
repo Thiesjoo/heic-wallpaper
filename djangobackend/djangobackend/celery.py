@@ -1,17 +1,19 @@
 import os
 from celery import Celery
 
+from djangobackend import settings
+
 # Set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'djangobackend.settings')
 
 app = Celery('djangobackend')
 
-# celery.conf.beat_schedule = {
-#     'remove_old_images': {
-#         'task': 'backend.worker.image_processor.remove_broken_images',
-#         'schedule': DatabaseConfig.CLEANUP_INTERVAL,
-#     }
-# }
+app.conf.beat_schedule = {
+    'remove_old_images': {
+        'task': 'api.tasks.remove_broken_images',
+        'schedule': settings.CLEANUP_INTERVAL_FOR_PENDING_WALLPAPERS,
+    }
+}
 
 
 # Using a string here means the worker doesn't have to serialize

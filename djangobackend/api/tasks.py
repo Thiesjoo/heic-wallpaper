@@ -1,10 +1,12 @@
+import logging
 from typing import Any
 
 import boto3
 from celery import group, shared_task
 
-from api.models import Wallpaper, WallpaperStatus
+from api.models import Wallpaper, WallpaperStatus, WallpaperType
 from api.services import image_service, heic_service as heic
+from api.services.wallpaper_service import delete_all_pending
 from djangobackend import settings
 
 s3_uploads = boto3.client('s3',
@@ -28,14 +30,14 @@ def remove_upload_with_key(key: str) -> None:
 
 
 @shared_task()
-def heic_generate_single_image(key: str, uid: str, idx: int):
-    img = image_service.open_image(s3_uploads, key)
+def heic_generate_single_image(uid: str, idx: int):
+    img = image_service.open_image(s3_uploads, uid)
     image_service.generate_normal_image(s3_results, heic.get_image_from_name(img, idx), uid, idx)
 
 
 @shared_task()
-def heic_generate_preview(key: str, uid: str):
-    img = image_service.open_image(s3_uploads, key)
+def heic_generate_preview(uid: str):
+    img = image_service.open_image(s3_uploads, uid)
     image_service.generate_preview(s3_results, heic.get_image_from_name(img, 0), uid)
 
 @shared_task()
@@ -66,15 +68,17 @@ def finish_processing(prev_results: Any, uid: str, times: Any | None) -> None:
 #     print(hmmm)
 
 
-def handle_heic(self, key: str, uid: str):
-    img = image_service.open_image(s3_uploads, key)
+def handle_heic(self, uid: str):
+    img = image_service.open_image(s3_uploads, uid)
     try:
         c = heic.get_wallpaper_config(img)
     except Exception as e:
-        # TODO: Convert to normal?
-        # update_status_of_wallpaper(uid, WallpaperStatus.ERROR)
-        remove_upload_with_key(key)
-        return "Error while processing HEIC image",str(e)
+        wallpaper = Wallpaper.objects.get(uid=uid)
+        wallpaper.type = WallpaperType.GENERIC
+        wallpaper.save()
+        logging.warning("Wallpaper was not a time-based wallpaper, rescheduled with generic")
+        handle_all_images.delay(uid, WallpaperType.GENERIC)
+        return "Wallpaper was not a time-based wallpaper, rescheduled with generic",str(e)
 
     warnings = ""
 
@@ -94,7 +98,7 @@ def handle_heic(self, key: str, uid: str):
         prev = cur
 
     if warnings:
-        print(warnings)
+        logging.warning(warnings)
 
     total_length = heic.get_img_count(img)
 
@@ -103,12 +107,12 @@ def handle_heic(self, key: str, uid: str):
         meta=f"Concurrently processing all image work (Preview and image resizing)",
     )
 
-    tasks = [heic_generate_single_image.s(key, uid, i) for i in range(total_length)]
-    tasks.append(heic_generate_preview.s(key, uid))
+    tasks = [heic_generate_single_image.s(uid, i) for i in range(total_length)]
+    tasks.append(heic_generate_preview.s(uid))
 
     job = group(tasks)
 
-    (job | finish_processing.s(key, uid, times)).delay()
+    (job | finish_processing.s(uid, times)).delay()
 
     return "Processing multiple HEIC images"
 
@@ -125,20 +129,16 @@ def handle_generic(uid: str):
 
 
 @shared_task(bind=True)
-def handle_all_images(self, uid: str):
-    # if type == WallpaperType.TIME_BASED:
-    #     assert False
-    #     # return handle_heic(self, uid)
-    # elif type == WallpaperType.GENERIC:
-    print("Handling generic for ", uid)
-    return handle_generic(uid)
+def handle_all_images(self, uid: str, type: WallpaperType):
+    type = int(type)
+    logging.info(f"Processing wallpaper {uid} with type {type}")
+    if type == WallpaperType.TIME_BASED:
+        return handle_heic(self, uid)
+    elif type == WallpaperType.GENERIC.value:
+        return handle_generic(uid)
 
-    # raise ValueError("Invalid wallpaper type")
+    raise ValueError("Invalid wallpaper type")
 
-# @shared_task()
-# def remove_broken_images():
-#     deleted_uuids = delete_all_pending()
-#
-#     for uuid in deleted_uuids:
-#         s3_results.delete_object(Bucket=settings.CONFIG.RESULT.BUCKET, Key=uuid)
-#
+@shared_task()
+def remove_broken_images():
+    delete_all_pending()

@@ -1,13 +1,10 @@
 <script setup lang="ts">
 import { useRoute } from "vue-router";
 import Preview from "@/components/Preview.vue";
-import {
-  getApiWallpaperURL,
-  useWallpaperStore,
-  type WallpaperWithDetails,
-} from "@/stores/wallpaper";
+import { getApiWallpaperURL, useWallpaperStore } from "@/stores/wallpaper";
 import { useUserStore } from "@/stores/user";
 import { computed } from "vue";
+import formatDate from "@/utils/formatDates";
 
 const SECONDS_IN_A_DAY = 60 * 60 * 24;
 
@@ -41,7 +38,11 @@ function copyURL() {
     {{ wallpaper.name }}
   </h3>
   <h2 class="text-center text-m text-emerald-600 font-bolder">
-    Created by: {{ wallpaper.created_by }}
+    Created by: {{ wallpaper.owner.first_name }} {{ wallpaper.owner.last_name }}
+  </h2>
+  <h2 class="text-center text-m text-emerald-600 font-bolder">
+    Created at: {{ formatDate(wallpaper.date_created) }} and updated at:
+    {{ formatDate(wallpaper.date_modified) }}
   </h2>
 
   <div class="flex justify-center" v-if="userStore.loggedIn">

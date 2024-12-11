@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { useUserStore } from "@/stores/user";
 import Wallpaper from "@/components/SingleWallpaper.vue";
-import {
-  useWallpaperStore,
-  type WallpaperWithDetails,
-} from "@/stores/wallpaper";
+import { useWallpaperStore } from "@/stores/wallpaper";
 import { computedAsync } from "@vueuse/core";
 import { useRouter } from "vue-router";
 

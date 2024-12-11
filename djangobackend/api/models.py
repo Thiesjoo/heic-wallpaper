@@ -1,3 +1,5 @@
+import logging
+
 from django.db import models
 
 from core.models import User
@@ -36,3 +38,9 @@ class Wallpaper(models.Model):
 
     def preview_url(self):
         return f"{settings.CONFIG.PUBLIC_ASSET_URL}/{self.uid}/preview.png"
+
+    def delete(self, *args, **kwargs):
+        from api.services import s3_service
+        s3_service.remove_all_references(self.uid)
+        logging.info(f"Deleted references for {self.uid}")
+        super().delete(*args, **kwargs)

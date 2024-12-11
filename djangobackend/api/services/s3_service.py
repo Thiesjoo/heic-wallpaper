@@ -83,3 +83,13 @@ def file_exists(key: str):
         return True
     except Exception as e:
         return False
+
+def remove_all_references(key: str):
+    try:
+        s3.delete_object(Bucket=settings.CONFIG.UPLOAD.BUCKET, Key=key)
+    except Exception as e:
+        pass
+    try:
+        s3.delete_object(Bucket=settings.CONFIG.RESULT.BUCKET, Key=key)
+    except Exception as e:
+        pass

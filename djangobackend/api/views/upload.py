@@ -71,7 +71,7 @@ def upload_complete(request):
     wallpaper.status = WallpaperStatus.PROCESSING
     wallpaper.save()
 
-    task = handle_all_images.delay(wallpaper.uid)
+    task = handle_all_images.delay(wallpaper.uid, wallpaper.type)
 
     return Response({
         'data': 'ok',

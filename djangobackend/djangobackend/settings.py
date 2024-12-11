@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 import os
@@ -61,8 +61,8 @@ CELERY_RESULT_BACKEND = os.environ.get("BROKER_URL")
 if CELERY_BROKER_URL is None or CELERY_RESULT_BACKEND is None:
     raise ValueError("BROKER_URL and BROKER_URL are required")
 
-MAX_AGE_FOR_PENDING_WALLPAPERS = 60 * 60  # 1h
-# CLEANUP_INTERVAL_FOR_PENDING_WALLPAPERS = 30  # 30s
+MAX_AGE_FOR_PENDING_WALLPAPERS = timedelta(hours=1)  # 1h
+CLEANUP_INTERVAL_FOR_PENDING_WALLPAPERS = 30  # 30s
 
 
 # Quick-start development settings - unsuitable for production

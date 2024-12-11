@@ -29,7 +29,7 @@ class AuthViaAuthentik(authentication.BaseAuthentication):
                 audience=f"{settings.CONFIG.AUTHENTIK_CLIENT_ID}",
                 options={
                     "verify_signature": True,
-                    "verify_exp": False,
+                    "verify_exp": not settings.DEBUG,
                     "verify_nbf": True,
                     "verify_iat": True,
                     "verify_aud": True,
