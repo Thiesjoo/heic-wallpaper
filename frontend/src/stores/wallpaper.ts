@@ -2,14 +2,20 @@ import { ref, computed } from "vue";
 import { defineStore } from "pinia";
 
 export type Wallpaper = {
-  error: string | null;
   id: string;
-  location: string;
+  uid: string;
+
   name: string;
-  preview_url: string;
-  created_by: string;
+
   status: WallpaperStatus;
   type: WallpaperType;
+
+  date_created: string;
+  date_modified: string;
+
+  owner: any;
+
+  preview_url: string;
 };
 
 export function getUserWallpaperURL(wallpaper: Wallpaper) {

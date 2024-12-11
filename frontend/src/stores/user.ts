@@ -82,12 +82,19 @@ export const useUserStore = defineStore("user", () => {
     loading.value = false;
   }
 
+  async function getAuthHeader() {
+    return {
+      Authorization: `Bearer ${await auth.getToken()}`,
+    };
+  }
+
   return {
     loading,
     user: computed(() => user.value),
     loggedIn: computed(() => user.value !== null),
     updateWallpaper,
     getUserData,
+    getAuthHeader,
     refreshUserInfo,
     reset,
   };

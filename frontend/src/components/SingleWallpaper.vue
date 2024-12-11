@@ -32,6 +32,17 @@ const previewError = ref(false);
 const canInteract = computed(() => {
   return !isLoading.value && !isError.value && !previewError.value;
 });
+
+const formattedDate = computed(() => {
+  const date = new Date(wallpaper.date_created);
+  return (
+    date.toLocaleDateString() +
+    " " +
+    date.toLocaleTimeString(Intl.DateTimeFormat().resolvedOptions().locale, {
+      hour12: false,
+    })
+  );
+});
 </script>
 
 <template>
@@ -59,7 +70,10 @@ const canInteract = computed(() => {
         @error="previewError = true"
       />
     </template>
-    <a-card-meta description="Created by ..., on ..."> </a-card-meta>
+    <a-card-meta
+      :description="`Created by ${wallpaper.owner.first_name}, on ${formattedDate}`"
+    >
+    </a-card-meta>
   </a-card>
 </template>
 

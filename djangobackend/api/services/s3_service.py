@@ -61,13 +61,12 @@ def allowed_file(filename):
 MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
 
 
-def get_presigned_post_url(file_name: str, file_type: str, max_file_size=MAX_FILE_SIZE) -> (dict, str):
+def get_presigned_post_url(file_type: str, max_file_size=MAX_FILE_SIZE) -> (dict, str):
     uid = str(uuid4())
-    new_filename = f"{uid}.{get_extension(file_name)}"
 
     return s3.generate_presigned_post(
         Bucket=settings.CONFIG.UPLOAD.BUCKET,
-        Key=new_filename,
+        Key=uid,
         Fields={
             "Content-Type": file_type
         },

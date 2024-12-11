@@ -55,6 +55,16 @@ class AppConfig:
 AppConfig.validate()
 CONFIG = AppConfig()
 
+CELERY_BROKER_URL = os.environ.get("BROKER_URL")
+CELERY_RESULT_BACKEND = os.environ.get("BROKER_URL")
+
+if CELERY_BROKER_URL is None or CELERY_RESULT_BACKEND is None:
+    raise ValueError("BROKER_URL and BROKER_URL are required")
+
+MAX_AGE_FOR_PENDING_WALLPAPERS = 60 * 60  # 1h
+# CLEANUP_INTERVAL_FOR_PENDING_WALLPAPERS = 30  # 30s
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 

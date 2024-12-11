@@ -1,6 +1,7 @@
 from django.db import models
 
 from core.models import User
+from djangobackend import settings
 
 
 class WallpaperType(models.IntegerChoices):
@@ -29,3 +30,9 @@ class Wallpaper(models.Model):
     date_modified = models.DateTimeField(auto_now=True)
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.name} ({self.uid}, status: {self.status})"
+
+    def preview_url(self):
+        return f"{settings.CONFIG.PUBLIC_ASSET_URL}/{self.uid}/preview.png"

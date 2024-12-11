@@ -1,6 +1,7 @@
 import { useToast } from "vue-toastification";
 import axios from "axios";
 import { useWallpaperStore } from "@/stores/wallpaper";
+import { useUserStore } from "@/stores/user";
 
 const toast = useToast();
 const allowedTypes = [
@@ -29,7 +30,14 @@ export async function onDrop(file: File) {
     return;
   }
 
-  const presignedURLResult = await fetch("/api/upload", {
+  const userStore = useUserStore();
+  if (!userStore.user) {
+    toast.error("You must be logged in to upload files.");
+    return;
+  }
+
+  const authHeader = await userStore.getAuthHeader();
+  const presignedURLResult = await fetch("/api/upload/", {
     method: "POST",
     body: JSON.stringify({
       name: file.name,
@@ -37,6 +45,7 @@ export async function onDrop(file: File) {
     }),
     headers: {
       "Content-Type": "application/json",
+      ...authHeader,
     },
   }).then((res) => res.json());
 
@@ -76,11 +85,14 @@ export async function onDrop(file: File) {
     return;
   }
 
-  const { key, uid } = presignedURLResult;
-  const completeResult = await axios.post("/api/upload/complete", {
-    key: key,
-    uid: uid,
-  });
+  const { id } = presignedURLResult;
+  const completeResult = await axios.post(
+    "/api/upload/complete/",
+    { id },
+    {
+      headers: authHeader,
+    },
+  );
 
   if (completeResult.status !== 202) {
     toast.error("Error processing file.");

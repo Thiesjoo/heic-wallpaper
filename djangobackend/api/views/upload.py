@@ -6,9 +6,10 @@ from api.services import s3_service
 from api.services.s3_service import allowed_file, ALLOWED_EXTENSIONS, get_extension, \
     determine_type_from_extension
 
+from api.tasks import handle_all_images
 
 @api_view(['POST'])
-def uploadView(request):
+def upload_view(request):
     file_name = request.data.get('name')
     file_type = request.data.get('type')
 
@@ -27,7 +28,7 @@ def uploadView(request):
             'error': 'Invalid file type'
         }, status=400)
 
-    presigned_data, uid = s3_service.get_presigned_post_url(file_name, file_type)
+    presigned_data, uid = s3_service.get_presigned_post_url(file_type)
 
     wallpaper = Wallpaper.objects.create(
         uid=uid,
@@ -42,25 +43,27 @@ def uploadView(request):
 
     return Response({
         'data': presigned_data,
-        'uid': uid,
+        'id': wallpaper.id,
     })
 
 @api_view(['POST'])
 def upload_complete(request):
-    uid = request.data.get('uid')
+    id = request.data.get('id')
 
-    if uid is None:
+    if id is None:
         return Response({
-            'error': 'uid/key is required'
+            'error': 'id is required'
         }, status=400)
 
-    wallpaper = Wallpaper.objects.get(uid=uid)
+    wallpaper = Wallpaper.objects.get(id=id)
+    print(wallpaper)
     if wallpaper is None or wallpaper.owner != request.user:
+            # or wallpaper.status != WallpaperStatus.UPLOADING:
         return Response({
             'error': 'invalid uid'
         }, status=400)
 
-    if not s3_service.file_exists(uid):
+    if not s3_service.file_exists(wallpaper.uid):
         return Response({
             'error': 'invalid uid'
         }, status=400)
@@ -68,8 +71,7 @@ def upload_complete(request):
     wallpaper.status = WallpaperStatus.PROCESSING
     wallpaper.save()
 
-    # s3_service.handle_all_images.delay(key, uid, determine_type_from_extension(
-    #     get_extension(key)))
+    task = handle_all_images.delay(wallpaper.uid)
 
     return Response({
         'data': 'ok',
