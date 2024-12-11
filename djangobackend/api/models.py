@@ -39,6 +39,9 @@ class Wallpaper(models.Model):
     def preview_url(self):
         return f"{settings.CONFIG.PUBLIC_ASSET_URL}/{self.uid}/preview.png"
 
+    def index_url(self, index: int):
+        return f"{settings.CONFIG.PUBLIC_ASSET_URL}/{self.uid}/{index}.png"
+
     def delete(self, *args, **kwargs):
         from api.services import s3_service
         s3_service.remove_all_references(self.uid)

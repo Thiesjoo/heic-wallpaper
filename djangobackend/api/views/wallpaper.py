@@ -1,9 +1,12 @@
-from rest_framework import viewsets, permissions, mixins, serializers
+from django.shortcuts import redirect
+from rest_framework import viewsets, permissions, mixins, serializers, status
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from api.models import Wallpaper, WallpaperStatus
 from api.serializers import WallpaperSerializer, WallpaperWithDetailsSerializer
+from api.services.wallpaper_service import get_current_image_url_for_wallpaper
 
 
 class WallpapersViewSet(mixins.RetrieveModelMixin,
@@ -25,3 +28,16 @@ class WallpapersViewSet(mixins.RetrieveModelMixin,
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         return Response(WallpaperWithDetailsSerializer(instance).data)
+
+
+@api_view(['GET'])
+def get_current_wallpaper(request, **kwargs):
+    wallpaper_id = kwargs.get('id')
+
+    result = get_current_image_url_for_wallpaper(wallpaper_id)
+    if result is None:
+        return Response({
+            "error": "Wallpaper not found"
+        }, status=status.HTTP_404_NOT_FOUND)
+
+    return redirect(result)

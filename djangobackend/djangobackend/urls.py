@@ -13,6 +13,7 @@ router.register(r'wallpapers', api_views.WallpapersViewSet)
 urlpatterns = [
     path('api/users/whoami/', core_views.WhoamiView.as_view()),
     path('api/', include(router.urls)),
+    path('api/wallpaper/<int:id>/', api_views.get_current_wallpaper),
     path('api/upload/', api_views.upload_view),
     path('api/upload/complete/', api_views.upload_complete),
 ]
