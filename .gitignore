@@ -12,3 +12,4 @@ env/
 celerybeat-schedule.db
 
 node_modules/
+**/*.sqlite3

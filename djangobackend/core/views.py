@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 class WhoamiView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, format=None):
+    def get(self, request):
         return Response({
             "name": request.user.name,
             "email": request.user.email,

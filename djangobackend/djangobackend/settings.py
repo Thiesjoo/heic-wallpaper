@@ -19,12 +19,41 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-AUTHENTIK_TOKEN = os.environ.get("AUTHENTIK_TOKEN")
-AUTHENTIK_API_URL = os.environ.get("AUTHENTIK_API_URL")
-AUTHENTIK_CLIENT_ID = os.environ.get("AUTHENTIK_CLIENT_ID")
+class S3Config:
+    def __init__(self, name):
+        self.name = name
+        self.S3_URL = os.environ.get(f"{name}_S3_URL")
+        self.BUCKET = os.environ.get(f"{name}_S3_BUCKET")
+        self.S3_ACCESS_KEY = os.environ.get(f"{name}_S3_ACCESS_KEY")
+        self.S3_SECRET_KEY = os.environ.get(f"{name}_S3_SECRET_KEY")
 
-if AUTHENTIK_TOKEN is None or AUTHENTIK_API_URL is None or AUTHENTIK_CLIENT_ID is None:
-    raise ValueError("AUTHENTIK_TOKEN, AUTHENTIK_API_URL, and AUTHENTIK_CLIENT_ID are required")
+class AppConfig:
+    UPLOAD = S3Config("UPLOAD")
+    RESULT = S3Config("RESULT")
+
+    PUBLIC_URL = os.environ.get("PUBLIC_URL")
+    PUBLIC_ASSET_URL = os.environ.get("PUBLIC_ASSET_URL")
+    AUTHENTIK_TOKEN = os.environ.get("AUTHENTIK_TOKEN")
+    AUTHENTIK_API_URL = os.environ.get("AUTHENTIK_API_URL")
+    AUTHENTIK_CLIENT_ID = os.environ.get("AUTHENTIK_CLIENT_ID")
+
+    @staticmethod
+    def validate():
+        for s3 in [AppConfig.UPLOAD, AppConfig.RESULT]:
+            for attr in ["S3_URL", "BUCKET", "S3_ACCESS_KEY", "S3_SECRET_KEY"]:
+                if getattr(s3, attr) is None:
+                    raise ValueError(f"{attr} is required for {s3.name}")
+        if AppConfig.PUBLIC_URL is None:
+            raise ValueError("PUBLIC_URL is required")
+        if AppConfig.PUBLIC_ASSET_URL is None:
+            raise ValueError("PUBLIC_ASSET_URL is required")
+        if AppConfig.AUTHENTIK_TOKEN is None:
+            raise ValueError("AUTHENTIK_TOKEN is required")
+        if AppConfig.AUTHENTIK_API_URL is None:
+            raise ValueError("AUTHENTIK_API_URL is required")
+
+AppConfig.validate()
+CONFIG = AppConfig()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -40,10 +69,8 @@ DEBUG = True
 # TODO: Add thies.dev
 ALLOWED_HOSTS = []
 
-
 # Application definition
 INSTALLED_APPS = [
-    # 'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -65,24 +92,9 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'djangobackend.urls'
 
-TEMPLATES = [
-    # {
-    #     'BACKEND': 'django.template.backends.django.DjangoTemplates',
-    #     'DIRS': [],
-    #     'APP_DIRS': True,
-    #     'OPTIONS': {
-    #         'context_processors': [
-    #             'django.template.context_processors.debug',
-    #             'django.template.context_processors.request',
-    #             'django.contrib.auth.context_processors.auth',
-    #             'django.contrib.messages.context_processors.messages',
-    #         ],
-    #     },
-    # },
-]
+TEMPLATES = []
 
-AUTHENTICATION_BACKENDS = [
-]
+AUTHENTICATION_BACKENDS = []
 
 WSGI_APPLICATION = 'djangobackend.wsgi.application'
 
@@ -97,8 +109,6 @@ DATABASES = {
     }
 }
 
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
@@ -109,12 +119,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.0/howto/static-files/
-
-STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

@@ -7,9 +7,12 @@ from core import views as core_views
 router = routers.DefaultRouter()
 router.register(r'wallpapers', api_views.WallpapersViewSet)
 
+
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
-    path('whoami/', core_views.WhoamiView.as_view()),
-    path('', include(router.urls)),
+    path('api/users/whoami/', core_views.WhoamiView.as_view()),
+    path('api/', include(router.urls)),
+    path('api/upload/', api_views.uploadView),
+    path('api/upload/complete/', api_views.upload_complete),
 ]

@@ -6,7 +6,7 @@ from rest_framework.exceptions import AuthenticationFailed
 
 from core.models import User
 
-client_url = f"{settings.AUTHENTIK_API_URL}/application/o/{settings.AUTHENTIK_CLIENT_ID}/"
+client_url = f"{settings.CONFIG.AUTHENTIK_API_URL}/application/o/{settings.CONFIG.AUTHENTIK_CLIENT_ID}/"
 jwks_client = jwt.PyJWKClient(f"{client_url}jwks/", cache_jwk_set=True, lifespan=360,
                               headers={"User-Agent": "Wallpaper-Backend"})
 
@@ -26,7 +26,7 @@ class AuthViaAuthentik(authentication.BaseAuthentication):
                 signing_key.key,
                 algorithms=["RS256"],
                 issuer=client_url,
-                audience=f"{settings.AUTHENTIK_CLIENT_ID}",
+                audience=f"{settings.CONFIG.AUTHENTIK_CLIENT_ID}",
                 options={
                     "verify_signature": True,
                     "verify_exp": True,
@@ -45,7 +45,10 @@ class AuthViaAuthentik(authentication.BaseAuthentication):
 
             (user, created) = User.objects.get_or_create(uid=uid)
 
-            user.name = name
+            [first_name, last_name] = name.split(" ", 1)
+            user.first_name = first_name
+            user.last_name = last_name
+
             user.email = email
             user.settings = user_settings
 
