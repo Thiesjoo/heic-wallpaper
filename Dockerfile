@@ -2,7 +2,10 @@ FROM python:3.11-slim as backend
 
 WORKDIR /app
 
-RUN apk add --no-cache libffi-dev libheif-dev libde265-dev gcc musl-dev zlib-dev jpeg-dev curl
+# RUN apk add --no-cache 
+RUN apt update \
+    && apt install --no-install-recommends -y libffi-dev libheif-dev libde265-dev gcc libjpeg-dev curl \
+    && rm -r /var/cache/apt/* /var/lib/apt/*
 RUN curl -sSL https://install.python-poetry.org | python -u - --version 1.8.5
 
 COPY djangobackend/poetry.lock .
