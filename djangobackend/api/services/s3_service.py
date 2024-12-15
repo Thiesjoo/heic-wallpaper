@@ -14,6 +14,7 @@ s3_uploads = boto3.client('s3',
                           config=boto3.session.Config(signature_version='s3v4'),
                           aws_access_key_id= settings.CONFIG.UPLOAD.S3_ACCESS_KEY,
                           aws_secret_access_key= settings.CONFIG.UPLOAD.S3_SECRET_KEY,
+                          region_name=settings.CONFIG.UPLOAD.S3_REGION
                           )
 
 s3_results = boto3.client('s3',
@@ -21,25 +22,9 @@ s3_results = boto3.client('s3',
                           config=boto3.session.Config(signature_version='s3v4'),
                           aws_access_key_id= settings.CONFIG.RESULT.S3_ACCESS_KEY,
                           aws_secret_access_key= settings.CONFIG.RESULT.S3_SECRET_KEY,
+                          region_name=settings.CONFIG.RESULT.S3_REGION
                           )
 
-# s3.put_bucket_lifecycle_configuration(
-#     Bucket=settings.CONFIG.UPLOAD.BUCKET,
-#     LifecycleConfiguration={
-#         'Rules': [
-#             {
-#                 'ID': 'delete_temp_files',
-#                 'Status': 'Enabled',
-#                 'Filter': {
-#                     'Prefix': '',
-#                 },
-#                 'Expiration': {
-#                     'Days': 1,
-#                 },
-#             },
-#         ],
-#     },
-# )
 
 logging.info("S3 Service init done")
 

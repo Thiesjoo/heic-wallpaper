@@ -26,6 +26,7 @@ class S3Config:
         self.BUCKET = os.environ.get(f"{name}_S3_BUCKET")
         self.S3_ACCESS_KEY = os.environ.get(f"{name}_S3_ACCESS_KEY")
         self.S3_SECRET_KEY = os.environ.get(f"{name}_S3_SECRET_KEY")
+        self.S3_REGION = os.environ.get(f"{name}_S3_REGION") or "eu-central-003"
 
 class AppConfig:
     UPLOAD = S3Config("UPLOAD")
@@ -61,24 +62,21 @@ CELERY_RESULT_BACKEND = os.environ.get("BROKER_URL")
 if CELERY_BROKER_URL is None or CELERY_RESULT_BACKEND is None:
     raise ValueError("BROKER_URL and BROKER_URL are required")
 
+DEBUG = os.environ.get("DEV") == "true"
+
 MAX_AGE_FOR_PENDING_WALLPAPERS = timedelta(hours=1)  # 1h
-CLEANUP_INTERVAL_FOR_PENDING_WALLPAPERS = 30  # 30s
+CLEANUP_INTERVAL_FOR_PENDING_WALLPAPERS = 30 if DEBUG else 60 * 60 * 12
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DEV") == "true"
 
 if DEBUG:
     ALLOWED_HOSTS = []
 else:
     CSRF_COOKIE_SECURE = True
-    SECURE_SSL_REDIRECT = True
     ALLOWED_HOSTS = [
         "wallpaper.thies.dev"
     ]

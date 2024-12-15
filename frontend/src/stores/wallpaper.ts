@@ -59,7 +59,7 @@ export const useWallpaperStore = defineStore("wallpapers", () => {
   // Fetch wallpapers from backend
   const fetchWallpapers = async (): Promise<Wallpaper[]> => {
     try {
-      const res = await fetch("/api/wallpapers");
+      const res = await fetch("/api/wallpapers/");
       const data = await res.json();
       wallpapers.value = data;
       isFetched.value = true;

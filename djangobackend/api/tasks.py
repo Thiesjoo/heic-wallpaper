@@ -10,17 +10,19 @@ from api.services.wallpaper_service import delete_all_pending
 from djangobackend import settings
 
 s3_uploads = boto3.client('s3',
-                          endpoint_url=settings.CONFIG.UPLOAD.S3_URL,
+                          endpoint_url= settings.CONFIG.UPLOAD.S3_URL,
                           config=boto3.session.Config(signature_version='s3v4'),
-                          aws_access_key_id=settings.CONFIG.UPLOAD.S3_ACCESS_KEY,
-                          aws_secret_access_key=settings.CONFIG.UPLOAD.S3_SECRET_KEY,
+                          aws_access_key_id= settings.CONFIG.UPLOAD.S3_ACCESS_KEY,
+                          aws_secret_access_key= settings.CONFIG.UPLOAD.S3_SECRET_KEY,
+                          region_name=settings.CONFIG.UPLOAD.S3_REGION
                           )
 
 s3_results = boto3.client('s3',
-                          endpoint_url=settings.CONFIG.RESULT.S3_URL,
+                          endpoint_url= settings.CONFIG.RESULT.S3_URL,
                           config=boto3.session.Config(signature_version='s3v4'),
-                          aws_access_key_id=settings.CONFIG.RESULT.S3_ACCESS_KEY,
-                          aws_secret_access_key=settings.CONFIG.RESULT.S3_SECRET_KEY,
+                          aws_access_key_id= settings.CONFIG.RESULT.S3_ACCESS_KEY,
+                          aws_secret_access_key= settings.CONFIG.RESULT.S3_SECRET_KEY,
+                          region_name=settings.CONFIG.RESULT.S3_REGION
                           )
 
 

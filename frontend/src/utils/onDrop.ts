@@ -68,6 +68,7 @@ export async function onDrop(file: File) {
   }
   formData.append("file", file);
 
+  // TODO: better error handling
   const fileUploadResult = await axios.post(url, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
