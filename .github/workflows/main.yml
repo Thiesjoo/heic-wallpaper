@@ -24,13 +24,10 @@ jobs:
         uses: docker/setup-qemu-action@v3
       - name: Build and push worker
         uses: docker/build-push-action@v6
-        env:
-            VITE_OIDC_AUTHORITY: ${{ vars.VITE_OIDC_AUTHORITY }}
-            VITE_OIDC_CLIENT_ID: ${{ vars.VITE_OIDC_CLIENT_ID }}
         with:
           build-args: |
-            "VITE_OIDC_AUTHORITY=$VITE_OIDC_AUTHORITY"
-            "VITE_OIDC_CLIENT_ID=$VITE_OIDC_CLIENT_ID"
+            "VITE_OIDC_AUTHORITY=${{ vars.VITE_OIDC_AUTHORITY }}"
+            "VITE_OIDC_CLIENT_ID=${{ vars.VITE_OIDC_CLIENT_ID }}"
           platforms: |
             "linux/amd64"
             "linux/arm64"
@@ -44,13 +41,10 @@ jobs:
           target: celery
       - name: Build and push backend
         uses: docker/build-push-action@v6
-        env:
-            VITE_OIDC_AUTHORITY: ${{ vars.VITE_OIDC_AUTHORITY }}
-            VITE_OIDC_CLIENT_ID: ${{ vars.VITE_OIDC_CLIENT_ID }}
         with:
           build-args: |
-            "VITE_OIDC_AUTHORITY=$VITE_OIDC_AUTHORITY"
-            "VITE_OIDC_CLIENT_ID=$VITE_OIDC_CLIENT_ID"
+            "VITE_OIDC_AUTHORITY=${{ vars.VITE_OIDC_AUTHORITY }}"
+            "VITE_OIDC_CLIENT_ID=${{ vars.VITE_OIDC_CLIENT_ID }}"
           platforms: |
             "linux/amd64"
             "linux/arm64"
@@ -64,13 +58,10 @@ jobs:
           target: backend-prod
       - name: Build and push frontend
         uses: docker/build-push-action@v6
-        env:
-            VITE_OIDC_AUTHORITY: ${{ vars.VITE_OIDC_AUTHORITY }}
-            VITE_OIDC_CLIENT_ID: ${{ vars.VITE_OIDC_CLIENT_ID }}
         with:
           build-args: |
-            "VITE_OIDC_AUTHORITY=$VITE_OIDC_AUTHORITY"
-            "VITE_OIDC_CLIENT_ID=$VITE_OIDC_CLIENT_ID"
+            "VITE_OIDC_AUTHORITY=${{ vars.VITE_OIDC_AUTHORITY }}"
+            "VITE_OIDC_CLIENT_ID=${{ vars.VITE_OIDC_CLIENT_ID }}"
           platforms: |
             "linux/amd64"
             "linux/arm64"
