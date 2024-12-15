@@ -76,7 +76,7 @@ async function getUser(fullRefresh = false): Promise<UserFromAPI | null> {
   }
   console.log("Token expires in", tempUser.expires_in);
 
-  if (fullRefresh || tempUser.expires_in < 60) {
+  if (fullRefresh || (tempUser?.expires_in || 61) < 60) {
     console.log("Full request asked");
     tempUser = await userManager.signinSilent();
     if (!tempUser) {

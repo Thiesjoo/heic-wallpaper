@@ -12,7 +12,8 @@ const route = useRoute();
 const selectedKeys = computed(() => [route.path]);
 const initials = computed(() => {
   return (
-    userStore.user?.name.first?.charAt(0) + userStore.user?.name.last?.charAt(0)
+    (userStore.user?.name?.first?.charAt(0) || "John") +
+    (userStore.user?.name?.last?.charAt(0) || "Doe")
   );
 });
 </script>
