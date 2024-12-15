@@ -20,7 +20,7 @@ pillow = "10.1"
 redis = "^5.2.1"
 pytz = "^2024.2"
 gunicorn = "^23.0.0"
-psycopg = "^3.2.3"
+psycopg = {extras = ["binary"], version = "^3.2.3"}
 
 
 [build-system]
