@@ -5,6 +5,7 @@ data/
 
 **/.env
 minio_data/
+postgres_data/
 .idea/
 .vscode/
 

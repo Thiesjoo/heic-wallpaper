@@ -117,12 +117,24 @@ WSGI_APPLICATION = 'djangobackend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASE_DIR = os.environ.get("DATABASE_DIR") or (BASE_DIR / 'db.sqlite3')
+DB_NAME = os.environ.get("DB_NAME")
+DB_HOST = os.environ.get("DB_HOST")
+DB_USER = os.environ.get("DB_USER")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
+DB_PORT = os.environ.get("DB_PORT") or 5432
+
+
+if (not (DB_USER and DB_PASSWORD and DB_HOST and DB_NAME)):
+    raise ValueError("Please specify db creds")
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': DATABASE_DIR,
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': DB_NAME,
+        'HOST': DB_HOST,
+        'USER': DB_USER,
+        'PASSWORD': DB_PASSWORD,
+        'PORT': DB_PORT
     }
 }
 
