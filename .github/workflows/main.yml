@@ -8,6 +8,10 @@ jobs:
     steps:
       - name: Checkout GIT repository
         uses: actions/checkout@v2.3.4
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        id: extract_branch
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v1
         with:
@@ -21,6 +25,6 @@ jobs:
             VITE_OIDC_AUTHORITY: ${{ vars.VITE_OIDC_AUTHORITY }}
             VITE_OIDC_CLIENT_ID: ${{ vars.VITE_OIDC_CLIENT_ID }}
         run: |
-            docker buildx build --build-arg	VITE_OIDC_AUTHORITY=$VITE_OIDC_AUTHORITY --build-arg VITE_OIDC_CLIENT_ID=$VITE_OIDC_CLIENT_ID --platform linux/amd64,linux/arm64 --push -t ghcr.io/thiesjoo/heic-wallpaper/worker:latest -t ghcr.io/thiesjoo/heic-wallpaper/worker:${{ github.sha }} --target celery .
-            docker buildx build --build-arg	VITE_OIDC_AUTHORITY=$VITE_OIDC_AUTHORITY --build-arg VITE_OIDC_CLIENT_ID=$VITE_OIDC_CLIENT_ID --platform linux/amd64,linux/arm64 --push -t ghcr.io/thiesjoo/heic-wallpaper/frontend:latest -t ghcr.io/thiesjoo/heic-wallpaper/frontend:${{ github.sha }} --target nginx-prod .
-            docker buildx build --build-arg	VITE_OIDC_AUTHORITY=$VITE_OIDC_AUTHORITY --build-arg VITE_OIDC_CLIENT_ID=$VITE_OIDC_CLIENT_ID --platform linux/amd64,linux/arm64 --push -t ghcr.io/thiesjoo/heic-wallpaper/backend:latest -t ghcr.io/thiesjoo/heic-wallpaper/backend:${{ github.sha }} --target backend-prod .
+            docker buildx build --build-arg	VITE_OIDC_AUTHORITY=$VITE_OIDC_AUTHORITY --build-arg VITE_OIDC_CLIENT_ID=$VITE_OIDC_CLIENT_ID --platform linux/amd64,linux/arm64 --push -t ghcr.io/thiesjoo/heic-wallpaper/worker:${{ steps.extract_branch.outputs.branch }} -t ghcr.io/thiesjoo/heic-wallpaper/worker:${{ github.sha }} --target celery .
+            docker buildx build --build-arg	VITE_OIDC_AUTHORITY=$VITE_OIDC_AUTHORITY --build-arg VITE_OIDC_CLIENT_ID=$VITE_OIDC_CLIENT_ID --platform linux/amd64,linux/arm64 --push -t ghcr.io/thiesjoo/heic-wallpaper/frontend:${{ steps.extract_branch.outputs.branch }} -t ghcr.io/thiesjoo/heic-wallpaper/frontend:${{ github.sha }} --target nginx-prod .
+            docker buildx build --build-arg	VITE_OIDC_AUTHORITY=$VITE_OIDC_AUTHORITY --build-arg VITE_OIDC_CLIENT_ID=$VITE_OIDC_CLIENT_ID --platform linux/amd64,linux/arm64 --push -t ghcr.io/thiesjoo/heic-wallpaper/backend:${{ steps.extract_branch.outputs.branch }} -t ghcr.io/thiesjoo/heic-wallpaper/backend:${{ github.sha }} --target backend-prod .

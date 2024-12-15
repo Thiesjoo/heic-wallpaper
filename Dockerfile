@@ -1,34 +1,27 @@
 FROM python:3.11-alpine as backend
 
-WORKDIR /backend
+WORKDIR /app
 
-RUN apk add --no-cache libffi-dev libheif-dev libde265-dev gcc musl-dev
-RUN apk add --no-cache zlib-dev jpeg-dev
+RUN apk add --no-cache libffi-dev libheif-dev libde265-dev gcc musl-dev zlib-dev jpeg-dev curl
+RUN curl -sSL https://install.python-poetry.org | python -u - --version 1.8.5
 
-COPY backend/requirements.txt ./
-RUN pip3 install --no-cache-dir -r requirements.txt
-COPY backend .
+COPY djangobackend/poetry.lock .
+COPY djangobackend/pyproject.toml .
+
+RUN /root/.local/bin/poetry install
+
+COPY djangobackend .
 
 EXPOSE 5000
-
-CMD ["flask", "run", "--host", "0.0.0.0", "--debug"]
-
-
-FROM backend as celery-watching
-RUN pip install --no-cache-dir watchdog
-
-WORKDIR /
-
-CMD ["watchmedo", "auto-restart", "--directory", "/backend", "--pattern", \
-    "*.py", "--recursive", "--", "celery", "-A", "backend.worker.image_processor", "worker", "-l", "info"]
+CMD ["/root/.local/bin/poetry", "run", "python", "manage.py", "runserver", "5000"]
 
 FROM backend as celery
 WORKDIR /
-CMD ["celery", "-A", "backend.worker.image_processor", "worker", "-l", "info"]
+CMD ["/root/.local/bin/poetrypoetry", "run", "celery", "-A", "djangobackend", "worker", "-l", "info", "--beat"]
 
 
 #Build frontend
-FROM node:18-alpine as frontend-base
+FROM node:22-alpine as frontend-base
 
 WORKDIR /app
 
@@ -52,8 +45,4 @@ COPY --from=frontend-prod /app/dist /usr/share/nginx/html
 COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
 FROM backend as backend-prod
-
-WORKDIR /
-RUN pip install --no-cache-dir waitress
-
-CMD ["waitress-serve","--host","0.0.0.0", "--port", "5000", "backend:app"]
+CMD ["/root/.local/bin/poetrypoetry", "run", "gunicorn", "djangobackend.wsgi", "-b", ":5000"]

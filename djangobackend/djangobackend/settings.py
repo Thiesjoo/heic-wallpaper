@@ -70,14 +70,22 @@ CLEANUP_INTERVAL_FOR_PENDING_WALLPAPERS = 30  # 30s
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # TODO: Change this to a random string
-SECRET_KEY = 'django-insecure-!le#n2lq0*0*o=*a%exff_fgct6eh8jzr(=6#8e87*cd0$2z19'
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # TODO: By default false, change to true for development
-DEBUG = True
+DEBUG = os.environ.get("DEV") == "true"
 
 # TODO: Add thies.dev
-ALLOWED_HOSTS = []
+if DEBUG:
+    ALLOWED_HOSTS = []
+else:
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
+    ALLOWED_HOSTS = [
+        "wallpaper.thies.dev"
+    ]
+
 
 # Application definition
 INSTALLED_APPS = [
@@ -112,10 +120,12 @@ WSGI_APPLICATION = 'djangobackend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+DATABASE_DIR = os.environ.get("DATABASE_DIR") or (BASE_DIR / 'db.sqlite3')
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': DATABASE_DIR,
     }
 }
 
