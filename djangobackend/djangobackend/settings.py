@@ -69,14 +69,11 @@ CLEANUP_INTERVAL_FOR_PENDING_WALLPAPERS = 30  # 30s
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# TODO: Change this to a random string
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# TODO: By default false, change to true for development
 DEBUG = os.environ.get("DEV") == "true"
 
-# TODO: Add thies.dev
 if DEBUG:
     ALLOWED_HOSTS = []
 else:

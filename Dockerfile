@@ -16,9 +16,7 @@ EXPOSE 5000
 CMD ["/root/.local/bin/poetry", "run", "python", "manage.py", "runserver", "5000"]
 
 FROM backend as celery
-WORKDIR /
-CMD ["/root/.local/bin/poetrypoetry", "run", "celery", "-A", "djangobackend", "worker", "-l", "info", "--beat"]
-
+CMD ["/root/.local/bin/poetry", "run", "celery", "-A", "djangobackend", "worker", "-l", "info", "--beat"]
 
 #Build frontend
 FROM node:22-alpine as frontend-base
@@ -45,4 +43,4 @@ COPY --from=frontend-prod /app/dist /usr/share/nginx/html
 COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
 FROM backend as backend-prod
-CMD ["/root/.local/bin/poetrypoetry", "run", "gunicorn", "djangobackend.wsgi", "-b", ":5000"]
+CMD ["/root/.local/bin/poetry", "run", "gunicorn", "djangobackend.wsgi", "-b", ":5000"]
