@@ -1,4 +1,4 @@
-FROM python:3.11-alpine as backend
+FROM python:3.11-slim as backend
 
 WORKDIR /app
 
