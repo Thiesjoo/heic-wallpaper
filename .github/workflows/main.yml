@@ -33,7 +33,6 @@ jobs:
             "linux/arm64"
           tags: |
             "ghcr.io/thiesjoo/heic-wallpaper/worker:${{ steps.extract_branch.outputs.branch }}"
-            "ghcr.io/thiesjoo/heic-wallpaper/worker:${{ github.sha }}"
           context: .
           push: true
           cache-from: type=gha
@@ -50,7 +49,6 @@ jobs:
             "linux/arm64"
           tags: |
             "ghcr.io/thiesjoo/heic-wallpaper/backend:${{ steps.extract_branch.outputs.branch }}"
-            "ghcr.io/thiesjoo/heic-wallpaper/backend:${{ github.sha }}"
           context: .
           push: true
           cache-from: type=gha
@@ -67,7 +65,6 @@ jobs:
             "linux/arm64"
           tags: |
             "ghcr.io/thiesjoo/heic-wallpaper/frontend:${{ steps.extract_branch.outputs.branch }}"
-            "ghcr.io/thiesjoo/heic-wallpaper/frontend:${{ github.sha }}"
           context: .
           push: true
           cache-from: type=gha

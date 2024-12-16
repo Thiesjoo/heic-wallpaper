@@ -1,0 +1,24 @@
+name: Cleanup of old images
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+
+
+jobs:
+  delete-untagged-images:
+    name: Delete Untagged Images
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          packages: heic-wallpaper/backend,heic-wallpaper/worker,heic-wallpaper/frontend
+          exclude-tags: main
+          keep-n-tagged: 3
+          older-than: 6 months
+          delete-ghost-images: true
+          delete-partial-images: true
+          delete-orphaned-images: true

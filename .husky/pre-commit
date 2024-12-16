@@ -1,4 +1,8 @@
-cd frontend
-npx lint-staged
-npm run type-check
-cd ..
+if git diff --name-only --cached | grep 'frontend/';
+then
+  echo "frontend/ files have been changed. Running frontend linting and type-checking..."
+  cd frontend
+  npx lint-staged
+  npm run type-check
+  cd ..
+fi
