@@ -1,5 +1,5 @@
-import { ref, computed } from "vue";
 import { defineStore } from "pinia";
+import { useToast } from "vue-toastification";
 
 export type Wallpaper = {
   id: string;
@@ -22,6 +22,13 @@ export type Wallpaper = {
 };
 export type WallpaperWithDetails = Wallpaper & {
   data: { i: number; t: number }[] | undefined;
+};
+
+export type PaginatedResponse<T> = {
+  results: T[];
+  total: number;
+  page: number;
+  limit: number;
 };
 
 export function getUserWallpaperURL(wallpaper: Wallpaper) {
@@ -50,26 +57,14 @@ export enum WallpaperType {
   ANIMATED = 3,
 }
 
+export async function fetchWallpapersFromApi(
+  params: URLSearchParams,
+): Promise<PaginatedResponse<Wallpaper[]>> {
+  const res = await fetch(`/api/wallpapers/?${params}`);
+  return await res.json();
+}
+
 export const useWallpaperStore = defineStore("wallpapers", () => {
-  // This store should manage all available wallpapers
-  const wallpapers = ref<Wallpaper[]>([]);
-  const isFetched = ref(false);
-  const lastError = ref<string>("");
-
-  // Fetch wallpapers from backend
-  const fetchWallpapers = async (): Promise<Wallpaper[]> => {
-    try {
-      const res = await fetch("/api/wallpapers/");
-      const data = await res.json();
-      wallpapers.value = data;
-      isFetched.value = true;
-      return data;
-    } catch (e: any) {
-      lastError.value = e?.message || "Unknown error";
-    }
-    return [];
-  };
-
   const fetchSpecificWallpaper = async (
     id: string,
   ): Promise<WallpaperWithDetails> => {
@@ -78,30 +73,19 @@ export const useWallpaperStore = defineStore("wallpapers", () => {
       if (res.status !== 200) {
         throw new Error("Wallpaper is not available here");
       }
-      const data = await res.json();
-      return data;
+      return await res.json();
     } catch (e: any) {
-      lastError.value = e?.message || "Unknown error";
+      const toast = useToast();
+      toast.error("Failed to fetch wallpaper");
       throw e;
     }
   };
-
-  // Fetch wallpapers on store creation
-  fetchWallpapers();
-
-  // Fetch wallpapers every 10 seconds
-  setInterval(fetchWallpapers, 10000);
 
   async function getWallpaperById(id: string) {
     return await fetchSpecificWallpaper(id);
   }
 
-  // Return wallpapers and fetch function
   return {
-    wallpapers: computed(() => wallpapers.value),
-    fetchWallpapers,
     getWallpaperById,
-    isFetched: computed(() => isFetched.value),
-    lastError: computed(() => lastError.value),
   };
 });

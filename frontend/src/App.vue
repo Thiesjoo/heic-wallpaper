@@ -100,6 +100,14 @@ const initials = computed(() => {
           <template #fallback> Loading...</template>
         </Suspense>
       </a-layout-content>
+      <a-layout-footer>
+        <a-divider />
+        <a-row justify="center">
+          <a-col>
+            <span>Heic Wallpaper | Created by Thies Nieborg</span>
+          </a-col>
+        </a-row>
+      </a-layout-footer>
     </a-layout>
   </a-config-provider>
 </template>

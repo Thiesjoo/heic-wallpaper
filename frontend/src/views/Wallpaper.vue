@@ -59,7 +59,6 @@ function copyURL() {
   <a-list
     :data-source="wallpaperData"
     :grid="{ gutter: 16, xs: 1, sm: 1, md: 2, lg: 3, xl: 4, xxl: 5 }"
-    :loading="!wallpaperStore.isFetched"
   >
     <template #renderItem="{ item: { i, t } }">
       <a-list-item>

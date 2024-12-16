@@ -101,10 +101,6 @@ export async function onDrop(file: File) {
   }
 
   toast.success("File uploaded successfully.");
-  const wallpaperStore = useWallpaperStore();
-  setTimeout(() => {
-    wallpaperStore.fetchWallpapers();
-  }, 2000);
 }
 
 export function startManualUpload() {

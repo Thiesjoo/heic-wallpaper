@@ -21,6 +21,7 @@ redis = "^5.2.1"
 pytz = "^2024.2"
 gunicorn = "^23.0.0"
 psycopg = {extras = ["binary"], version = "^3.2.3"}
+django-filter = "^24.3"
 
 
 [build-system]

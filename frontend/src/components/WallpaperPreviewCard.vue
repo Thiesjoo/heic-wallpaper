@@ -9,11 +9,9 @@ import {
   HeartFilled,
 } from "@ant-design/icons-vue";
 
-const props = defineProps<{
+const { wallpaper } = defineProps<{
   wallpaper: Wallpaper;
 }>();
-
-const wallpaper = props.wallpaper;
 
 const isLoading = computed(() => {
   return wallpaper.status === WallpaperStatus.PROCESSING;

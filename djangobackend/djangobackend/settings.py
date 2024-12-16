@@ -88,6 +88,8 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.postgres',
+    'django_filters',
     'rest_framework',
     'core',
     'api'
@@ -159,6 +161,10 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ),
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+    'DEFAULT_PAGINATION_CLASS': 'djangobackend.pagination.CustomPagination',
+    'PAGE_SIZE': 100,
+    'ORDERING_PARAM': 'sort'
 }
 
 AUTH_USER_MODEL = 'core.User'

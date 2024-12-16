@@ -1,36 +1,57 @@
 <script lang="ts" setup>
 import WallpaperPreviewCard from "@/components/WallpaperPreviewCard.vue";
-import { useWallpaperStore, WallpaperStatus } from "@/stores/wallpaper";
+import { fetchWallpapersFromApi } from "@/stores/wallpaper";
 import Drop from "@/components/Drop.vue";
 import { onDrop } from "@/utils/onDrop";
-import { computed, ref, watch } from "vue";
+import { VuePaginatedAntComposable } from "@/utils/VuePaginatedAnt";
+import Wallpaper from "@/views/Wallpaper.vue";
+import { useIntervalFn, useDocumentVisibility, useIdle } from "@vueuse/core";
 
-const wallpaperStore = useWallpaperStore();
+async function dataFunction(
+  search: string,
+  sort: string,
+  page: number,
+  pageSize: number,
+) {
+  const params = new URLSearchParams();
+  params.append("search", search);
+  params.append("sort", sort);
+  params.append("page", page.toString());
+  params.append("limit", pageSize.toString());
 
-const search = ref("");
-const searchDebounced = ref("");
+  const response = await fetchWallpapersFromApi(params);
 
-let debounceTimeout: number | undefined;
-watch(search, () => {
-  if (debounceTimeout) {
-    clearTimeout(debounceTimeout);
+  return {
+    data: response.results,
+    pagination: {
+      total: response.total,
+      pageSize: response.limit,
+      current: response.page,
+    },
+  };
+}
+
+const {
+  loading,
+  pagination,
+  data,
+  search,
+  pageSize,
+  page,
+  debouncedRefreshListView,
+} = VuePaginatedAntComposable<Wallpaper>(dataFunction);
+
+const visibility = useDocumentVisibility();
+const idle = useIdle(1000 * 60);
+useIntervalFn(() => {
+  if (visibility.value === "visible" && !idle.value) {
+    debouncedRefreshListView();
   }
-  debounceTimeout = setTimeout(() => {
-    searchDebounced.value = search.value;
-  }, 300);
-});
-
-const data = computed(() => {
-  return wallpaperStore.wallpapers.filter((wallpaper) => {
-    return wallpaper.name
-      .toLowerCase()
-      .includes(searchDebounced.value.toLowerCase());
-  });
-});
+}, 1000 * 10);
 </script>
 
 <template>
-  <Drop text="Drop your pictures here" @drop="onDrop"> </Drop>
+  <Drop text="Drop your pictures here" @drop="onDrop"></Drop>
   <h3 class="text-center text-xl w-full">
     Get your dynamic wallpapers from here:
     <a
@@ -47,20 +68,30 @@ const data = computed(() => {
       v-model:value="search"
       placeholder="Looking for something?"
       style="width: 50%"
-      @search="searchDebounced = search"
     />
   </a-flex>
   <a-divider></a-divider>
   <a-list
-    :grid="{ gutter: 16, xs: 1, sm: 1, md: 2, lg: 2, xl: 3, xxl: 4 }"
     :data-source="data"
-    :loading="!wallpaperStore.isFetched"
+    :grid="{ gutter: 16, xs: 1, sm: 1, md: 2, lg: 2, xl: 3, xxl: 4 }"
+    :loading="loading"
   >
     <template #renderItem="{ item }">
       <a-list-item>
         <WallpaperPreviewCard :wallpaper="item"></WallpaperPreviewCard>
       </a-list-item>
     </template>
-    <!--   TODO:  Pagination or infinite scroll-->
   </a-list>
+  <a-flex justify="center">
+    <a-pagination
+      v-model:current="page"
+      v-model:pageSize="pageSize"
+      :loading="loading"
+      :show-total="
+        (total, range) => `${range[0]}-${range[1]} of ${total} items`
+      "
+      :total="pagination.total"
+      hide-on-single-page
+    ></a-pagination>
+  </a-flex>
 </template>

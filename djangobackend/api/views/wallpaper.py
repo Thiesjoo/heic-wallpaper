@@ -1,9 +1,11 @@
 import pytz
 from django.shortcuts import redirect
-from rest_framework import viewsets, permissions, mixins, serializers, status
+from rest_framework import viewsets, permissions, mixins, serializers, status, filters
 from rest_framework.decorators import api_view
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
+from django_filters.rest_framework import DjangoFilterBackend
 
 from api.models import Wallpaper, WallpaperStatus
 from api.serializers import WallpaperSerializer, WallpaperWithDetailsSerializer
@@ -18,13 +20,9 @@ class WallpapersViewSet(mixins.RetrieveModelMixin,
 
     queryset = Wallpaper.objects.all().prefetch_related('owner')
     serializer_class = WallpaperSerializer
-
-    def list(self, request, *args, **kwargs):
-        # only return wallpapers that are ready
-        queryset = self.filter_queryset(self.get_queryset())
-        queryset = queryset.filter(status=WallpaperStatus.READY)
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['status', 'type']
+    search_fields = ["name", "owner__first_name", "owner__last_name"]
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
