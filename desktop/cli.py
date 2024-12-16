@@ -1,13 +1,11 @@
 import argparse
-import json
-import os
 
 import authentik_integration
 import wallpaper_utils
 import heicwallpaper_utils
 import service
 
-config_location = os.path.join(wallpaper_utils.get_config_dir('heic-wallpaper'), "config.json")
+from config_utils import read_from_config, write_to_config
 
 parser = argparse.ArgumentParser(
     description="A CLI tool to change the wallpaper. When no arguments are provided, the wallpaper will be changed to the configured wallpaper. When no wallpaper is configured, no changes will be made",
@@ -39,32 +37,10 @@ service_subparser.add_argument(
 args = parser.parse_args()
 
 
-def write_to_config(key, value):
-    if not os.path.exists(config_location):
-        data = {}
-        os.makedirs(os.path.dirname(config_location), exist_ok=True)
-    else:
-        with open(config_location, "r") as f:
-            data = json.load(f)
-
-    data[key] = value
-
-    with open(config_location, "w") as f:
-        json.dump(data, f)
-
-
-def read_from_config(key):
-    if not os.path.exists(config_location):
-        return None
-
-    with open(config_location, "r") as f:
-        data = json.load(f)
-    return data[key]
-
-
 def set_wallpaper_from_uuid_args(uuid_from_args: str):
     if uuid_from_args == "account":
-        access = read_from_config("access_token")
+        access = authentik_integration.get_current_token()
+
         if access is None:
             print("Please login first, using 'auth login'")
             exit(1)
@@ -74,7 +50,6 @@ def set_wallpaper_from_uuid_args(uuid_from_args: str):
                 print(
                     "No wallpaper set on your account, please set a wallpaper on the website")
                 exit(1)
-            write_to_config("last_account_wallpaper", wallpaper_url)
         except Exception as e:
             print(f"Error when trying to fetch current wallpaper from your account: {e}")
 
@@ -86,17 +61,20 @@ def set_wallpaper_from_uuid_args(uuid_from_args: str):
             print("Falling back to previous wallpaper")
             wallpaper_url = previous_wallpaper
 
-        uuid = heicwallpaper_utils.get_uuid_from_url(wallpaper_url)
+        uuid = wallpaper_url
         write_to_config("wallpaper", "account")
     else:
-        uuid = heicwallpaper_utils.get_uuid_from_url(uuid_from_args)
+        uuid = uuid_from_args
         write_to_config("wallpaper", uuid)
 
     print(f"Changing wallpaper to {uuid}")
+    wallpaper = heicwallpaper_utils.Wallpaper.from_uuid_or_url(uuid)
+    wallpaper.make_available_offline()
 
-    print(heicwallpaper_utils.CONFIG_DIR)
-    heicwallpaper_utils.make_available_offline(uuid)
-    path = heicwallpaper_utils.get_correct_photo_for_wallpaper(uuid)
+    if uuid_from_args == "account":
+        write_to_config("last_account_wallpaper", wallpaper.uid)
+
+    path = wallpaper.get_correct_wallpaper_for_time()
     print("Setting wallpaper to path: ",path)
     wallpaper_utils.set_wallpaper(path)
 
@@ -104,20 +82,19 @@ def set_wallpaper_from_uuid_args(uuid_from_args: str):
 if "auth" in args:
     if args.auth == "login":
         print("Trying to log in")
-        if read_from_config("access_token") is None:
-            access, id = authentik_integration.login_request()
-            write_to_config("access_token", access)
-            write_to_config("id_token", id)
+        if read_from_config("refresh_token") is None:
+            tokens = authentik_integration.login_request()
+            authentik_integration.save_tokens(tokens)
         else:
             print("Already logged in")
-            access = read_from_config("access_token")
-        user = authentik_integration.get_user(access)
+
+        active_token = authentik_integration.get_current_token()
+        user = authentik_integration.get_user(active_token)
         print(f"Welcome {user['name']}")
         print("You can now use the wallpaper command to change the wallpaper")
     elif args.auth == "logout":
         print("Logging out")
-        write_to_config("access_token", None)
-        write_to_config("id_token", None)
+        authentik_integration.logout()
         write_to_config("wallpaper", None)
 
 elif "uuid" in args:
@@ -127,9 +104,9 @@ elif "action" in args:
 else:
     print(
         "No arguments provided, changing to configured wallpaper. For help, use --help")
-    wallpaper = read_from_config("wallpaper")
-    if wallpaper is None:
+    wallpaper_uuid = read_from_config("wallpaper")
+    if wallpaper_uuid is None:
         print("No wallpaper configured")
         exit(1)
 
-    set_wallpaper_from_uuid_args(wallpaper)
+    set_wallpaper_from_uuid_args(wallpaper_uuid)
