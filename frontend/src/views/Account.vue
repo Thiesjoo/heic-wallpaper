@@ -25,9 +25,14 @@ const currentWallpaper = computedAsync(async () => {
     return undefined;
   }
 
-  const secondLastSlash = currentURL.lastIndexOf("/", currentURL.length - 2);
+  if (currentURL[currentURL.length - 1] !== "/") {
+    currentURL = currentURL + "/";
+  }
 
-  currentURL = currentURL.substring(secondLastSlash + 1).trim();
+  const secondLastSlash = currentURL.lastIndexOf("/", currentURL.length - 2);
+  currentURL = currentURL
+    .substring(secondLastSlash + 1, currentURL.length - 1)
+    .trim();
   return await wallpaperStore.getWallpaperById(currentURL);
 }, undefined);
 </script>

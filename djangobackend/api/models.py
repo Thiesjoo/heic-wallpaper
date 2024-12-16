@@ -27,7 +27,7 @@ class Wallpaper(models.Model):
     status = models.CharField(max_length=255, choices=WallpaperStatus.choices)
     type = models.CharField(max_length=255, choices=WallpaperType.choices)
 
-    data = models.JSONField()
+    data = models.JSONField(default=list())
 
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)

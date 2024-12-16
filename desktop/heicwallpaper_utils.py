@@ -115,6 +115,8 @@ class Wallpaper:
                 shutil.rmtree(wallpaper_path)
                 raise ValueError("Wallpaper directory exists, but no data is present. We deleted the directory, you should try again.")
 
+            # Data can change, so always save timestamps. Images (should) never change
+            self.save_to_file()
             self.saved_for_offline_use = True
             print(f"Wallpaper {self} is already available offline")
             return
