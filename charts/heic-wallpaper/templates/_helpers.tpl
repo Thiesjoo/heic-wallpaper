@@ -51,3 +51,54 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/name: {{ include "heicwallpaper.names.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
+
+
+{{- define "heicwallpaper.lookupSecretKey" -}}
+  {{- $namespace := index . 0 -}}
+  {{- $secretName := index . 1 -}}
+  {{- $key := index . 2 -}}
+  {{- $secret := lookup "v1" "Secret" $namespace $secretName -}}
+  {{- if $secret -}}
+    {{- if hasKey $secret.data $key -}}
+      {{- $secretValue := index $secret.data $key -}}
+      {{ $secretValue | b64dec }}
+    {{- else -}}
+      {{- fail (printf "Secret '%s' does not have key '%s'" $secretName $key) -}}
+    {{- end -}}
+  {{- else -}}
+    {{- fail (printf "Secret '%s' not found in namespace '%s'" $secretName $namespace) -}}
+  {{- end -}}
+{{- end -}}
+
+{{- define "heicwallpaper.databasePassword" -}}
+  {{- if and .Values.postgresql.auth.existingSecret (not (empty .Values.postgresql.auth.existingSecret)) -}}
+    {{ include "heicwallpaper.lookupSecretKey" (list .Release.Namespace .Values.postgresql.auth.existingSecret "password") }}
+  {{- else -}}
+    {{ .Values.postgresql.auth.password }}
+  {{- end -}}
+{{- end -}}
+
+
+{{- define "heicwallpaper.appEnvironment" }}
+- name: BROKER_URL
+  value: "redis://{{ .Release.Name }}-redis-master:6379/0"
+- name: PUBLIC_URL
+  value: "{{ $.Values.heicwallpaper.public_url }}"
+- name: PUBLIC_ASSET_URL
+  value: "{{ $.Values.heicwallpaper.public_asset_url }}"
+- name: DB_NAME
+  value: {{ .Values.postgresql.auth.database }}
+- name: DB_PASSWORD
+{{ if .Values.postgresql.auth.existingSecret }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.postgresql.auth.existingSecret }}
+      key: password
+{{ else }}
+  value: {{ .Values.postgresql.auth.password }}
+{{ end }}
+- name: DB_HOST
+  value: {{ (include "heicwallpaper.names.fullname" .) }}-postgresql-hl
+- name: DB_USER
+  value: {{ .Values.postgresql.auth.username }}
+{{- end}}

@@ -56,7 +56,6 @@ def upload_complete(request):
         }, status=400)
 
     wallpaper = Wallpaper.objects.get(id=id)
-    print(wallpaper)
     if wallpaper is None or wallpaper.owner != request.user:
             # or wallpaper.status != WallpaperStatus.UPLOADING:
         return Response({

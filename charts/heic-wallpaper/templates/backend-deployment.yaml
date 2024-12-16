@@ -17,6 +17,22 @@ spec:
         {{- include "heicwallpaper.labels.selectorLabels" $ | nindent 8 }}
         app.kubernetes.io/component: "backend"
     spec:
+      initContainers:
+        - name: init-migrate-db
+          image: "{{ $.Values.image.repository }}/backend:{{ $.Values.image.tag }}{{- if $.Values.image.digest -}}@{{ $.Values.image.digest }}{{- end -}}"
+          imagePullPolicy: "{{ $.Values.image.pullPolicy }}"
+          envFrom:
+            - secretRef:
+                name: {{ $.Values.heicwallpaper.results_s3_secret_name }}
+            - secretRef:
+                name: {{ $.Values.heicwallpaper.upload_s3_secret_name }}
+            - secretRef:
+                name: {{ $.Values.heicwallpaper.authentik_secret_name }}
+            - secretRef:
+                name: {{ $.Values.heicwallpaper.secret_values_secret }}
+          env:
+          {{- include "heicwallpaper.appEnvironment" . | nindent 12 }}
+          command: ["/root/.local/bin/poetry", "run", "python", "manage.py", "migrate"]
       containers:
         - name: {{ $.Chart.Name }}
           image: "{{ $.Values.image.repository }}/backend:{{ $.Values.image.tag }}{{- if $.Values.image.digest -}}@{{ $.Values.image.digest }}{{- end -}}"
@@ -28,15 +44,10 @@ spec:
                 name: {{ $.Values.heicwallpaper.upload_s3_secret_name }}
             - secretRef:
                 name: {{ $.Values.heicwallpaper.authentik_secret_name }}
+            - secretRef:
+                name: {{ $.Values.heicwallpaper.secret_values_secret }}
           env:
-            - name: BROKER_URL
-              value: "redis://{{ .Release.Name }}-redis-master:6379/0"
-            - name: PUBLIC_URL
-              value: "{{ $.Values.heicwallpaper.public_url }}"
-            - name: PUBLIC_ASSET_URL
-              value: "{{ $.Values.heicwallpaper.public_asset_url }}"
-            - name: DATABASE_URL
-              value: "redis://{{ .Release.Name }}-redis-master:6379/0"
+          {{- include "heicwallpaper.appEnvironment" . | nindent 10 }}
           ports:
             - containerPort: 5000
               protocol: TCP
