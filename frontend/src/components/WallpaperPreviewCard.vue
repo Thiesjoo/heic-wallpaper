@@ -28,7 +28,7 @@ function click() {
   if (isError.value || isLoading.value) {
     return;
   }
-  router.push(`/wallpaper/${wallpaper.id}`);
+  router.push(`/wallpaper/${wallpaper.value.id}`);
 }
 
 const previewError = ref(false);

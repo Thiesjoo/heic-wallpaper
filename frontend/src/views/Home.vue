@@ -1,10 +1,9 @@
 <script lang="ts" setup>
 import WallpaperPreviewCard from "@/components/WallpaperPreviewCard.vue";
-import { fetchWallpapersFromApi } from "@/stores/wallpaper";
+import { fetchWallpapersFromApi, type Wallpaper } from "@/stores/wallpaper";
 import Drop from "@/components/Drop.vue";
 import { onDrop } from "@/utils/onDrop";
 import { VuePaginatedAntComposable } from "@/utils/VuePaginatedAnt";
-import Wallpaper from "@/views/Wallpaper.vue";
 import { useIntervalFn, useDocumentVisibility, useIdle } from "@vueuse/core";
 import { computed, ref, watch } from "vue";
 
@@ -130,7 +129,7 @@ watch(
 const visibility = useDocumentVisibility();
 const idle = useIdle(1000 * 60);
 useIntervalFn(() => {
-  if (visibility.value === "visible" && !idle.value) {
+  if (visibility.value === "visible" && !idle.idle) {
     debouncedRefreshListView();
   }
 }, 1000 * 10);
@@ -185,7 +184,8 @@ useIntervalFn(() => {
       v-model:pageSize="pageSize"
       :loading="loading"
       :show-total="
-        (total, range) => `${range[0]}-${range[1]} of ${total} items`
+        (total: number, range: number[]) =>
+          `${range[0]}-${range[1]} of ${total} items`
       "
       :total="pagination.total"
       hide-on-single-page

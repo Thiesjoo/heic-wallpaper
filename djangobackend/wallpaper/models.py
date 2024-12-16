@@ -51,3 +51,6 @@ class Wallpaper(models.Model):
         s3_service.remove_all_references(self.uid)
         logging.info(f"Deleted references for {self.uid}")
         super().delete(*args, **kwargs)
+
+    class Meta:
+        ordering = ["-id"]

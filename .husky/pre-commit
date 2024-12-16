@@ -1,3 +1,4 @@
 cd frontend
 npx lint-staged
+npm run type-check
 cd ..

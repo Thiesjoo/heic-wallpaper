@@ -57,7 +57,7 @@ export enum WallpaperType {
 
 export async function fetchWallpapersFromApi(
   params: URLSearchParams,
-): Promise<PaginatedResponse<Wallpaper[]>> {
+): Promise<PaginatedResponse<Wallpaper>> {
   const res = await fetch(`/api/wallpapers/?${params}`);
   return await res.json();
 }

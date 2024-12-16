@@ -1,11 +1,11 @@
 // Directly from: https://gitlab.com/studieverenigingvia/viaduct/-/blob/master/frontend/utils/VuePaginatedAnt.ts?ref_type=heads
-import { ref, reactive, computed, Ref, nextTick } from "vue";
+import { ref, reactive, computed, type Ref, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { notification } from "ant-design-vue";
 
-function debounce(fn, delay) {
+function debounce<T extends (...args: any[]) => void>(fn: T, delay: number) {
   let timeout: number;
-  return function (...args) {
+  return function <U>(this: U, ...args: Parameters<typeof fn>) {
     if (timeout !== undefined) {
       clearTimeout(timeout);
     }
@@ -68,7 +68,6 @@ export function VuePaginatedAntComposable<T>(
       return actualSort.value;
     },
     set(sort) {
-      console.log("Replacing sort", sort);
       actualSort.value = sort;
       paginationRef.current = 1;
       debouncedRefreshListView();
@@ -142,19 +141,6 @@ export function VuePaginatedAntComposable<T>(
 
   const debouncedRefreshListView = debounce(refreshListView, 300);
 
-  const handleTableChange = (pagination, filters, sorter) => {
-    if (sorter["columnKey"]) {
-      let newSort = sorter["columnKey"];
-      if (sorter["order"] === "descend") {
-        newSort = `-${newSort}`;
-      }
-      sort.value = newSort;
-    }
-    pagination.value = pagination;
-    page.value = pagination.current;
-    debouncedRefreshListView();
-  };
-
   const pageSwitch = async (pageNew: number) => {
     page.value = pageNew;
   };
@@ -167,7 +153,6 @@ export function VuePaginatedAntComposable<T>(
     data: dataRef,
     refreshListView,
     debouncedRefreshListView,
-    handleTableChange,
     sort,
     search,
     page,
