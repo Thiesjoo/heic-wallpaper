@@ -1,12 +1,12 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from api.models import Wallpaper, WallpaperStatus
-from api.services import s3_service
-from api.services.s3_service import allowed_file, ALLOWED_EXTENSIONS, get_extension, \
+from wallpaper.models import Wallpaper, WallpaperStatus
+from wallpaper.services import s3_service
+from wallpaper.services.s3_service import allowed_file, ALLOWED_EXTENSIONS, get_extension, \
     determine_type_from_extension, ADMIN_MAX_FILE_SIZE, DEFAULT_MAX_FILE_SIZE
 
-from api.tasks import handle_all_images
+from wallpaper.tasks import handle_all_images
 
 @api_view(['POST'])
 def upload_view(request):

@@ -2,7 +2,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api.services.wallpaper_service import get_wallpaper_by_id
+from wallpaper.services.wallpaper_service import get_wallpaper_by_id
 from core import authentication
 from core.serializers import UserSerializer
 

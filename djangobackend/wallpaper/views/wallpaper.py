@@ -7,9 +7,9 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 
-from api.models import Wallpaper, WallpaperStatus
-from api.serializers import WallpaperSerializer, WallpaperWithDetailsSerializer
-from api.services.wallpaper_service import get_current_image_url_for_wallpaper
+from wallpaper.models import Wallpaper, WallpaperStatus
+from wallpaper.serializers import WallpaperSerializer, WallpaperWithDetailsSerializer
+from wallpaper.services.wallpaper_service import get_current_image_url_for_wallpaper
 
 
 class WallpapersViewSet(mixins.RetrieveModelMixin,

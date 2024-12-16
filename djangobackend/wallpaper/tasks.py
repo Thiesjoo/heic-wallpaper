@@ -4,9 +4,9 @@ from typing import Any
 import boto3
 from celery import group, shared_task
 
-from api.models import Wallpaper, WallpaperStatus, WallpaperType
-from api.services import image_service, heic_service as heic
-from api.services.wallpaper_service import delete_all_pending
+from wallpaper.models import Wallpaper, WallpaperStatus, WallpaperType
+from wallpaper.services import image_service, heic_service as heic
+from wallpaper.services.wallpaper_service import delete_all_pending
 from djangobackend import settings
 
 s3_uploads = boto3.client('s3',

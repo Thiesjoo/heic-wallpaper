@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytz as pytz
 
-from api.models import WallpaperStatus, Wallpaper, WallpaperType
+from wallpaper.models import WallpaperStatus, Wallpaper, WallpaperType
 from djangobackend import settings
 
 

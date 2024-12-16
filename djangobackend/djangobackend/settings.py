@@ -92,7 +92,7 @@ INSTALLED_APPS = [
     'django_filters',
     'rest_framework',
     'core',
-    'api'
+    'wallpaper'
 ]
 
 MIDDLEWARE = [

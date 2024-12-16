@@ -47,7 +47,7 @@ class Wallpaper(models.Model):
         return f"{settings.CONFIG.PUBLIC_URL}{api_url}"
 
     def delete(self, *args, **kwargs):
-        from api.services import s3_service
+        from wallpaper.services import s3_service
         s3_service.remove_all_references(self.uid)
         logging.info(f"Deleted references for {self.uid}")
         super().delete(*args, **kwargs)

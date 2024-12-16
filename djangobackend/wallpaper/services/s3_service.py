@@ -3,7 +3,7 @@ from uuid import uuid4
 import boto3
 from django.conf import settings
 
-from api.models import WallpaperType
+from wallpaper.models import WallpaperType
 
 import logging
 

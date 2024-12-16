@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from api.models import Wallpaper
+from wallpaper.models import Wallpaper
 from core.serializers import UserSerializer
 
 
