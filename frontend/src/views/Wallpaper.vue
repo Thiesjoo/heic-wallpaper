@@ -14,7 +14,10 @@ const id = route.params.id as string;
 const wallpaperStore = useWallpaperStore();
 const wallpaper = await wallpaperStore.getWallpaperById(id);
 const wallpaperData = computed(() => {
-  return wallpaper.data || [{ i: 0, t: 0 }];
+  if (wallpaper.data && wallpaper.data.length > 0) {
+    return wallpaper.data;
+  }
+  return [{ i: 0, t: 0 }];
 });
 
 const baseURL = wallpaper.preview_url;

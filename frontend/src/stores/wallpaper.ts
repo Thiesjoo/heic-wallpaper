@@ -46,15 +46,13 @@ export function getRouterWallpaperURL(wallpaper: Wallpaper) {
 export enum WallpaperStatus {
   READY = 1,
   UPLOADING = 2,
-  PROCESSING = 4,
-  ERROR = 8,
-  DELETED = 16,
+  PROCESSING = 3,
+  ERROR = 4,
 }
 
 export enum WallpaperType {
-  NORMAL = 1,
-  HEIC = 2,
-  ANIMATED = 3,
+  GENERIC = 1,
+  TIME_BASED = 2,
 }
 
 export async function fetchWallpapersFromApi(

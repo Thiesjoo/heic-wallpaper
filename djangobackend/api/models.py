@@ -16,7 +16,6 @@ class WallpaperStatus(models.IntegerChoices):
     UPLOADING = 2
     PROCESSING = 3
     ERROR = 4
-    DELETED = 5
 
 class Wallpaper(models.Model):
     id = models.AutoField(primary_key=True)

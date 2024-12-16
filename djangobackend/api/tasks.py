@@ -58,17 +58,11 @@ def generate_single_image(uid: str):
 def finish_processing(prev_results: Any, uid: str, times: Any | None) -> None:
     wallpaper = Wallpaper.objects.get(uid=uid)
     wallpaper.status = WallpaperStatus.READY
-    wallpaper.data = times
+    if times is not None:
+        wallpaper.data = times
     wallpaper.save()
 
     remove_upload_with_key(uid)
-#
-#
-# @shared_task
-# def on_chord_error(request, exc, traceback, hmmm):
-#     print("Task {0!r} raised error: {1!r}".format(request.id, exc))
-#     print(hmmm)
-
 
 def handle_heic(self, uid: str):
     img = image_service.open_image(s3_uploads, uid)

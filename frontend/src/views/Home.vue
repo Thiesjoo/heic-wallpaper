@@ -6,6 +6,33 @@ import { onDrop } from "@/utils/onDrop";
 import { VuePaginatedAntComposable } from "@/utils/VuePaginatedAnt";
 import Wallpaper from "@/views/Wallpaper.vue";
 import { useIntervalFn, useDocumentVisibility, useIdle } from "@vueuse/core";
+import { computed, ref, watch } from "vue";
+
+const selectedCategories = ref<string[][]>([]);
+const selectedType = computed(() => {
+  const filter = selectedCategories.value
+    .filter((category) => category[0] === "type")
+    .map((category) => category[1]);
+  if (filter.length === 0) {
+    return undefined;
+  }
+  if (filter[0] === undefined) {
+    return undefined;
+  }
+  return filter;
+});
+const selectedStatus = computed(() => {
+  const filter = selectedCategories.value
+    .filter((category) => category[0] === "status")
+    .map((category) => category[1]);
+  if (filter.length === 0) {
+    return undefined;
+  }
+  if (filter[0] === undefined) {
+    return undefined;
+  }
+  return filter;
+});
 
 async function dataFunction(
   search: string,
@@ -18,6 +45,17 @@ async function dataFunction(
   params.append("sort", sort);
   params.append("page", page.toString());
   params.append("limit", pageSize.toString());
+
+  if (selectedType.value) {
+    selectedType.value.forEach((type) => {
+      params.append("type", type);
+    });
+  }
+  if (selectedStatus.value) {
+    selectedStatus.value.forEach((status) => {
+      params.append("status", status);
+    });
+  }
 
   const response = await fetchWallpapersFromApi(params);
 
@@ -41,6 +79,54 @@ const {
   debouncedRefreshListView,
 } = VuePaginatedAntComposable<Wallpaper>(dataFunction);
 
+const categories = [
+  {
+    label: "Status of processing",
+    value: "status",
+    children: [
+      {
+        label: "Ready",
+        value: "1",
+      },
+      {
+        label: "Uploading",
+        value: "2",
+      },
+      {
+        label: "Processing",
+        value: "3",
+      },
+      {
+        label: "Error",
+        value: "4",
+      },
+    ],
+  },
+  {
+    label: "Type of wallpaper",
+    value: "type",
+    children: [
+      {
+        label: "Generic",
+        value: "1",
+      },
+      {
+        label: "Time based",
+        value: "2",
+      },
+    ],
+  },
+];
+
+watch(
+  selectedCategories,
+  () => {
+    debouncedRefreshListView();
+  },
+  { deep: true },
+);
+
+// Auto refresh the list view every 10 seconds when the tab is visible and the user is not idle
 const visibility = useDocumentVisibility();
 const idle = useIdle(1000 * 60);
 useIntervalFn(() => {
@@ -69,6 +155,17 @@ useIntervalFn(() => {
       placeholder="Looking for something?"
       style="width: 50%"
     />
+  </a-flex>
+  <a-divider></a-divider>
+  <a-flex justify="center">
+    <a-cascader
+      v-model:value="selectedCategories"
+      style="width: 25%"
+      multiple
+      max-tag-count="responsive"
+      :options="categories"
+      placeholder="Select categories"
+    ></a-cascader>
   </a-flex>
   <a-divider></a-divider>
   <a-list

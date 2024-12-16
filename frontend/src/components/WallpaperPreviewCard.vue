@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { type Wallpaper, WallpaperStatus } from "@/stores/wallpaper";
-import { computed, ref } from "vue";
+import { computed, ref, toRefs } from "vue";
 import { useRouter } from "vue-router";
 import formatDate from "@/utils/formatDates";
 import {
@@ -9,19 +9,18 @@ import {
   HeartFilled,
 } from "@ant-design/icons-vue";
 
-const { wallpaper } = defineProps<{
+const props = defineProps<{
   wallpaper: Wallpaper;
 }>();
 
+const { wallpaper } = toRefs(props);
+
 const isLoading = computed(() => {
-  return wallpaper.status === WallpaperStatus.PROCESSING;
+  return wallpaper.value.status === WallpaperStatus.PROCESSING;
 });
 
 const isError = computed(() => {
-  return (
-    wallpaper.status === WallpaperStatus.DELETED ||
-    wallpaper.status === WallpaperStatus.ERROR
-  );
+  return wallpaper.value.status === WallpaperStatus.ERROR;
 });
 const router = useRouter();
 
