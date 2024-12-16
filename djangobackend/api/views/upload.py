@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from api.models import Wallpaper, WallpaperStatus
 from api.services import s3_service
 from api.services.s3_service import allowed_file, ALLOWED_EXTENSIONS, get_extension, \
-    determine_type_from_extension
+    determine_type_from_extension, ADMIN_MAX_FILE_SIZE, DEFAULT_MAX_FILE_SIZE
 
 from api.tasks import handle_all_images
 
@@ -28,7 +28,8 @@ def upload_view(request):
             'error': 'Invalid file type'
         }, status=400)
 
-    presigned_data, uid = s3_service.get_presigned_post_url(file_type)
+    max_size = ADMIN_MAX_FILE_SIZE if request.user.is_superuser else DEFAULT_MAX_FILE_SIZE
+    presigned_data, uid = s3_service.get_presigned_post_url(file_type, max_size)
 
     wallpaper = Wallpaper.objects.create(
         uid=uid,
@@ -36,7 +37,6 @@ def upload_view(request):
         owner=request.user,
         status=WallpaperStatus.UPLOADING,
         type=determine_type_from_extension(get_extension(file_name)),
-        data={},
     )
 
     wallpaper.save()

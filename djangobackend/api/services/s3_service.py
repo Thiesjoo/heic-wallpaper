@@ -50,10 +50,10 @@ def allowed_file(filename):
     return "." in filename and get_extension(filename) in ALLOWED_EXTENSIONS
 
 
-MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
+DEFAULT_MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
+ADMIN_MAX_FILE_SIZE = 1024 * 1024 * 1024 # 1Gi
 
-
-def get_presigned_post_url(file_type: str, max_file_size=MAX_FILE_SIZE) -> (dict, str):
+def get_presigned_post_url(file_type: str, max_file_size) -> (dict, str):
     uid = str(uuid4())
 
     return s3_uploads.generate_presigned_post(

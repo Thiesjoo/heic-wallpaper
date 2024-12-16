@@ -71,7 +71,7 @@ minio:
       tls: true
       annotations:
         cert-manager.io/cluster-issuer: "cloudflare-thies-dev-issuer"
-        nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+        nginx.ingress.kubernetes.io/proxy-body-size: "1Gi"
 
 
 redis:
