@@ -81,9 +81,19 @@ redis:
   master:
     persistence:
       size: 1Gi
+  image:
+    registry: docker.io
+    repository: redis
+    tag: 7.4.5
+
 
 
 postgresql:
+    image:
+      registry: docker.io
+      repository: postgres
+      tag: 17.6
+
     primary:
         persistence:
             size: 1Gi
