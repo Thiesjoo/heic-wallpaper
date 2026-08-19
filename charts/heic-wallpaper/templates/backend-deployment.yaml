@@ -32,7 +32,7 @@ spec:
                 name: {{ $.Values.heicwallpaper.secret_values_secret }}
           env:
           {{- include "heicwallpaper.appEnvironment" . | nindent 12 }}
-          command: ["/root/.local/bin/poetry", "run", "python", "manage.py", "migrate"]
+          command: ["uv", "run", "python", "manage.py", "migrate"]
       containers:
         - name: {{ $.Chart.Name }}
           image: "{{ $.Values.image.repository }}/backend:{{ $.Values.image.tag }}{{- if $.Values.image.digest -}}@{{ $.Values.image.digest }}{{- end -}}"
