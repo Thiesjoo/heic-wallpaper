@@ -22,7 +22,37 @@ export const useUserStore = defineStore("user", () => {
     loading.value = true;
     try {
       console.log("Getting user data", cachedUser ? "cached" : "");
-      user.value = cachedUser || (await auth.getUser()) || null;
+      const baseUser = cachedUser || (await auth.getUser()) || null;
+      if (baseUser) {
+        const token = await auth.getToken();
+        if (token) {
+          try {
+            const resp = await fetch("/api/users/whoami/", {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+            if (resp.ok) {
+              const dbUser = await resp.json();
+              baseUser.name.first = dbUser.first_name || baseUser.name.first;
+              baseUser.name.last = dbUser.last_name || baseUser.name.last;
+              baseUser.email = dbUser.email || baseUser.email;
+              baseUser.avatarUrl = dbUser.avatar_url || baseUser.avatarUrl;
+              if (dbUser.settings) {
+                baseUser.settings = {
+                  ...baseUser.settings,
+                  ...dbUser.settings,
+                };
+              }
+            }
+          } catch (fetchErr) {
+            console.error("Failed to fetch settings from backend:", fetchErr);
+          }
+        }
+        user.value = baseUser;
+      } else {
+        user.value = null;
+      }
     } catch (e: any) {
       console.error(e);
     }
@@ -59,6 +89,9 @@ export const useUserStore = defineStore("user", () => {
       .then(function (response) {
         toast.success("Wallpaper updated successfully!");
         console.log(response);
+        if (user.value && response.backgroundURL) {
+          user.value.settings.backgroundURL = response.backgroundURL;
+        }
       })
       .catch((x) => {
         toast.error("Failed to update wallpaper, see console for more info.");

@@ -34,9 +34,9 @@ class AppConfig:
 
     PUBLIC_URL = os.environ.get("PUBLIC_URL")
     PUBLIC_ASSET_URL = os.environ.get("PUBLIC_ASSET_URL")
-    AUTHENTIK_TOKEN = os.environ.get("AUTHENTIK_TOKEN")
-    AUTHENTIK_API_URL = os.environ.get("AUTHENTIK_API_URL")
-    AUTHENTIK_CLIENT_ID = os.environ.get("AUTHENTIK_CLIENT_ID")
+    OIDC_ISSUER = os.environ.get("OIDC_ISSUER")
+    OIDC_AUDIENCE = os.environ.get("OIDC_AUDIENCE")
+    OIDC_JWKS_URL = os.environ.get("OIDC_JWKS_URL")
 
     @staticmethod
     def validate():
@@ -48,10 +48,10 @@ class AppConfig:
             raise ValueError("PUBLIC_URL is required")
         if AppConfig.PUBLIC_ASSET_URL is None:
             raise ValueError("PUBLIC_ASSET_URL is required")
-        if AppConfig.AUTHENTIK_TOKEN is None:
-            raise ValueError("AUTHENTIK_TOKEN is required")
-        if AppConfig.AUTHENTIK_API_URL is None:
-            raise ValueError("AUTHENTIK_API_URL is required")
+        if AppConfig.OIDC_ISSUER is None:
+            raise ValueError("OIDC_ISSUER is required")
+        if AppConfig.OIDC_AUDIENCE is None:
+            raise ValueError("OIDC_AUDIENCE is required")
 
 AppConfig.validate()
 CONFIG = AppConfig()
@@ -64,7 +64,7 @@ if CELERY_BROKER_URL is None or CELERY_RESULT_BACKEND is None:
 
 DEBUG = os.environ.get("DEV") == "true"
 
-MAX_AGE_FOR_PENDING_WALLPAPERS = timedelta(hours=1)  # 1h
+MAX_AGE_FOR_PENDING_WALLPAPERS = timedelta(minutes=1) if DEBUG else timedelta(hours=1)  # 1h
 CLEANUP_INTERVAL_FOR_PENDING_WALLPAPERS = 30 if DEBUG else 60 * 60 * 12
 
 
@@ -156,7 +156,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'core.authentication.AuthViaAuthentik',
+        'core.authentication.OIDCAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',

@@ -10,7 +10,7 @@ postgres_data/
 .vscode/
 
 env/
-celerybeat-schedule.db
+celerybeat-schedule*
 
 node_modules/
 **/*.sqlite3

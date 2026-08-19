@@ -10,7 +10,7 @@ app = Celery('djangobackend')
 
 app.conf.beat_schedule = {
     'remove_old_images': {
-        'task': 'api.tasks.remove_broken_images',
+        'task': 'wallpaper.tasks.remove_broken_images',
         'schedule': settings.CLEANUP_INTERVAL_FOR_PENDING_WALLPAPERS,
     }
 }

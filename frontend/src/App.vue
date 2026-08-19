@@ -64,6 +64,15 @@ const initials = computed(() => {
               <a-divider type="vertical" />
               <a-dropdown>
                 <a-avatar
+                  v-if="userStore.user?.avatarUrl"
+                  :src="userStore.user.avatarUrl"
+                  :size="48"
+                  :style="{
+                    verticalAlign: 'middle',
+                  }"
+                />
+                <a-avatar
+                  v-else
                   :size="48"
                   :style="{
                     backgroundColor: '#f56a00',
@@ -79,7 +88,7 @@ const initials = computed(() => {
                     </a-menu-item>
                     <a-menu-divider />
                     <a-menu-item key="3">
-                      <a @click="userStore.reset">Logout</a>
+                      <a @click="() => userStore.reset()">Logout</a>
                     </a-menu-item>
                   </a-menu>
                 </template>

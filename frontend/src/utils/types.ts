@@ -5,6 +5,7 @@ export type User = {
   };
   email: string;
   settings: UserSettings;
+  avatarUrl?: string;
 };
 
 export type UserSettings = {

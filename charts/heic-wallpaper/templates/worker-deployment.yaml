@@ -34,7 +34,7 @@ spec:
             - secretRef:
                 name: {{ $.Values.heicwallpaper.upload_s3_secret_name }}
             - secretRef:
-                name: {{ $.Values.heicwallpaper.authentik_secret_name }}
+                name: {{ $.Values.heicwallpaper.oidc_secret_name }}
             - secretRef:
                 name: {{ $.Values.heicwallpaper.secret_values_secret }}
           env:

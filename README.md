@@ -4,32 +4,52 @@ Originally only for heic wallpapers, but now it supports all image formats.
 
 ## Installation
 
-```bash
-cd backend
-pip install -r requirements.txt
+### Prerequisites
+Make sure you have [uv](https://github.com/astral-sh/uv) and [Node.js](https://nodejs.org/) installed.
 
-cd ../frontend
-npm ci
+```bash
+# Set up Django backend dependencies with uv
+cd djangobackend
+uv sync
 cp .sample.env .env
-echo "Fill in the information in the .env file"
 
+# Set up frontend dependencies
+cd ../frontend
+npm install
+cp .sample.env .env
+echo "Fill in the information in the .env files"
+
+# Start background services (PostgreSQL, Redis, MinIO)
 cd ../
-docker compose up redis minio -d
+docker compose up -d
 ```
+
+Setup minio:
+
+```bash
+docker compose exec minio bash
+mc alias set local http://localhost:9000 minioadmin minioadmin
+mc mb local/uploads
+mc mb local/results
+mc anonymous set download local/results
+```
+
+
 ## Usage
-Run the project with the following commands:
 
+### 1. Run the Django Backend
 ```bash
-cd backend
-BROKER_URL=redis://localhost:6379 flask run --host 0.0.0.0 --debug
+cd djangobackend
+uv run python manage.py runserver
 ```
 
-For the worker:
+### 2. Run the Celery Worker
 ```bash
-BROKER_URL=redis://localhost:6379 celery -A backend.worker.image_processor worker -l info --autoscale=4,1 
+cd djangobackend
+uv run celery -A djangobackend worker -l info --beat
 ```
 
-And for the frontend
+### 3. Run the Frontend Dev Server
 ```bash
 cd frontend
 npm run start

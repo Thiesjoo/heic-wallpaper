@@ -35,10 +35,9 @@ heicwallpaper:
   upload_s3_secret_name: "heicwallpaper-s3-upload"
 
   #  Should be a pre-existing kubernetes secret with the values:
-  #  AUTHENTIK_API_URL
-  #  AUTHENTIK_CLIENT_ID
-  #  AUTHENTIK_TOKEN
-  authentik_secret_name: "authentik-tokens-heicwallpaper"
+  #  OIDC_ISSUER
+  #  OIDC_AUDIENCE
+  oidc_secret_name: "oidc-tokens-heicwallpaper"
 
   public_asset_url: "https://static.wallpaper.thies.dev"
   public_url: "https://wallpaper.thies.dev"

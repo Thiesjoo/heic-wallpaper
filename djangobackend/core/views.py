@@ -30,6 +30,6 @@ class SetSettingsView(APIView):
                                                         wallpaper.live_url())
 
         if result:
-            return Response({"success": True})
+            return Response({"success": True, "backgroundURL": wallpaper.live_url()})
         else:
             return Response({"error": msg}, status=400)

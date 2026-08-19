@@ -88,11 +88,11 @@ async function getUser(fullRefresh = false): Promise<UserFromAPI | null> {
   }
 
   const prof = tempUser.profile;
-  if (!prof || !prof.name || !prof.email || !prof.settings) {
+  if (!prof || !prof.name || !prof.email) {
     console.warn("User is missing some data", tempUser);
     return null;
   }
-  const settings = prof.settings as {
+  const settings = (prof.settings || {}) as {
     [key: string]: string | boolean | undefined;
   };
 
@@ -100,9 +100,10 @@ async function getUser(fullRefresh = false): Promise<UserFromAPI | null> {
   const user = {
     name: {
       first: name[0],
-      last: name[1],
+      last: name[1] || "",
     },
     email: prof.email as string,
+    avatarUrl: (prof.picture || prof.avatar || prof.avatar_url || "") as string,
     settings: {
       showSeconds: parseBoolean(settings.showSeconds),
       showDate: parseBoolean(settings.showDate),
@@ -119,7 +120,7 @@ async function getUser(fullRefresh = false): Promise<UserFromAPI | null> {
 async function getToken() {
   const user = await userManager.getUser();
   if (user) {
-    return user.access_token;
+    return user.id_token || user.access_token;
   } else {
     return null;
   }

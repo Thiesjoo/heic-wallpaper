@@ -29,10 +29,11 @@ s3_results = boto3.client('s3',
 logging.info("S3 Service init done")
 
 ALLOWED_EXTENSIONS = {
-    "png": "image/png",
-    "jpg": "image/jpeg",
-    "jpeg": "image/jpeg",
-    "heic": "image/heic",
+    "png": ["image/png"],
+    "jpg": ["image/jpeg"],
+    "jpeg": ["image/jpeg"],
+    "heic": ["image/heic", "image/heif"],
+    "heif": ["image/heif", "image/heic"],
 }
 
 def get_extension(filename):
@@ -40,7 +41,7 @@ def get_extension(filename):
 
 
 def determine_type_from_extension(extension):
-    if extension == "heic":
+    if extension in ("heic", "heif"):
         return WallpaperType.TIME_BASED
     else:
         return WallpaperType.GENERIC

@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import pytz as pytz
+from django.utils import timezone
 
 from wallpaper.models import WallpaperStatus, Wallpaper, WallpaperType
 from djangobackend import settings
@@ -20,7 +21,7 @@ def delete_all_pending() -> list[int]:
     """
     pending = Wallpaper.objects.filter(
         status__in=[WallpaperStatus.UPLOADING, WallpaperStatus.PROCESSING, WallpaperStatus.ERROR],
-        date_created__lt=datetime.now() - settings.MAX_AGE_FOR_PENDING_WALLPAPERS
+        date_created__lt=timezone.now() - settings.MAX_AGE_FOR_PENDING_WALLPAPERS
     ).all()
 
     deleted_uuids = []

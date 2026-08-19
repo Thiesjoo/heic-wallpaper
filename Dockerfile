@@ -2,24 +2,24 @@ FROM python:3.11-slim as backend
 
 WORKDIR /app
 
-# RUN apk add --no-cache 
 RUN apt update \
     && apt install --no-install-recommends -y libffi-dev libheif-dev libde265-dev gcc libjpeg-dev curl \
     && rm -r /var/cache/apt/* /var/lib/apt/*
-RUN curl -sSL https://install.python-poetry.org | python -u - --version 1.8.5
 
-COPY djangobackend/poetry.lock .
-COPY djangobackend/pyproject.toml .
+# Install uv by copying it from the official image
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-RUN /root/.local/bin/poetry install
+COPY djangobackend/pyproject.toml djangobackend/uv.lock ./
+
+RUN uv sync --frozen
 
 COPY djangobackend .
 
 EXPOSE 5000
-CMD ["/root/.local/bin/poetry", "run", "python", "manage.py", "runserver", "5000"]
+CMD ["uv", "run", "python", "manage.py", "runserver", "5000"]
 
 FROM backend as celery
-CMD ["/root/.local/bin/poetry", "run", "celery", "-A", "djangobackend", "worker", "-l", "info", "--beat"]
+CMD ["uv", "run", "celery", "-A", "djangobackend", "worker", "-l", "info", "--beat"]
 
 #Build frontend
 FROM node:22-alpine as frontend-base
@@ -46,4 +46,4 @@ COPY --from=frontend-prod /app/dist /usr/share/nginx/html
 COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
 FROM backend as backend-prod
-CMD ["/root/.local/bin/poetry", "run", "gunicorn", "djangobackend.wsgi", "-b", ":5000"]
+CMD ["uv", "run", "gunicorn", "djangobackend.wsgi", "-b", ":5000"]

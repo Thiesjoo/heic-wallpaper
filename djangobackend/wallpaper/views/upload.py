@@ -23,7 +23,7 @@ def upload_view(request):
             'error': 'Invalid file type'
         }, status=400)
 
-    if not ALLOWED_EXTENSIONS[get_extension(file_name)] == file_type:
+    if file_type not in ALLOWED_EXTENSIONS[get_extension(file_name)]:
         return Response({
             'error': 'Invalid file type'
         }, status=400)
